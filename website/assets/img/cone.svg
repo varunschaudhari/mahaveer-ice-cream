@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" role="img" aria-hidden="true">
+  <!-- Placeholder artwork until the owner's logo / photos arrive (TODO: owner content). -->
+  <polygon points="35,92 125,92 80,196" fill="#FFB300"/>
+  <path d="M58 92 L80 168 M80 92 L80 180 M102 92 L80 168" stroke="#E09400" stroke-width="4" fill="none"/>
+  <ellipse cx="80" cy="76" rx="50" ry="40" fill="#F8BBD0"/>
+  <ellipse cx="80" cy="42" rx="34" ry="28" fill="#FFF8F0" stroke="#F8BBD0" stroke-width="2"/>
+  <circle cx="80" cy="14" r="8" fill="#C2185B"/>
+</svg>

@@ -98,3 +98,12 @@ a.admin-row:active { background: var(--color-primary-soft); }
   a { color: inherit; text-decoration: none; }
   .report-card strong, .report-table .num strong { color: #000; }
 }
+
+/* ---------- Website content (M8) ---------- */
+
+.gallery-row { display: grid; grid-template-columns: 120px 1fr; gap: var(--space-3); align-items: start; }
+.gallery-row > form:last-child { grid-column: 1 / -1; }
+@media (min-width: 720px) {
+  .gallery-row { grid-template-columns: 120px 1fr auto; }
+  .gallery-row > form:last-child { grid-column: auto; }
+}

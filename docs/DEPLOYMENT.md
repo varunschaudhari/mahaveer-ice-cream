@@ -21,7 +21,7 @@ copy app\config.example.php app\config.php      # then edit DB credentials, APP_
 php database/migrate.php --fresh
 php database/create_owner.php                    # owner login + staff PINs (from M1)
 php -S localhost:8000 -t order                   # ordering app
-php -S localhost:8001 -t website                 # website (second terminal)
+php -S localhost:8001 -t website                 # website (second terminal; any free port works, APP_URL_WEBSITE is only used for canonical / OG links)
 php tools/phpunit.phar
 ```
 
@@ -130,3 +130,13 @@ Notes:
 - [ ] Lock the screen, place a test table order from another phone: the notification must arrive within a few seconds; tapping it opens the owner page at that order. Accepting it on the phone prints the KOT at the counter (the counter must be open).
 - [ ] Mute switch: muted → no notification for the next test order; unmuted → notifications again.
 - [ ] If notifications were blocked by mistake: Chrome ⋮ → Settings → Site settings → Notifications → allow `order.mahaveericecream.in`. Without notifications the page still checks every 10 s and beeps while it is open.
+
+## 8. Website go-live checks (M8)
+
+- [ ] Owner content in admin → Website content: About text (mr/en), gallery photos (the first visible photo is the home page photo). Until then the pages show "coming soon" placeholders (`TODO: owner content` in the code marks each one).
+- [ ] Map: Google Maps → search the shop → Share → **Embed a map** → Copy HTML → paste into admin → Settings → "Google Maps Embed a map code". Also paste the shop's normal share link into "Google Maps link" (Directions button). Check the map shows on `/location.php` after tapping "Show the map".
+- [ ] WhatsApp number in Settings only once the owner wants the button on the website.
+- [ ] `APP_URL_WEBSITE` in production `config.php` is `https://mahaveericecream.in` (canonical and link-preview URLs). Staging pages carry `noindex` automatically (any `APP_ENV` other than `production`).
+- [ ] `sitemap.xml` and `robots.txt` contain the production domain; submit `https://mahaveericecream.in/sitemap.xml` in Google Search Console.
+- [ ] Lighthouse (Chrome DevTools → Lighthouse → Mobile, on the production URL): Performance ≥ 90, Accessibility ≥ 90, SEO ≥ 95 for the home and menu pages. Run it in an Incognito window (extensions skew the score).
+- [ ] Share the home page link in WhatsApp once: the preview should show the shop name, description and photo.

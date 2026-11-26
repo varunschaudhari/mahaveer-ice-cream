@@ -90,7 +90,9 @@ function render_fatal_error(?Throwable $e): void
 // Web requests: session, security headers, language
 // ---------------------------------------------------------------
 
-if (PHP_SAPI !== 'cli') {
+// The public website (APP_NO_SESSION, set in website/boot.php) has no logins or forms: no session,
+// so no cookie on every visit and no session file per crawler.
+if (PHP_SAPI !== 'cli' && !defined('APP_NO_SESSION')) {
     // Sessions live in storage/ with a long lifetime: PHP's default (24 min, often in a shared
     // /tmp cleaned by the host) would log the counter out. Auth enforces the real idle limits.
     $sessionDir = APP_ROOT . '/storage/sessions';
@@ -112,7 +114,9 @@ if (PHP_SAPI !== 'cli') {
         'secure' => !is_local(),
     ]);
     session_start();
+}
 
+if (PHP_SAPI !== 'cli') {
     send_security_headers();
     Lang::initFromRequest();
 }

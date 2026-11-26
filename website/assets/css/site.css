@@ -1,0 +1,102 @@
+/*
+ * Public website (mahaveericecream.in). Load after base.css (a copy of order/assets/css/base.css).
+ * Mobile-first, works at 360 px. Same browser rules as the rest (ARCHITECTURE §10): no CSS
+ * nesting, no color-mix(), no @scope, no subgrid, no text-wrap: balance.
+ */
+
+.skip-link { position: absolute; left: var(--space-2); top: -100px; z-index: 10; padding: var(--space-2) var(--space-4); border-radius: var(--radius); background: var(--color-surface); color: var(--color-primary-dark); font-weight: 700; }
+.skip-link:focus { top: var(--space-2); }
+
+/* ---------- header + nav ---------- */
+
+.site-nav { display: flex; gap: var(--space-1); overflow-x: auto; padding-bottom: var(--space-2); scrollbar-width: none; }
+.site-nav::-webkit-scrollbar { display: none; }
+.site-nav a {
+  display: inline-flex; align-items: center; flex-shrink: 0; min-height: var(--tap-min); padding-inline: var(--space-3);
+  border-radius: var(--radius-pill); color: var(--color-on-primary); font-weight: 700; text-decoration: none; white-space: nowrap;
+}
+.site-nav a[aria-current="page"] { background: var(--color-bg); color: var(--color-primary-dark); }
+.site-nav .site-nav__order { background: var(--color-accent); color: var(--color-text); }
+
+.site-banner { margin: 0; padding: var(--space-3) 0; background: var(--color-accent); color: var(--color-text); font-weight: 700; text-align: center; }
+.site-banner .container { display: block; }
+
+h1, h2, h3 { color: var(--color-primary-dark); line-height: 1.25; }
+h1 { font-size: var(--text-2xl); }
+h2 { font-size: var(--text-xl); }
+.lead { font-size: var(--text-lg); }
+.section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.prose { max-width: 40rem; }
+.prose p + p { margin-top: var(--space-4); }
+address { font-style: normal; }
+
+/* ---------- home: hero ---------- */
+
+.hero { display: grid; gap: var(--space-4); align-items: center; }
+.hero__img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); background: var(--color-primary-soft); }
+.hero__placeholder {
+  display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3; border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--color-primary-soft), #FFE0B2);
+}
+.hero__years {
+  display: inline-block; margin: 0; padding: var(--space-1) var(--space-3); border-radius: var(--radius-pill);
+  background: var(--color-primary); color: var(--color-on-primary); font-weight: 700;
+}
+.hero__title { margin: 0; font-size: 2rem; }
+.hero__tagline { margin: 0; font-size: var(--text-lg); color: var(--color-muted); }
+.hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.hero__actions .btn { flex: 1 1 12rem; }
+
+@media (min-width: 720px) {
+  .hero { grid-template-columns: 1fr 1fr; }
+  .hero__title { font-size: 2.5rem; }
+}
+
+/* ---------- best sellers ---------- */
+
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.product-card { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); box-shadow: var(--shadow); }
+.product-card__img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+.product-card__img--placeholder { display: flex; align-items: center; justify-content: center; aspect-ratio: 5 / 2; background: var(--color-primary-soft); } /* no item photo yet: a short strip, not a big empty box */
+.product-card__body { padding: var(--space-3) var(--space-4) var(--space-4); }
+.product-card__name { margin: 0 0 var(--space-1); font-size: var(--text-lg); }
+.product-card__prices { margin: var(--space-1) 0 0; }
+.product-card.is-sold-out .product-card__name { color: var(--color-muted); }
+
+.info-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.info-grid h2 { margin: 0; font-size: var(--text-lg); }
+
+/* ---------- bulk ---------- */
+
+.steps { display: grid; gap: var(--space-3); padding-left: var(--space-5); }
+.steps li { padding-left: var(--space-2); }
+
+/* ---------- gallery ---------- */
+
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.gallery figure { margin: 0; }
+.gallery img { display: block; width: 100%; height: auto; border-radius: var(--radius); background: var(--color-primary-soft); }
+.gallery figcaption { margin-top: var(--space-1); color: var(--color-muted); font-size: var(--text-sm); }
+
+/* ---------- location: tap-to-load map ---------- */
+
+.map {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2);
+  aspect-ratio: 4 / 3; max-height: 480px; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius);
+  background: repeating-linear-gradient(45deg, #FBEFF3, #FBEFF3 12px, #FFF8F0 12px, #FFF8F0 24px);
+  text-align: center;
+}
+.map__note { margin: 0; }
+.map__frame { width: 100%; height: 100%; border: 0; border-radius: var(--radius); }
+.map:has(.map__frame) { padding: 0; }
+
+/* ---------- contact ---------- */
+
+.contact-buttons { display: grid; gap: var(--space-3); max-width: 28rem; }
+
+/* ---------- footer ---------- */
+
+.site-footer__grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.site-footer__name { font-size: var(--text-lg); font-weight: 700; }
+.site-footer a { color: inherit; }
+.site-footer__copy { margin-top: var(--space-4); opacity: 0.85; }

@@ -35,6 +35,7 @@ final class SettingsService
         'bill_footer_en' => ['type' => 'text', 'max' => 200],
         'whatsapp_number' => ['type' => 'mobile'],
         'google_maps_url' => ['type' => 'url'],
+        'google_maps_embed' => ['type' => 'map_embed', 'max' => 3000],
     ];
 
     private readonly PDO $db;
@@ -73,7 +74,7 @@ final class SettingsService
         $current = Settings::all();
         $changed = array_keys(array_filter(
             $values,
-            static fn (string $value, string $key): bool => ($current[$key] ?? null) !== $value,
+            static fn (string $value, string $key): bool => ($current[$key] ?? '') !== $value, // no row yet = empty
             ARRAY_FILTER_USE_BOTH
         ));
 
@@ -155,9 +156,31 @@ final class SettingsService
                 return mb_strlen($raw) <= 500 && str_starts_with($raw, 'https://') && filter_var($raw, FILTER_VALIDATE_URL)
                     ? ['value' => $raw]
                     : ['error' => 'settings.error.url'];
+
+            case 'map_embed':
+                $url = mb_strlen($raw) <= $rule['max'] ? self::mapEmbedUrl($raw) : null;
+                return $url !== null ? ['value' => $url] : ['error' => 'settings.error.map_embed'];
         }
 
         throw new InvalidArgumentException('Unknown setting type: ' . $rule['type']);
+    }
+
+    /**
+     * The map address from Google Maps → Share → "Embed a map": the whole <iframe …> code or just
+     * its src. Only https://www.google.com/maps/embed?pb=… is accepted (the website loads exactly
+     * this in a frame, and its CSP allows only www.google.com). Null when it is not such a URL.
+     */
+    public static function mapEmbedUrl(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if (preg_match('/\bsrc\s*=\s*["\x27]([^"\x27]+)["\x27]/i', $raw, $m)) {
+            $raw = $m[1]; // the whole <iframe …> code was pasted
+        }
+        $url = html_entity_decode(trim($raw), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // Letters, digits and the punctuation Google uses in "pb" only: no quotes, spaces or < >.
+        return strlen($url) <= 500 && preg_match('#^https://www\.google\.com/maps/embed\?pb=[A-Za-z0-9!._~%:+=&,;@/*-]+$#', $url)
+            ? $url
+            : null;
     }
 
     private function crossFieldErrors(array $values, array $errors): array

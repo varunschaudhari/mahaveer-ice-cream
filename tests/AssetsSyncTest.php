@@ -14,7 +14,7 @@ final class AssetsSyncTest extends TestCase
 {
     public function testWebsiteCopiesMatchOrderAssets(): void
     {
-        $shared = ['css/base.css', 'fonts/OFL.txt'];
+        $shared = ['css/base.css', 'fonts/OFL.txt', 'img/icon-192.png', 'img/icon-512.png'];
         foreach (glob(APP_ROOT . '/order/assets/fonts/*.woff2') as $font) {
             $shared[] = 'fonts/' . basename($font);
         }

@@ -11,8 +11,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - [x] M4 – Table ordering (2026-11-26, commit ebee6f8; phone + counter browser check and a KOT print still open)
 - [x] M5 – Bulk orders (2026-11-26, commit f05b019; browser check still open)
 - [x] M6 – Owner's phone (PWA + Web Push) (2026-11-26, commit d764b3e; "Done when" needs an Android phone on staging, see DEPLOYMENT §7)
-- [x] M7 – Reports & customers (2026-11-26 – tests, HTTP checks, headless Chrome + A4 PDF check pass; opening a CSV in Excel is left to the developer)
-- [ ] M8 – Public website
+- [x] M7 – Reports & customers (2026-11-26, commit c7f3e90; opening a CSV in Excel is left to the developer)
+- [x] M8 – Public website (2026-11-26 – tests, HTTP checks, headless Chrome + throttled speed check pass; the Lighthouse run itself is left to the developer, see DEPLOYMENT §8)
 - [ ] M9 – Hardening & go-live
 
 ## Waiting on the owner
@@ -89,10 +89,34 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M7:** item-wise = per size (variant) in menu order with today's menu names; amounts are line totals before discount, parcel charge and round-off (the page says so). Staff-wise = who issued the bill (counter biller, pickup, bulk completion) or settled the table. Cancelled bills show the first order's reason and who cancelled. |
 | 2026-11-26 | **M7:** ranges are whole days, both ends included, presets Today / Yesterday / This week (from Monday) / This month / Last month, or custom up to 366 days (bad or too long → today with a message). CSV: UTF-8 BOM, CRLF, amounts as rupees "1600.00", dates Y-m-d, text starting with = + - @ gets a leading apostrophe (names are typed by customers). |
 | 2026-11-26 | **M7:** Customers replaces the M3 "Blocked numbers" page (old URL redirects to the Blocked filter). Search: digits search the mobile ("+91 98765 43210" works), anything else the name (`%` / `_` are literal). The owner can also block a number by hand (audit `customer_block`); unblocking still resets the no-show count. Blocking stops online takeaway orders only, as before. |
+| 2026-11-26 | **M8 (developer):** the Google Map on the location page loads only when tapped: address, Directions button and a map placeholder first; nothing is requested from Google before the tap. The owner pastes Google's "Embed a map" code once in Settings (`google_maps_embed`); only a `https://www.google.com/maps/embed?pb=…` address is kept, and the location page's CSP allows frames from `https://www.google.com` only while one is set. No migration: settings are saved with an upsert, so the row appears on first save (a missing row counts as empty, so other saves don't log a change). |
+| 2026-11-26 | **M8 (developer):** home page best sellers are automatic: top 3 items by sales amount over the last 30 days (same ranking as the M7 top-flavours report), only items on the online menu now; Badam Shake, Mahavir Special, American Dryfruit (SPEC §13) fill empty places. No admin picker. |
+| 2026-11-26 | **M8:** the public website starts no session (`APP_NO_SESSION` in `website/boot.php`): no cookie on every visit, no session file per crawler, photos from `website/media.php` stay cacheable. Language toggle unchanged (cookie), so only the Marathi pages are indexed; titles carry both "महावीर आईस्क्रीम, अमळनेर" and "Ice Cream Amalner" so either search matches. Non-production pages carry `noindex`. |
+| 2026-11-26 | **M8:** pages = `SiteService::PAGES` (home, menu, about, bulk, gallery, location, contact); the bulk page is `website/bulk.php` (ARCHITECTURE had `bulk-orders.php`, which also breaks the snake_case rule). `sitemap.xml` is a static file with production URLs kept right by `SiteFilesTest` instead of an admin "regenerate" button (pages only change with code). ARCHITECTURE updated. |
+| 2026-11-26 | **M8:** hero = the first visible gallery photo (`fetchpriority="high"`, width/height from the file); without photos a brand-colour placeholder with a cone drawing. JSON-LD `IceCreamShop` on home / location / contact: names mr + en, phone, address (postcode from the address, locality Amalner), daily hours from Settings, map link, and geo read from the embed code (`!2d<lng>!3d<lat>`). |
+| 2026-11-26 | **M8:** admin → Website content: About (mr/en, up to 5,000 characters each, blank line = new paragraph, shown as text, never HTML), banner (mr/en, one line up to 200, on/off, shown on every page), gallery (upload through the same 1200 px WebP pipeline, captions mr/en, order, show/hide, delete removes the file). All audit-logged. |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M8 Public website
+
+- Website (`website/`): home (hero, best sellers, order buttons), menu (live), about, bulk, gallery, location (tap-to-load map), contact (call, WhatsApp when set); shared `site_header` / `site_footer` views (nav, banner, SEO tags, JSON-LD), `site.css`, `site.js` (map only), `media.php`, `sitemap.xml`, `robots.txt`, placeholder art (`cone.svg`) and icons. `SiteService` (text, banner, gallery, best sellers, structured data, directions / WhatsApp links); `SettingsService` map-embed field; `ImageService::dimensions()`; bootstrap skips sessions for the website.
+- Admin: `admin/website.php` (banner, About, gallery), nav + dashboard tile, audit labels; Settings has the "Embed a map" field.
+- Checks: 336 PHPUnit tests pass (new: `SiteServiceTest`, `SiteFilesTest`). Scripted HTTP run (order app :8000, website :8003):
+  - all 7 pages complete, with their own title / description, canonical, OG, `noindex` off production, CSP and no cookie; sitemap and robots
+  - JSON-LD; automatic best sellers
+  - **a price changed in the admin item form shows on the website menu at once**; ₹0 / inactive hidden; sold-out badge
+  - banner on → all 7 pages, off → gone; About paragraphs, HTML shown as text
+  - gallery upload through the admin form → gallery (1200×900 size attributes) + home hero; `media.php` cacheable, no cookie, refuses other paths
+  - map code pasted as Google's whole iframe → URL kept, foreign address refused, CSP frame-src only Google; JSON-LD geo
+  - WhatsApp hidden until set; `?lang=en`
+- Headless Chrome: every page at 360 px without sideways scroll, one h1, all images with alt + size, no tiny tap targets; the map makes no Google request before the tap and loads Google's frame after it; no script errors.
+- Speed: Lighthouse itself could not be fetched here (npx download not allowed). A Lighthouse-like run in the installed Chrome (slow 4G, CPU ×4, cold cache) gave LCP 1.0–1.8 s, layout shift 0 and about 150 KB per page. The official Lighthouse scores are DEPLOYMENT §8.
+- Fixed while checking: a setting without a database row counted as "changed" on every save (spurious audit entries). Best-seller placeholders without item photos were large empty boxes on phones and are now a short strip.
+- Test data removed afterwards (test photo deleted through admin, made-up map code cleared).
+- Next: M9 (Hardening & go-live) after the developer confirms M8.
 
 ### 2026-11-26 – M7 Reports & customers
 

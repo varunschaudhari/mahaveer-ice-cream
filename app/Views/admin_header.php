@@ -19,6 +19,7 @@ $nav = [
     'tables' => ['/admin/tables.php', t('admin.nav.tables')],
     'reports' => ['/admin/reports.php', t('admin.nav.reports')],
     'customers' => ['/admin/customers.php', t('admin.nav.customers')],
+    'website' => ['/admin/website.php', t('admin.nav.website')],
     'qr' => ['/admin/qr.php', t('admin.nav.qr')],
 ];
 ?>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Every public page of website/ (SiteFilesTest checks this list against the .php pages). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://mahaveericecream.in/</loc></url>
+  <url><loc>https://mahaveericecream.in/menu.php</loc></url>
+  <url><loc>https://mahaveericecream.in/about.php</loc></url>
+  <url><loc>https://mahaveericecream.in/bulk.php</loc></url>
+  <url><loc>https://mahaveericecream.in/gallery.php</loc></url>
+  <url><loc>https://mahaveericecream.in/location.php</loc></url>
+  <url><loc>https://mahaveericecream.in/contact.php</loc></url>
+</urlset>

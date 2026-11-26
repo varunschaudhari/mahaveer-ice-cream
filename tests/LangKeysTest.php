@@ -46,6 +46,11 @@ final class LangKeysTest extends TestCase
         foreach (\App\Services\CustomerService::FILTERS as $filter) {
             $used['customers.filter.' . $filter][] = 'order/admin/customers.php';
         }
+        foreach (array_keys(\App\Services\SiteService::PAGES) as $page) {
+            foreach (['site.title.', 'site.desc.', 'site.nav.'] as $prefix) {
+                $used[$prefix . $page][] = 'app/Views/site_header.php';
+            }
+        }
 
         foreach (Lang::SUPPORTED as $lang) {
             $missing = array_diff_key($used, Lang::strings($lang));

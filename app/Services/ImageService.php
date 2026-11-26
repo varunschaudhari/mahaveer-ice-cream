@@ -86,6 +86,14 @@ final class ImageService
         }
     }
 
+    /** @return array{0: int, 1: int}|null width and height in pixels (for <img width height>) */
+    public function dimensions(string $name): ?array
+    {
+        $path = $this->path($name);
+        $size = $path === null ? false : @getimagesize($path);
+        return $size === false ? null : [(int) $size[0], (int) $size[1]];
+    }
+
     public function path(string $name): ?string
     {
         $path = $this->dir . '/' . $name;

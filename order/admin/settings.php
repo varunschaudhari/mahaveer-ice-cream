@@ -62,6 +62,7 @@ $groups = [
         'bill_footer_en' => [t('settings.bill_footer_en'), 'text', null],
         'whatsapp_number' => [t('settings.whatsapp_number'), 'phone', t('settings.help.whatsapp_number')],
         'google_maps_url' => [t('settings.google_maps_url'), 'url', t('settings.help.google_maps_url')],
+        'google_maps_embed' => [t('settings.google_maps_embed'), 'text', t('settings.help.google_maps_embed')],
     ]],
 ];
 
