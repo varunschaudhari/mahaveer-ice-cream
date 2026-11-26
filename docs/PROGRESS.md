@@ -6,8 +6,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 
 - [x] M0 – Project foundation (2026-11-26, commit a20f8d0)
 - [x] M1 – Login, roles, admin menu & settings (2026-11-26, commit 93624a9)
-- [x] M2 – Counter billing (pilot-ready) (2026-11-26 – tests + scripted HTTP checks pass; awaiting developer's check at 1024×768 and a real print on the TM-T82)
-- [ ] M3 – Takeaway ordering + online orders panel
+- [x] M2 – Counter billing (pilot-ready) (2026-11-26, commit 0741a7b; real 1024×768 + TM-T82 print check still open)
+- [x] M3 – Takeaway ordering + online orders panel (2026-11-26 – tests + scripted HTTP checks pass; awaiting a phone + counter browser check)
 - [ ] M4 – Table ordering
 - [ ] M5 – Bulk orders
 - [ ] M6 – Owner's phone (PWA + Web Push)
@@ -54,10 +54,29 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M2:** payment UI = three buttons (Cash / UPI / Cash + UPI). UPI saves at once; Cash opens a dialog with Exact / next ₹50 / ₹100 / ₹500 / Other and shows the change; Mixed asks for the cash part. Keeps the cart visible at 1024×768 with 56 px buttons. |
 | 2026-11-26 | **M2:** sound unlock is a non-blocking "tap anywhere" hint, not a full-screen overlay (each tab is its own page, so an overlay would return on every tab). The counter shortcut gets `--autoplay-policy=no-user-gesture-required` so sound works without a tap (SPEC §9, DEPLOYMENT §6 updated). |
 | 2026-11-26 | **M2:** owner PIN approvals check the PIN of any active owner/super-admin; 5 wrong owner PINs per 15 min per address block approvals. |
+| 2026-11-26 | **M3 (developer):** customers may cancel their own order from the status page while it is still Received. Reason saved as "ग्राहकाने रद्द केले / Cancelled by customer"; not a no-show. |
+| 2026-11-26 | **M3 (developer):** "My recent orders" = this phone's own orders (cookie `mahavir_recent` with id + secret key, last 5), not lookup by mobile (SPEC §6.8 updated). |
+| 2026-11-26 | **M3 (developer):** no kitchen ticket for takeaway; staff work from the Online tab card, bill prints at pickup. |
+| 2026-11-26 | **M3:** slot capacity counts every order in the slot except cancelled / no_show (picked-up orders still count). The capacity check runs inside the order transaction after taking the daily token row lock, so two phones cannot both get the 10th place. |
+| 2026-11-26 | **M3:** "Picked up" is allowed from Preparing or Ready (staff may skip Ready). No discount at pickup for online orders. |
+| 2026-11-26 | **M3:** cancel rules in `OrderService::cancel()` – reason always, today only; `received` without the owner, `preparing` / `ready` / `completed` need the owner PIN; `no_show` cannot be cancelled. |
+| 2026-11-26 | **M3:** no-show cutoff = slot start + slot_mins + noshow_after_mins (slot 7:30–7:45 → no-show from 8:15). Unblocking a number resets its no-show count. A small admin "Blocked numbers" page (unblock) exists before the full customers page (M7). |
+| 2026-11-26 | **M3:** new-order alert: the counter polls `api/poll.php` every 5 s on every tab (replaces `ping.php`). It beeps at once and every 10 s while there is a Received order newer than the last acknowledged one; tapping the alert bar acknowledges (stored in the counter's localStorage) and opens the Online tab; accepting the order also stops it. |
+| 2026-11-26 | **M3:** the place-order rate limit (5 per 10 min per IP and per mobile) counts successful orders only. All phones on the shop's own Wi-Fi share one IP – if that becomes a problem, raise the IP limit. |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M3 Takeaway ordering + online orders panel
+
+- Services: `SlotService` (slot times, capacity), `CustomerService` (upsert by mobile, no-shows, block/unblock), `QrService`; `OrderService` gains placeTakeaway, accept, markReady, pickup, cancelByCustomer, markNoShows, activeOnline, newOnlineSummary and the wider cancel rules; `RecentOrders` cookie; helpers `normalize_mobile`, `line_name`, `order_status_label`.
+- Customer: `order/index.php` (menu, cart bar, checkout with slots, recent orders + reorder, closed banner), `order/order.php` status page (10 s polling, self-cancel), `shop.js`, `status.js`, `shop.css`. API: `place_order`, `slots`, `order_status`, `customer_cancel`.
+- Counter: Online tab (`online.php`, `online.js`), `poll.php` every 5 s on all tabs (badge, alert bar, beep loop) replacing `ping.php`; cash dialog moved to the shared frame (`Counter.cash`, `Counter.pay`); Today tab shows takeaway orders and their status. `order_action` gains accept / ready / pickup; cancel PIN optional for Received orders.
+- Admin: A4 takeaway QR poster (`admin/qr.php`, warns when not on production), Blocked numbers (`admin/blocked.php`). Cron: `cron/auto_noshow.php`.
+- Checks: 256 PHPUnit tests pass. Scripted HTTP run: order from the menu page → poll shows it → Accept / Ready / Picked up (bill 1, ₹165, customer page follows each step) → bill prints "टेकअवे"; customer self-cancel (wrong key refused); accepted order needs the owner PIN to cancel; 6th order from one IP in 10 min refused; 11th order in a slot refused and the slot reports full; two uncollected orders → cron marks no-show → number blocked → admin Unblock → can order again; closed banner when past closing; recent orders + reorder on the phone; QR poster renders; no errors in the app log. All JS files pass `node --check`; no post-Chrome-109 features in counter JS/CSS.
+- Not verified here: the pages in a real phone browser and in Chrome 109 on the counter (tap flows, sticky cart bar, dialogs, beep). The local dev DB holds test orders from the scripted run (reset with `migrate.php --fresh` + `create_owner.php`).
+- Next: M4 (table ordering) after the developer confirms M3.
 
 ### 2026-11-26 – M2 Counter billing
 

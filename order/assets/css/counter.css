@@ -194,6 +194,34 @@ a.counter-tab { display: flex; align-items: center; justify-content: center; tex
 .toast-error { background: var(--color-danger); }
 .print-frame { position: absolute; width: 0; height: 0; border: 0; visibility: hidden; }
 
+/* ---------- New-order alert bar ---------- */
+
+.alert-bar {
+  position: fixed; top: 0; right: 0; left: 0; z-index: 180; min-height: 56px; border: 0;
+  background: var(--color-accent); color: var(--color-text); font-size: var(--text-xl); font-weight: 700;
+}
+.alert-bar[hidden] { display: none; }
+
+/* ---------- Online tab ---------- */
+
+.online-empty { padding: var(--space-6); font-size: var(--text-lg); text-align: center; }
+.online-empty[hidden] { display: none; }
+.online-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-3); align-items: start; }
+.order-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: 2px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
+.order-card.status-received { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(255, 179, 0, 0.35); }
+.order-card.status-ready { border-color: var(--color-success); }
+.order-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.order-card__token { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.order-card__status { padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--color-primary-soft); color: var(--color-primary-dark); font-size: var(--text-sm); font-weight: 700; }
+.order-card.status-ready .order-card__status { background: #E8F5E9; color: var(--color-success); }
+.order-card__age { color: var(--color-muted); font-size: var(--text-sm); }
+.order-card__slot { color: var(--color-primary-dark); font-weight: 700; }
+.order-card__mobile { font-weight: 700; }
+.order-card__items { margin: 0; padding-left: 1.2em; list-style: disc; }
+.order-card__note { padding: var(--space-2); border-radius: var(--radius); background: #FFF3CD; }
+.order-card__total { font-size: var(--text-xl); font-weight: 700; text-align: right; }
+.order-card__actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--space-2); }
+
 /* ---------- Stock tab ---------- */
 
 .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-2); }

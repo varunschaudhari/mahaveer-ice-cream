@@ -25,7 +25,10 @@ $paymentLabel = static function (array $order): string {
         default => t('billing.pay_upi'),
     }, $modes));
 };
-$typeLabel = static fn (array $order): string => $order['service_type'] === 'parcel' ? t('billing.parcel') : t('billing.dine_in');
+$typeLabel = static fn (array $order): string => match ($order['order_type']) {
+    'takeaway' => t('print.takeaway') . ' · ' . $order['customer_name'],
+    default => $order['service_type'] === 'parcel' ? t('billing.parcel') : t('billing.dine_in'),
+};
 
 $cancelReasons = [t('cancel.reason.wrong_bill'), t('cancel.reason.customer'), t('cancel.reason.duplicate')];
 $texts = [
@@ -72,12 +75,22 @@ view('counter_frame_start', ['user' => $user, 'active' => 'today']);
         <td><?= e(format_time(substr($order['created_at'], 11, 5))) ?></td>
         <td><?= e($typeLabel($order)) ?></td>
         <td class="num"><?= e(money(paise_from_decimal((string) $order['total']))) ?></td>
-        <td><?= $cancelled ? '<span class="badge badge-danger">' . e(t('today.cancelled_badge')) . '</span>' : e($paymentLabel($order)) ?></td>
+        <td>
+          <?php if ($cancelled): ?>
+          <span class="badge badge-danger"><?= e(t('today.cancelled_badge')) ?></span>
+          <?php elseif ($order['status'] !== 'completed'): ?>
+          <span class="badge badge-muted"><?= e(order_status_label($order['status'])) ?></span>
+          <?php else: ?>
+          <?= e($paymentLabel($order)) ?>
+          <?php endif; ?>
+        </td>
         <td><?= e($order['staff_name'] ?? '') ?></td>
         <td class="row-actions">
+          <?php if ($order['bill_no'] !== null): ?>
           <button type="button" class="counter-btn" data-reprint="<?= (int) $order['id'] ?>"><?= e(t('today.reprint')) ?></button>
-          <?php if (!$cancelled): ?>
-          <button type="button" class="counter-btn btn-danger-c" data-cancel="<?= (int) $order['id'] ?>" data-bill="<?= e($order['bill_no']) ?>"><?= e(t('today.cancel')) ?></button>
+          <?php endif; ?>
+          <?php if (!$cancelled && $order['status'] !== 'no_show'): ?>
+          <button type="button" class="counter-btn btn-danger-c" data-cancel="<?= (int) $order['id'] ?>" data-bill="<?= e($order['bill_no'] ?? '#' . $order['token_no']) ?>"><?= e(t('today.cancel')) ?></button>
           <?php endif; ?>
         </td>
       </tr>

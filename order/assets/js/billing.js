@@ -279,96 +279,20 @@
     }
   }
 
-  var cashDialog = document.querySelector('[data-cash-dialog]');
-  var tendered = 0;
-
-  function tenderOptions(total) {
-    var options = [total];
-    [5000, 10000, 50000].forEach(function (step) {
-      var next = Math.ceil((total + 1) / step) * step;
-      if (options.indexOf(next) === -1) {
-        options.push(next);
-      }
-    });
-    return options.sort(function (a, b) { return a - b; }).slice(0, 4);
-  }
-
-  function renderCash(total) {
-    cashDialog.querySelector('[data-cash-received]').textContent = C.money(tendered);
-    var change = tendered - total;
-    var changeEl = cashDialog.querySelector('[data-cash-change]');
-    changeEl.textContent = change >= 0 ? C.money(change) : '—';
-    cashDialog.querySelector('[data-cash-save]').disabled = change < 0 || busy;
-    cashDialog.querySelectorAll('[data-tender]').forEach(function (button) {
-      button.classList.toggle('is-selected', parseInt(button.getAttribute('data-tender'), 10) === tendered);
-    });
-  }
-
-  function openCash() {
-    var total = totals().total;
-    tendered = total;
-    cashDialog.querySelector('[data-cash-total]').textContent = C.money(total);
-    var grid = cashDialog.querySelector('[data-tender-options]');
-    grid.textContent = '';
-    tenderOptions(total).forEach(function (amount) {
-      var button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'counter-btn';
-      button.setAttribute('data-tender', amount);
-      button.textContent = C.money(amount);
-      grid.appendChild(button);
-    });
-    var other = document.createElement('button');
-    other.type = 'button';
-    other.className = 'counter-btn';
-    other.setAttribute('data-tender-other', '');
-    other.textContent = C.t('other');
-    grid.appendChild(other);
-    renderCash(total);
-    cashDialog.showModal();
-  }
-
-  cashDialog.addEventListener('click', async function (event) {
-    var button = event.target.closest('button');
-    if (!button) {
-      return;
-    }
-    var total = totals().total;
-    if (button.hasAttribute('data-tender')) {
-      tendered = parseInt(button.getAttribute('data-tender'), 10);
-      renderCash(total);
-    } else if (button.hasAttribute('data-tender-other')) {
-      var rupees = await C.numpad({ title: text('received_amount'), prefix: '₹', maxLength: 6, minLength: 1 });
-      if (rupees) {
-        tendered = parseInt(rupees, 10) * 100;
-        renderCash(total);
-      }
-    } else if (button.hasAttribute('data-cash-cancel')) {
-      cashDialog.close();
-    } else if (button.hasAttribute('data-cash-save')) {
-      button.disabled = true;
-      if (await save('cash')) {
-        cashDialog.close();
-      } else {
-        renderCash(total);
-      }
-    }
-  });
-
   cart.querySelector('.pay-buttons').addEventListener('click', async function (event) {
     var button = event.target.closest('[data-pay]');
     if (!button || button.disabled) {
       return;
     }
     var method = button.getAttribute('data-pay');
+    var total = totals().total;
     if (method === 'cash') {
-      openCash();
+      C.cash(total, function () { return save('cash'); });
     } else if (method === 'upi') {
       save('upi');
     } else {
-      var total = totals().total;
       var rupees = await C.numpad({
-        title: text('cash_part', { total: C.money(total) }),
+        title: C.t('cash_part', { total: C.money(total) }),
         prefix: '₹',
         maxLength: 6,
         minLength: 1
@@ -376,12 +300,12 @@
       if (!rupees) {
         return;
       }
-      var cash = parseInt(rupees, 10) * 100;
-      if (cash <= 0 || cash >= total) {
-        C.toast(text('mixed_invalid'), 'error');
+      var cashPart = parseInt(rupees, 10) * 100;
+      if (cashPart <= 0 || cashPart >= total) {
+        C.toast(C.t('mixed_invalid'), 'error');
         return;
       }
-      save('mixed', cash);
+      save('mixed', cashPart);
     }
   });
 

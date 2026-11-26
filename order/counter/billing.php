@@ -25,9 +25,6 @@ $texts = [
     'discount_approved' => t('billing.discount_approved'),
     'remove_discount' => t('billing.remove_discount'),
     'discount' => t('billing.discount'),
-    'cash_part' => t('billing.cash_part', ['total' => '{total}']),
-    'mixed_invalid' => t('payment.error.mixed'),
-    'received_amount' => t('billing.received_amount'),
     'remove' => t('billing.remove'),
 ];
 $discountReasons = [
@@ -103,18 +100,5 @@ view('counter_frame_start', ['user' => $user, 'active' => 'billing', 'withCart' 
     </div>
   </div>
 </aside>
-
-<dialog class="counter-dialog" data-cash-dialog>
-  <h2><?= e(t('billing.cash_title')) ?> <span data-cash-total></span></h2>
-  <div class="tender-grid" data-tender-options></div>
-  <p class="change-line">
-    <span><?= e(t('billing.received')) ?> <strong data-cash-received>—</strong></span>
-    <span><?= e(t('billing.change')) ?> <strong class="change" data-cash-change>—</strong></span>
-  </p>
-  <div class="dialog-actions">
-    <button type="button" class="counter-btn" data-cash-cancel><?= e(t('common.cancel')) ?></button>
-    <button type="button" class="counter-btn btn-go" data-cash-save><?= e(t('billing.save_print')) ?></button>
-  </div>
-</dialog>
 <?php
 view('counter_frame_end', ['scripts' => ['js/billing.js']]);

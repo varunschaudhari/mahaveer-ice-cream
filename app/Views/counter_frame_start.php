@@ -12,6 +12,7 @@ $withCart ??= false;
 $otherLang = lang() === 'mr' ? 'en' : 'mr';
 $tabs = [
     'billing' => ['/counter/billing.php', t('counter.tab.billing')],
+    'online' => ['/counter/online.php', t('counter.tab.online')],
     'stock' => ['/counter/stock.php', t('counter.tab.stock')],
     'today' => ['/counter/today.php', t('counter.tab.today')],
 ];
@@ -23,6 +24,14 @@ $i18n = [
     'cancel' => t('common.cancel'),
     'other' => t('counter.other'),
     'owner_pin' => t('counter.owner_pin'),
+    'new_orders' => t('online.new_orders'),
+    'pay_title' => t('online.pay_title'),
+    'pay_cash' => t('billing.pay_cash'),
+    'pay_upi' => t('billing.pay_upi'),
+    'pay_mixed' => t('billing.pay_mixed'),
+    'cash_part' => t('billing.cash_part', ['total' => '{total}']),
+    'mixed_invalid' => t('payment.error.mixed'),
+    'received_amount' => t('billing.received_amount'),
 ];
 ?>
 <div class="counter-app" data-i18n="<?= e(json_encode($i18n, JSON_UNESCAPED_UNICODE)) ?>">
@@ -42,7 +51,11 @@ $i18n = [
   </header>
   <nav class="counter-tabs">
     <?php foreach ($tabs as $key => [$href, $label]): ?>
-    <a class="counter-tab<?= $key === $active ? ' is-active' : '' ?>" href="<?= e($href) ?>"<?= $key === $active ? ' aria-current="page"' : '' ?>><?= e($label) ?></a>
+    <a class="counter-tab<?= $key === $active ? ' is-active' : '' ?>" href="<?= e($href) ?>"<?= $key === $active ? ' aria-current="page"' : '' ?>>
+      <?= e($label) ?>
+      <?php if ($key === 'online'): ?><span class="badge" data-online-badge hidden></span><?php endif; ?>
+    </a>
     <?php endforeach; ?>
   </nav>
+  <button type="button" class="alert-bar" data-alert-bar hidden></button>
   <main class="counter-main<?= $withCart ? '' : ' no-cart' ?>">

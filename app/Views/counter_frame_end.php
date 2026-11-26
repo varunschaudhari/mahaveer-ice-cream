@@ -39,5 +39,18 @@ $scripts ??= [];
   </div>
 </dialog>
 
+<dialog class="counter-dialog" data-cash-dialog>
+  <h2><?= e(t('billing.cash_title')) ?> <span data-cash-total></span></h2>
+  <div class="tender-grid" data-tender-options></div>
+  <p class="change-line">
+    <span><?= e(t('billing.received')) ?> <strong data-cash-received>—</strong></span>
+    <span><?= e(t('billing.change')) ?> <strong class="change" data-cash-change>—</strong></span>
+  </p>
+  <div class="dialog-actions">
+    <button type="button" class="counter-btn" data-cash-cancel><?= e(t('common.cancel')) ?></button>
+    <button type="button" class="counter-btn btn-go" data-cash-save><?= e(t('billing.save_print')) ?></button>
+  </div>
+</dialog>
+
 <iframe class="print-frame" data-print-frame title="print" tabindex="-1" aria-hidden="true"></iframe>
 <?php view('counter_foot', ['scripts' => array_merge(['js/counter.js'], $scripts)]); ?>

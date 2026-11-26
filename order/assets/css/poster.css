@@ -1,0 +1,20 @@
+/* A4 posters printed from admin (takeaway QR now, table stickers in M4). Black on white. */
+
+@page { size: A4 portrait; margin: 12mm; }
+
+.poster-page { background: #fff; }
+.poster-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
+.poster { display: flex; flex-direction: column; align-items: center; max-width: 180mm; margin: 0 auto; padding: 10mm 0; color: #000; text-align: center; }
+.poster-shop { font-size: 40px; font-weight: 700; line-height: 1.2; }
+.poster-shop-en { font-size: 24px; font-weight: 700; }
+.poster-title { margin-top: 8mm; font-size: 48px; font-weight: 700; }
+.poster-title-en { font-size: 28px; }
+.poster-qr { width: 120mm; height: 120mm; margin: 8mm 0; }
+.poster-steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 4mm 8mm; padding: 0; font-size: 20px; list-style: decimal inside; }
+.poster-url { margin-top: 6mm; font-size: 22px; font-weight: 700; }
+.poster-phone { font-size: 22px; }
+
+@media print {
+  .poster-toolbar { display: none; }
+  .poster { padding: 0; }
+}

@@ -15,6 +15,7 @@ $otherLang = lang() === 'mr' ? 'en' : 'mr';
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<?= csrf_meta() ?>
 <title><?= e($title) ?></title>
 <?php foreach ($css as $file): ?>
 <link rel="stylesheet" href="<?= e(asset($file)) ?>">

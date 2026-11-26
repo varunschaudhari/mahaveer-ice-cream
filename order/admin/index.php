@@ -64,6 +64,8 @@ view('admin_header', ['title' => t('admin.dashboard'), 'user' => $user]);
   <a class="tile" href="/admin/settings.php"><?= e(t('admin.nav.settings')) ?></a>
   <a class="tile" href="/admin/staff.php"><?= e(t('admin.nav.staff')) ?></a>
   <a class="tile" href="/admin/audit.php"><?= e(t('admin.nav.audit')) ?></a>
+  <a class="tile" href="/admin/blocked.php"><?= e(t('admin.nav.blocked')) ?></a>
+  <a class="tile" href="/admin/qr.php"><?= e(t('admin.nav.qr')) ?></a>
   <a class="tile" href="/counter/"><?= e(t('admin.nav.counter')) ?></a>
 </nav>
 <?php

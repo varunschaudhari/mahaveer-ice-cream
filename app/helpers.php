@@ -70,6 +70,20 @@ function lang_field(array $row, string $base): string
     return $value !== '' ? $value : (string) ($row[$base . '_' . $other] ?? '');
 }
 
+/** Order status in words for customers and staff. */
+function order_status_label(string $status): string
+{
+    return match ($status) {
+        'received' => t('status.received'),
+        'preparing' => t('status.preparing'),
+        'ready' => t('status.ready'),
+        'completed' => t('status.completed'),
+        'cancelled' => t('status.cancelled'),
+        'no_show' => t('status.no_show'),
+        default => $status,
+    };
+}
+
 function role_label(string $role): string
 {
     return match ($role) {
@@ -225,6 +239,31 @@ function rupees_input(int $paise): string
 // ---------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------
+
+/**
+ * Indian mobile number as 10 digits starting 6–9 (SPEC §6.3), or null. Accepts spaces, dashes
+ * and a leading +91 / 91 / 0: '+91 98765 43210' → '9876543210'.
+ */
+function normalize_mobile(string $input): ?string
+{
+    $digits = preg_replace('/\D/', '', $input);
+    if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
+        $digits = substr($digits, 2);
+    } elseif (strlen($digits) === 11 && str_starts_with($digits, '0')) {
+        $digits = substr($digits, 1);
+    }
+    return preg_match('/^[6-9]\d{9}$/', $digits) ? $digits : null;
+}
+
+/** Order-line snapshot "मराठी (…) / English (…)" in the current language. */
+function line_name(string $snapshot): string
+{
+    $pos = mb_strpos($snapshot, ' / ');
+    if ($pos === false) {
+        return $snapshot;
+    }
+    return lang() === 'en' ? mb_substr($snapshot, $pos + 3) : mb_substr($snapshot, 0, $pos);
+}
 
 function is_valid_pin(string $pin): bool
 {

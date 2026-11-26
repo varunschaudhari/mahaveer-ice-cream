@@ -69,7 +69,8 @@ URL: `order.mahaveericecream.in/` (takeaway QR on door/counter poster, links fro
 5. Ordering closed outside hours: banner "दुकान बंद आहे, सकाळी 10:00 वाजता उघडेल" / "Shop closed, opens at 10:00 AM".
 6. Blocked mobile numbers (2+ no-shows) see: "Please order at the counter or call the shop."
 7. After placing: order status page `order.php?id=<id>&k=<order_key>` shows token, items, total, pickup slot, live status (polls every 10 s): Received → Confirmed/Preparing → Ready → Picked up / Cancelled.
-8. "My recent orders" on the menu page: remembered by mobile number in a cookie; reorder button refills the cart with currently available items.
+8. "My recent orders" on the menu page: this phone's own last 5 orders, remembered in a cookie that holds each order's id + secret key (never the mobile number, so nobody can see another person's orders by typing their number); reorder button refills the cart with currently available items. Name and mobile are pre-filled from the phone.
+9. The customer can cancel their own order from the status page while it is still Received (not yet accepted); after that they call the shop.
 
 ## 7. Table ordering (customer phone)
 

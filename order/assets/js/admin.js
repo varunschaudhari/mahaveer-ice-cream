@@ -6,6 +6,13 @@
 (function () {
   'use strict';
 
+  // <button data-print-page> (posters): no inline onclick, the CSP forbids it.
+  document.addEventListener('click', function (event) {
+    if (event.target.closest('[data-print-page]')) {
+      window.print();
+    }
+  });
+
   document.addEventListener('submit', function (event) {
     var form = event.target;
     var message = form.getAttribute('data-confirm');

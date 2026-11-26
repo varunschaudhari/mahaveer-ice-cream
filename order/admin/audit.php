@@ -44,6 +44,8 @@ $actionLabel = static fn (string $action): string => match ($action) {
     'bill_reprint' => t('audit.action.bill_reprint'),
     'stock_toggle' => t('audit.action.stock_toggle'),
     'stock_reset' => t('audit.action.stock_reset'),
+    'no_show' => t('audit.action.no_show'),
+    'customer_unblock' => t('audit.action.customer_unblock'),
     default => $action,
 };
 

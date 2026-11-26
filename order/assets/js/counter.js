@@ -84,12 +84,77 @@ window.Counter = (function () {
     return data.data;
   }
 
-  function ping() {
-    api('/api/ping.php').catch(function () { /* banner already shown */ });
+  // ---------- poll (every 5 s): new online orders + connection check ----------
+  // The Online tab asks for the full order list (setPollFull); other tabs only need counts.
+  // Pages listen for the 'counter:poll' event.
+
+  var pollFull = false;
+  var ACK_KEY = 'mahavir.counter.ack';
+  var badge = document.querySelector('[data-online-badge]');
+  var alertBar = document.querySelector('[data-alert-bar]');
+  var latestNew = 0;
+  var lastSeenNew = 0;
+
+  function ackedId() {
+    try {
+      return parseInt(window.localStorage.getItem(ACK_KEY), 10) || 0;
+    } catch (e) {
+      return 0;
+    }
   }
-  window.setInterval(ping, 15000);
+
+  function acknowledge() {
+    try {
+      window.localStorage.setItem(ACK_KEY, String(latestNew));
+    } catch (e) { /* the bar shows again on the next poll */ }
+    if (alertBar) {
+      alertBar.hidden = true;
+    }
+  }
+
+  function updateAlerts(data) {
+    latestNew = data.latest_new_id;
+    if (badge) {
+      badge.textContent = data.new_count;
+      badge.hidden = data.new_count === 0;
+    }
+    var unacknowledged = data.new_count > 0 && data.latest_new_id > ackedId();
+    if (alertBar) {
+      alertBar.hidden = !unacknowledged;
+      alertBar.textContent = t('new_orders', { n: data.new_count });
+    }
+    if (unacknowledged && data.latest_new_id > lastSeenNew) {
+      beep(); // a new order just arrived: beep at once, then every 10 s
+    }
+    lastSeenNew = data.latest_new_id;
+  }
+
+  async function poll() {
+    try {
+      var data = await api('/api/poll.php' + (pollFull ? '?full=1' : ''));
+      updateAlerts(data);
+      document.dispatchEvent(new CustomEvent('counter:poll', { detail: data }));
+    } catch (e) { /* offline banner is already shown by api() */ }
+  }
+
+  window.setInterval(poll, 5000);
+  window.setTimeout(poll, 300);
+  window.setInterval(function () {
+    if (alertBar && !alertBar.hidden) {
+      beep();
+    }
+  }, 10000);
   window.addEventListener('offline', function () { setOnline(false); });
-  window.addEventListener('online', ping);
+  window.addEventListener('online', poll);
+
+  if (alertBar) {
+    alertBar.addEventListener('click', function () {
+      acknowledge();
+      if (window.location.pathname !== '/counter/online.php') {
+        window.location.href = '/counter/online.php';
+      }
+    });
+  }
 
   // ---------- printing ----------
 
@@ -317,15 +382,131 @@ window.Counter = (function () {
     });
   }
 
+  // ---------- cash payment dialog (billing + online pickup) ----------
+
+  var cashDialog = document.querySelector('[data-cash-dialog]');
+  var cashState = null;
+
+  function tenderOptions(total) {
+    var options = [total];
+    [5000, 10000, 50000].forEach(function (step) {
+      var next = Math.ceil((total + 1) / step) * step;
+      if (options.indexOf(next) === -1) {
+        options.push(next);
+      }
+    });
+    return options.sort(function (a, b) { return a - b; }).slice(0, 4);
+  }
+
+  function renderCash() {
+    var change = cashState.tendered - cashState.total;
+    cashDialog.querySelector('[data-cash-received]').textContent = money(cashState.tendered);
+    cashDialog.querySelector('[data-cash-change]').textContent = change >= 0 ? money(change) : '—';
+    cashDialog.querySelector('[data-cash-save]').disabled = change < 0 || cashState.busy;
+    cashDialog.querySelectorAll('[data-tender]').forEach(function (button) {
+      button.classList.toggle('is-selected', parseInt(button.getAttribute('data-tender'), 10) === cashState.tendered);
+    });
+  }
+
+  /**
+   * Cash payment of `total` paise: quick amounts (exact, next ₹50 / ₹100 / ₹500, other) and the
+   * change to give. Save calls onSave(), which resolves true when the bill was saved.
+   */
+  function cash(total, onSave) {
+    cashState = { total: total, tendered: total, onSave: onSave, busy: false };
+    cashDialog.querySelector('[data-cash-total]').textContent = money(total);
+    var grid = cashDialog.querySelector('[data-tender-options]');
+    grid.textContent = '';
+    tenderOptions(total).forEach(function (amount) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'counter-btn';
+      button.setAttribute('data-tender', amount);
+      button.textContent = money(amount);
+      grid.appendChild(button);
+    });
+    var other = document.createElement('button');
+    other.type = 'button';
+    other.className = 'counter-btn';
+    other.setAttribute('data-tender-other', '');
+    other.textContent = t('other');
+    grid.appendChild(other);
+    renderCash();
+    cashDialog.showModal();
+  }
+
+  if (cashDialog) {
+    cashDialog.addEventListener('click', async function (event) {
+      var button = event.target.closest('button');
+      if (!button || !cashState) {
+        return;
+      }
+      if (button.hasAttribute('data-tender')) {
+        cashState.tendered = parseInt(button.getAttribute('data-tender'), 10);
+        renderCash();
+      } else if (button.hasAttribute('data-tender-other')) {
+        var rupees = await numpad({ title: t('received_amount'), prefix: '₹', maxLength: 6, minLength: 1 });
+        if (rupees) {
+          cashState.tendered = parseInt(rupees, 10) * 100;
+          renderCash();
+        }
+      } else if (button.hasAttribute('data-cash-cancel')) {
+        cashDialog.close();
+      } else if (button.hasAttribute('data-cash-save')) {
+        cashState.busy = true;
+        renderCash();
+        var saved = await cashState.onSave();
+        cashState.busy = false;
+        if (saved) {
+          cashDialog.close();
+        } else {
+          renderCash();
+        }
+      }
+    });
+  }
+
+  /**
+   * Asks how `total` is paid and calls onPay(method, cashPaise) → Promise<boolean>.
+   * Used by the Online tab's "Picked up"; billing has its own three buttons.
+   */
+  async function pay(total, onPay) {
+    var labels = [t('pay_cash'), t('pay_upi'), t('pay_mixed')];
+    var choice = await choose({ title: t('pay_title', { total: money(total) }), options: labels });
+    if (choice === labels[0]) {
+      cash(total, function () { return onPay('cash', 0); });
+    } else if (choice === labels[1]) {
+      await onPay('upi', 0);
+    } else if (choice === labels[2]) {
+      var rupees = await numpad({ title: t('cash_part', { total: money(total) }), prefix: '₹', maxLength: 6, minLength: 1 });
+      if (!rupees) {
+        return;
+      }
+      var part = parseInt(rupees, 10) * 100;
+      if (part <= 0 || part >= total) {
+        toast(t('mixed_invalid'), 'error');
+        return;
+      }
+      await onPay('mixed', part);
+    }
+  }
+
   return {
     api: api,
     print: print,
     toast: toast,
     numpad: numpad,
     choose: choose,
+    cash: cash,
+    pay: pay,
     money: money,
     beep: beep,
     t: t,
+    acknowledge: acknowledge,
+    setPollFull: function (value) {
+      pollFull = value;
+      poll();
+    },
     isOnline: function () { return online; }
   };
 })();
