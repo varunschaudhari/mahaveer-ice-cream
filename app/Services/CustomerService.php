@@ -86,10 +86,122 @@ final class CustomerService
     /** @return list<array> blocked numbers, most recent order first */
     public function blocked(): array
     {
-        return $this->db->query(
-            'SELECT id, mobile, name, order_count, no_show_count, last_order_at FROM customers
-             WHERE is_blocked = 1 ORDER BY last_order_at DESC'
-        )->fetchAll();
+        return $this->search('', 'blocked', 1, 1000)['rows'];
+    }
+
+    // ---------------------------------------------------------------
+    // Admin → Customers (M7)
+    // ---------------------------------------------------------------
+
+    public const FILTERS = ['all', 'blocked', 'no_shows'];
+
+    /**
+     * Customers matching a search, most recent order first. $query: digits search the mobile
+     * number ("98765", "+91 98765 43210"), anything else the name. $filter: all | blocked | no_shows.
+     *
+     * @return array{rows: list<array>, total: int}
+     */
+    public function search(string $query, string $filter, int $page = 1, int $perPage = 50): array
+    {
+        [$where, $params] = self::where($query, $filter);
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM customers c WHERE {$where}");
+        $stmt->execute($params);
+        $total = (int) $stmt->fetchColumn();
+
+        $perPage = max(1, $perPage);
+        $offset = (max(1, $page) - 1) * $perPage;
+        $stmt = $this->db->prepare(
+            "SELECT c.id, c.mobile, c.name, c.order_count, c.last_order_at, c.no_show_count, c.is_blocked, c.created_at
+             FROM customers c WHERE {$where}
+             ORDER BY c.last_order_at IS NULL, c.last_order_at DESC, c.id DESC
+             LIMIT {$perPage} OFFSET {$offset}"
+        );
+        $stmt->execute($params);
+        return ['rows' => $stmt->fetchAll(), 'total' => $total];
+    }
+
+    /** @return array{0: string, 1: list<string>} */
+    private static function where(string $query, string $filter): array
+    {
+        $conditions = ['1 = 1'];
+        $params = [];
+        if ($filter === 'blocked') {
+            $conditions[] = 'c.is_blocked = 1';
+        } elseif ($filter === 'no_shows') {
+            $conditions[] = 'c.no_show_count > 0';
+        }
+
+        $query = trim(mb_substr($query, 0, 60));
+        if ($query !== '') {
+            $digits = preg_replace('/\D/', '', $query);
+            if (preg_match('/^[\d\s+()-]+$/', $query) && $digits !== '') {
+                if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
+                    $digits = substr($digits, 2); // "+91 98765 43210"
+                }
+                $conditions[] = 'c.mobile LIKE ?';
+                $params[] = '%' . $digits . '%';
+            } else {
+                $conditions[] = "c.name LIKE ? ESCAPE '!'";
+                $params[] = '%' . strtr($query, ['!' => '!!', '%' => '!%', '_' => '!_']) . '%';
+            }
+        }
+        return [implode(' AND ', $conditions), $params];
+    }
+
+    public function find(int $customerId): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM customers WHERE id = ?');
+        $stmt->execute([$customerId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    /** The customer's latest orders (any type), newest first. @return list<array> */
+    public function orders(int $customerId, int $limit = 20): array
+    {
+        $limit = max(1, $limit);
+        $stmt = $this->db->prepare(
+            "SELECT o.id, o.token_no, o.token_date, o.order_type, o.status, o.total, o.bill_no, o.pickup_at,
+                    o.cancel_reason, o.created_at, t.code AS table_code
+             FROM orders o
+             LEFT JOIN table_sessions s ON s.id = o.table_session_id
+             LEFT JOIN dining_tables t ON t.id = s.table_id
+             WHERE o.customer_id = ? ORDER BY o.id DESC LIMIT {$limit}"
+        );
+        $stmt->execute([$customerId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Customers CSV (developer decision for M7: the owner may export names + mobile numbers).
+     * Every export is written to the audit log.
+     *
+     * @return list<array>
+     */
+    public function export(string $query, string $filter, int $staffId): array
+    {
+        $rows = $this->search($query, $filter, 1, 1000000)['rows'];
+        $this->audit->log($staffId, 'customers_export', 'customer', null, [
+            'count' => count($rows),
+            'filter' => $filter,
+            'search' => mb_substr(trim($query), 0, 60),
+        ]);
+        return $rows;
+    }
+
+    /** Owner blocks a number from online ordering by hand (no-shows block automatically). */
+    public function block(int $customerId, int $staffId): void
+    {
+        $customer = $this->find($customerId);
+        if ($customer === null || (int) $customer['is_blocked'] === 1) {
+            return;
+        }
+        Db::transaction(function () use ($customerId, $customer, $staffId): void {
+            $this->db->prepare('UPDATE customers SET is_blocked = 1 WHERE id = ?')->execute([$customerId]);
+            $this->audit->log($staffId, 'customer_block', 'customer', $customerId, [
+                'name' => $customer['name'],
+                'mobile' => $customer['mobile'],
+            ]);
+        });
     }
 
     /** Owner unblocks a number; its no-show count starts again from zero. */

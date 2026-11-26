@@ -10,8 +10,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - [x] M3 – Takeaway ordering + online orders panel (2026-11-26, commit ed77a87; phone + counter browser check still open)
 - [x] M4 – Table ordering (2026-11-26, commit ebee6f8; phone + counter browser check and a KOT print still open)
 - [x] M5 – Bulk orders (2026-11-26, commit f05b019; browser check still open)
-- [x] M6 – Owner's phone (PWA + Web Push) (2026-11-26 – tests, HTTP checks, headless Chrome check pass; "Done when" needs an Android phone on staging, see DEPLOYMENT §7)
-- [ ] M7 – Reports & customers
+- [x] M6 – Owner's phone (PWA + Web Push) (2026-11-26, commit d764b3e; "Done when" needs an Android phone on staging, see DEPLOYMENT §7)
+- [x] M7 – Reports & customers (2026-11-26 – tests, HTTP checks, headless Chrome + A4 PDF check pass; opening a CSV in Excel is left to the developer)
 - [ ] M8 – Public website
 - [ ] M9 – Hardening & go-live
 
@@ -21,6 +21,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - Logo file, shop/owner/ice cream photos, founding year and family story, Google Maps link
 - WhatsApp number (website button stays hidden until set; WhatsApp messaging itself is phase 2)
 - For bulk orders by weight (M5): which flavours are sold per kg and at what price – the owner adds a "1 किलो / 1 kg" variant to each in admin
+- Menu text check: some seeded Marathi size labels use Devanagari digits (e.g. Shrikhand "५०० ग्रॅम"), while SPEC §15 says Western digits everywhere. Fix in admin → Menu if the owner agrees (seed data, not code).
 
 ## Decisions log
 
@@ -82,10 +83,25 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M6:** pushes go to unmuted phones of active owners / super-admins only. Sent after the reply (`notify_owners_later()`): new takeaway, table, bulk order (not for a repeated order key) and a *new* Request bill (not while the same alert is still open). Push service TTL 15 min, urgency high; 404/410 deletes the phone's subscription. A "Send a test" button sends to this phone only (even when muted). |
 | 2026-11-26 | **M6:** placeholder app icons (pink square, ice-cream cone, drawn with GD) until the logo arrives: `assets/img/icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `badge-72.png` (white silhouette for the Android status bar). `owner/manifest.json` app name is Marathi ("महावीर आईस्क्रीम – मालक"), being the shop's name rather than UI text. |
 | 2026-11-26 | **M6:** `sw.js` caches only the offline page (both languages) and its CSS; if that fails the worker still installs, so notifications never depend on it. The owner page re-sends its subscription on each load and re-subscribes by itself if the server's VAPID key changed. |
+| 2026-11-26 | **M7 (developer):** top flavours are ranked by amount (₹), all sizes of an item together; quantity is shown alongside (Half, Full, 1 kg each count as 1). Print = an A4 page from the browser (can be saved as PDF), no 80 mm range summary. |
+| 2026-11-26 | **M7 (developer):** the owner may download the customer list (names + mobile numbers) as CSV, with the current search / filter; every download is written to the audit log (`customers_export`: count, filter, search). |
+| 2026-11-26 | **M7:** report bases = the day close's: money by payment time; bills, item sales, staff-wise and billed amounts by bill time (orders `completed_at`, table visits `closed_at`), cancelled bills left out and listed separately; order counts by token date (not cancelled / no-show). `daySummary()` is now `summary()` for one day, so a one-day report equals the day close by construction; tests also cross-check the per-day report against it. |
+| 2026-11-26 | **M7:** item-wise = per size (variant) in menu order with today's menu names; amounts are line totals before discount, parcel charge and round-off (the page says so). Staff-wise = who issued the bill (counter biller, pickup, bulk completion) or settled the table. Cancelled bills show the first order's reason and who cancelled. |
+| 2026-11-26 | **M7:** ranges are whole days, both ends included, presets Today / Yesterday / This week (from Monday) / This month / Last month, or custom up to 366 days (bad or too long → today with a message). CSV: UTF-8 BOM, CRLF, amounts as rupees "1600.00", dates Y-m-d, text starting with = + - @ gets a leading apostrophe (names are typed by customers). |
+| 2026-11-26 | **M7:** Customers replaces the M3 "Blocked numbers" page (old URL redirects to the Blocked filter). Search: digits search the mobile ("+91 98765 43210" works), anything else the name (`%` / `_` are literal). The owner can also block a number by hand (audit `customer_block`); unblocking still resets the no-show count. Blocking stops online takeaway orders only, as before. |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M7 Reports & customers
+
+- Reports: `ReportService` range reports (summary, payment split, sales by day incl. empty days, order types, item-wise, top flavours, staff-wise, cancelled bills; `range()` for presets / custom dates) with `daySummary()` built on them; `ReportExport` (CSV rows per report); `App\Csv`. Page `admin/reports.php`: presets + custom range, summary cards, one section per report with its own CSV link, Print (A4 print styles in `admin.css`: menus / forms / buttons hidden, column names repeat per page, totals printed once).
+- Customers: `admin/customers.php` (search, filter all / blocked / with no-shows, 50 per page, block / unblock with confirm, detail with the latest 20 orders, CSV download), `CustomerService` search / find / orders / block / export. `admin/blocked.php` now redirects (301) to the Blocked filter. Admin nav + dashboard: Reports and Customers; audit page labels the two new actions.
+- Checks: 323 PHPUnit tests pass (new: `ReportRangeTest` with a 3-day fixture through the real services, `CsvTest`, `CustomerAdminTest`). Scripted HTTP run: staff refused; today's report = counter Today tab = printed day close; all 7 CSVs (BOM, `text/csv`, file names, Marathi names, column counts, month CSV totals agree with each other and with today); presets, bad / too-long / junk ranges; customers search (+91 number, part of a name, `%` literal), block → blocked filter → unblock (foreign "back" ignored), no-CSRF refused, audit entries, detail rows = DB, customers CSV = all rows + audit entry, staff cannot export, old URL redirects. Headless Chrome: no sideways scroll at 360 px on reports / customers / customer detail, print view hides menus and shows the print header, `printToPDF` gives A4 pages, no script errors. Crawl: all pages complete.
+- Fixed while checking: on paper, whole report sections refused to split (large gaps), and Chrome repeated each table's total row at the foot of every page (a "total" under rows that did not add up to it). Long tables now split, headings stay with their table, totals print once.
+- Not verified here: opening the CSVs in Excel (bytes checked: UTF-8 with BOM, CRLF, quoting).
+- Next: M8 (Public website) after the developer confirms M7.
 
 ### 2026-11-26 – M6 Owner's phone (PWA + Web Push)
 

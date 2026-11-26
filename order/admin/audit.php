@@ -46,6 +46,8 @@ $actionLabel = static fn (string $action): string => match ($action) {
     'stock_reset' => t('audit.action.stock_reset'),
     'no_show' => t('audit.action.no_show'),
     'customer_unblock' => t('audit.action.customer_unblock'),
+    'customer_block' => t('audit.action.customer_block'),
+    'customers_export' => t('audit.action.customers_export'),
     'table_move' => t('audit.action.table_move'),
     'table_qr_regenerate' => t('audit.action.table_qr_regenerate'),
     'table_activate' => t('audit.action.table_activate'),
@@ -79,6 +81,12 @@ $describe = static function (array $row) use ($show): array {
         if (isset($details[$key]) && is_scalar($details[$key])) {
             $lines[] = (string) $details[$key];
         }
+    }
+    if (isset($details['mobile']) && is_scalar($details['mobile'])) {
+        $lines[] = (string) $details['mobile'];
+    }
+    if (isset($details['count'])) {
+        $lines[] = t('customers.count', ['n' => (int) $details['count']]);
     }
     if (isset($details['bill_no'])) {
         $lines[] = t('print.bill_no') . ' ' . $details['bill_no'];

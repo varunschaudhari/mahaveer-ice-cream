@@ -18,7 +18,7 @@ final class LangKeysTest extends TestCase
 {
     private const PREFIXES = 'auth|admin|counter|menu|common|staff|settings|audit|role|image|error|shop|lang|time|order|site'
         . '|billing|cart|payment|discount|cancel|today|stock|print'
-        . '|online|checkout|status|qr|blocked|table|tables|bulk|push|owner';
+        . '|online|checkout|status|qr|blocked|table|tables|bulk|push|owner|report|customers';
 
     public function testEveryKeyUsedInCodeExistsInBothLanguages(): void
     {
@@ -36,6 +36,16 @@ final class LangKeysTest extends TestCase
             }
         }
         self::assertGreaterThan(100, count($used), 'scanner found too few keys – is the pattern broken?');
+
+        // Keys built in code ('report.preset.' . $preset) are invisible to the scanner: list them.
+        foreach (\App\Services\ReportService::PRESETS as $preset) {
+            if ($preset !== 'custom') {
+                $used['report.preset.' . $preset][] = 'order/admin/reports.php';
+            }
+        }
+        foreach (\App\Services\CustomerService::FILTERS as $filter) {
+            $used['customers.filter.' . $filter][] = 'order/admin/customers.php';
+        }
 
         foreach (Lang::SUPPORTED as $lang) {
             $missing = array_diff_key($used, Lang::strings($lang));

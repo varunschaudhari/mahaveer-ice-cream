@@ -17,7 +17,8 @@ $nav = [
     'audit' => ['/admin/audit.php', t('admin.nav.audit')],
     'bulk' => ['/admin/bulk.php', t('admin.nav.bulk')],
     'tables' => ['/admin/tables.php', t('admin.nav.tables')],
-    'blocked' => ['/admin/blocked.php', t('admin.nav.blocked')],
+    'reports' => ['/admin/reports.php', t('admin.nav.reports')],
+    'customers' => ['/admin/customers.php', t('admin.nav.customers')],
     'qr' => ['/admin/qr.php', t('admin.nav.qr')],
 ];
 ?>

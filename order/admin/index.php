@@ -67,6 +67,7 @@ view('admin_header', ['title' => t('admin.dashboard'), 'user' => $user]);
 <p class="muted"><?= e(role_label($user['role'])) ?></p>
 <nav class="tiles">
   <a class="tile" href="/owner/"><?= e(t('admin.nav.owner')) ?></a>
+  <a class="tile" href="/admin/reports.php"><?= e(t('admin.nav.reports')) ?></a>
   <a class="tile" href="/admin/menu.php"><?= e(t('admin.nav.menu')) ?></a>
   <a class="tile" href="/admin/settings.php"><?= e(t('admin.nav.settings')) ?></a>
   <a class="tile" href="/admin/staff.php"><?= e(t('admin.nav.staff')) ?></a>
@@ -77,7 +78,7 @@ view('admin_header', ['title' => t('admin.dashboard'), 'user' => $user]);
     <?php if ($pendingBulk > 0): ?>&nbsp;<span class="badge badge-danger"><?= $pendingBulk ?></span><?php endif; ?>
   </a>
   <a class="tile" href="/admin/tables.php"><?= e(t('admin.nav.tables')) ?></a>
-  <a class="tile" href="/admin/blocked.php"><?= e(t('admin.nav.blocked')) ?></a>
+  <a class="tile" href="/admin/customers.php"><?= e(t('admin.nav.customers')) ?></a>
   <a class="tile" href="/admin/qr.php"><?= e(t('admin.nav.qr')) ?></a>
   <a class="tile" href="/counter/"><?= e(t('admin.nav.counter')) ?></a>
 </nav>

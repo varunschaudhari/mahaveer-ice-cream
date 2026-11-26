@@ -118,6 +118,7 @@ Notes:
 - [ ] Power options: never sleep, screen off after 30 min at most.
 - [ ] Internet backup: keep a phone with mobile hotspot (or a 4G dongle) for when the shop internet drops. Connect the counter PC to it once and save the password, so staff only have to switch the hotspot on. If the PC has no Wi-Fi, use a USB Wi-Fi adapter or the phone's USB tethering. Test: switch off the shop router, switch on the hotspot, print a bill.
 - [ ] Test: bill with Marathi item names prints clearly; KOT prints; beep is audible over shop noise.
+- [ ] Reports (admin → Reports → Print) are A4 pages. The counter's Chrome prints silently to the receipt printer (`--kiosk-printing`), so print or save reports as PDF from the owner's phone or another PC, not from the counter shortcut.
 
 ## 7. Owner's phone (Android)
 

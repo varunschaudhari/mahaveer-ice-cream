@@ -22,6 +22,7 @@
 │   ├── RateLimiter.php    counts events per key in `rate_limits` (failed logins per IP, …)
 │   ├── RecentOrders.php   "my recent orders" cookie (order id + secret key, never the mobile)
 │   ├── ValidationException.php  field → lang key errors thrown by services, shown by pages
+│   ├── Csv.php            CSV downloads for Excel (UTF-8 BOM, CRLF, formula-injection guard)
 │   ├── Views/             shared layout partials (header, footer, admin/counter frames, receipt templates)
 │   └── Services/
 │       ├── MenuService.php        public menu + admin CRUD (active-item ₹0 guard)
@@ -37,9 +38,11 @@
 │       ├── TableService.php       sessions, move order, settle
 │       ├── PaymentService.php
 │       ├── BulkService.php
-│       ├── CustomerService.php    upsert by mobile, no-shows, block
+│       ├── CustomerService.php    upsert by mobile, no-shows, block / unblock, admin search, export
 │       ├── PushService.php        Web Push via minishlink/web-push
-│       ├── ReportService.php
+│       ├── ReportService.php      day close + date-range reports (same bases, so a day's report = its close)
+│       ├── ReportExport.php       each report as CSV rows in the page language
+│       ├── OrderCard.php          active order → JSON card (counter Online tab, owner's phone)
 │       ├── QrService.php          QR SVG via chillerlan/php-qrcode
 │       └── AuditService.php
 ├── order/                 web root of order.mahaveericecream.in
