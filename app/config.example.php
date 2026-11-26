@@ -15,7 +15,8 @@ return [
     'DB_USER' => 'root',
     'DB_PASS' => '',
 
-    // Web Push (M6). Generate once, keep the same keys forever or existing subscriptions break.
+    // Web Push (M6): php database/vapid_keys.php, one pair per server. Keep the same keys forever
+    // or subscribed phones stop getting notifications. Subject: a contact URL, e.g. the website.
     'VAPID_PUBLIC'  => '',
     'VAPID_PRIVATE' => '',
     'VAPID_SUBJECT' => 'mailto:owner@example.com',

@@ -2,12 +2,20 @@
 
 declare(strict_types=1);
 
-// Counter poll, every 5 s on every counter tab: new online orders (badge + beep) and the
-// connection check for the "No internet" banner. ?full=1 (Online tab) adds the active orders.
-// 401 when the login has ended. Does not count as activity (idle counter still logs out).
+// Counter poll, every 5 s on every counter tab: new online orders and table alerts (badge + beep),
+// table orders accepted elsewhere whose kitchen ticket this counter still has to print, and the
+// connection check for the "No internet" banner. ?full=1 (Online tab) adds the active orders,
+// ?view=tables the table tiles. 401 when the login has ended. Does not count as activity.
+// ?view=owner (owner's phone, every 10 s, owner / super-admin only): today's sales, active
+// orders, bulk orders and open table alerts.
 
 use App\Auth;
+use App\Services\BulkService;
+use App\Services\OrderCard;
 use App\Services\OrderService;
+use App\Services\ReportService;
+use App\Services\TableService;
+use App\Settings;
 
 require __DIR__ . '/../boot.php';
 
@@ -19,7 +27,11 @@ if ($user === null) {
 
 $today = now();
 $orders = new OrderService();
-$data = $orders->newOnlineSummary($today) + ['time' => $today->format('H:i')];
+$data = $orders->newOnlineSummary($today) + [
+    'time' => $today->format('H:i'),
+    // The counter prints these KOTs unless it already did (e.g. the owner accepted on his phone).
+    'kot_pending' => $orders->recentlyAcceptedTableOrders($today),
+];
 
 if (($_GET['view'] ?? '') === 'tables') {
     $data['tables'] = array_map(static fn (array $table): array => [
@@ -29,35 +41,33 @@ if (($_GET['view'] ?? '') === 'tables') {
         'status' => $table['status'],
         'total_paise' => $table['total_paise'],
         'minutes' => $table['minutes'],
-        'unsettled' => $table['status'] !== 'free' && $table['minutes'] >= App\Settings::int('table_unsettled_mins', 120),
+        'unsettled' => $table['status'] !== 'free' && $table['minutes'] >= Settings::int('table_unsettled_mins', 120),
         'unserved' => $table['unserved'],
         'alerts' => array_map(static fn (array $a): string => $a['type'], $table['alerts']),
-    ], (new App\Services\TableService())->overview($today));
+    ], (new TableService())->overview($today));
+}
+
+if (($_GET['view'] ?? '') === 'owner') {
+    if (!Auth::isAdmin($user)) {
+        json_error('auth.required', 401); // a counter PIN login is not enough: back to the password login
+    }
+    $sales = (new ReportService())->daySummary($today);
+    $data['owner'] = [
+        'sales_paise' => $sales['total'],
+        'bill_count' => $sales['bill_count'],
+        'orders' => array_map(static fn (array $order): array => OrderCard::make($order, $today), $orders->activeOnline($today)),
+        'bulk' => array_map(static fn (array $order): array => OrderCard::bulk($order), (new BulkService())->open()),
+        'alerts' => array_map(static fn (array $alert): array => [
+            'id' => (int) $alert['id'],
+            'table' => table_number($alert['table_code']),
+            'label' => $alert['type'] === 'request_bill' ? t('tables.alert.request_bill') : t('tables.alert.call_staff'),
+            'time' => format_time(substr($alert['created_at'], 11, 5)),
+        ], (new TableService())->openAlerts()),
+    ];
 }
 
 if (!empty($_GET['full'])) {
-    $slotMins = max(5, App\Settings::int('slot_mins', 15));
-    $data['orders'] = array_map(static function (array $order) use ($today, $slotMins): array {
-        $pickup = $order['pickup_at'] === null ? null : new DateTimeImmutable($order['pickup_at']);
-        return [
-            'id' => (int) $order['id'],
-            'type' => $order['order_type'],
-            'table' => $order['table_code'] === null ? null : table_number($order['table_code']),
-            'token' => (int) $order['token_no'],
-            'status' => $order['status'],
-            'status_label' => order_status_label($order['status']),
-            'slot' => $pickup === null ? '' : format_time($pickup->format('H:i')) . ' – ' . format_time($pickup->modify("+{$slotMins} minutes")->format('H:i')),
-            'customer' => (string) $order['customer_name'],
-            'mobile' => (string) $order['customer_mobile'],
-            'items' => array_map(static fn (array $line): array => [
-                'name' => line_name($line['item_name']),
-                'qty' => format_qty((string) $line['qty']),
-            ], $order['items']),
-            'total_paise' => paise_from_decimal((string) $order['total']),
-            'note' => (string) ($order['note'] ?? ''),
-            'age_mins' => max(0, intdiv($today->getTimestamp() - strtotime($order['created_at']), 60)),
-        ];
-    }, $orders->activeOnline($today));
+    $data['orders'] = array_map(static fn (array $order): array => OrderCard::make($order, $today), $orders->activeOnline($today));
 }
 
 json_response(['ok' => true, 'data' => $data]);

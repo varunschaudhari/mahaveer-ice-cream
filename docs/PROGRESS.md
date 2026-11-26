@@ -9,8 +9,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - [x] M2 – Counter billing (pilot-ready) (2026-11-26, commit 0741a7b; real 1024×768 + TM-T82 print check still open)
 - [x] M3 – Takeaway ordering + online orders panel (2026-11-26, commit ed77a87; phone + counter browser check still open)
 - [x] M4 – Table ordering (2026-11-26, commit ebee6f8; phone + counter browser check and a KOT print still open)
-- [x] M5 – Bulk orders (2026-11-26 – tests + scripted HTTP checks + page crawl pass; awaiting a browser check)
-- [ ] M6 – Owner's phone (PWA + Web Push)
+- [x] M5 – Bulk orders (2026-11-26, commit f05b019; browser check still open)
+- [x] M6 – Owner's phone (PWA + Web Push) (2026-11-26 – tests, HTTP checks, headless Chrome check pass; "Done when" needs an Android phone on staging, see DEPLOYMENT §7)
 - [ ] M7 – Reports & customers
 - [ ] M8 – Public website
 - [ ] M9 – Hardening & go-live
@@ -75,10 +75,27 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M5:** owner (admin): edit lines (qty, price per line; a blank price on a new line = menu price), approve with an advance (₹0 … total) → `preparing`, reject / cancel with a reason that the customer sees; an approved order's payments become `refunded` on cancel. A new total may not drop below what was already paid. Audit: bulk_approve / bulk_reject / bulk_update / cancel_order. |
 | 2026-11-26 | **M5:** staff (counter Bulk tab): record payments before pickup (cash / UPI, ≤ balance) → `orders.amount_paid`; Ready; Picked up collects the balance (cash / UPI / mixed, nothing if fully prepaid) → bill number → bill shows event date, "आगाऊ भरले" and "आत्ता भरले". Customer self-cancel works while the request is still pending. |
 | 2026-11-26 | **M5:** the customer status page (`order.php`) serves takeaway and bulk; label / help / cancel come from `customer_status()` so the page and its 10 s refresh agree (e.g. the advance due after approval). |
+| 2026-11-26 | **M6 (developer):** a table order accepted on the owner's phone still prints its KOT at the counter automatically. The counter's 5 s poll gets `kot_pending` (table orders accepted in the last 10 min) and prints each once; printed ids are kept in the counter's localStorage, so Accept at the counter does not print twice. The counter must be open for this. |
+| 2026-11-26 | **M6 (developer):** notifications use the language the owner page uses on that phone. Each push carries Marathi + English; the service worker picks one from Cache Storage (written by the owner page on every load, Marathi if missing). |
+| 2026-11-26 | **M6:** the owner page needs the owner's password login (as admin); `/admin/?next=/owner/` returns there after login (`/owner/` is the only allowed `next`). Actions on the phone need no PIN: the password login is the owner's approval (cancel of an accepted order is logged with the owner as approver). |
+| 2026-11-26 | **M6:** on the phone the owner can Accept takeaway / table orders, Cancel any open order with a reason (preset list or own text), Approve a bulk request with an advance (rupees, up to 2 decimals) and Reject / cancel bulk orders. Ready / Served / Picked up / payments stay on the counter. |
+| 2026-11-26 | **M6:** pushes go to unmuted phones of active owners / super-admins only. Sent after the reply (`notify_owners_later()`): new takeaway, table, bulk order (not for a repeated order key) and a *new* Request bill (not while the same alert is still open). Push service TTL 15 min, urgency high; 404/410 deletes the phone's subscription. A "Send a test" button sends to this phone only (even when muted). |
+| 2026-11-26 | **M6:** placeholder app icons (pink square, ice-cream cone, drawn with GD) until the logo arrives: `assets/img/icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `badge-72.png` (white silhouette for the Android status bar). `owner/manifest.json` app name is Marathi ("महावीर आईस्क्रीम – मालक"), being the shop's name rather than UI text. |
+| 2026-11-26 | **M6:** `sw.js` caches only the offline page (both languages) and its CSS; if that fails the worker still installs, so notifications never depend on it. The owner page re-sends its subscription on each load and re-subscribes by itself if the server's VAPID key changed. |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M6 Owner's phone (PWA + Web Push)
+
+- Push: `PushService` (subscribe / unsubscribe / mute / status, `notifyOwners`, `notifyDevice` for the test button, message builders `forOrder` / `forBillRequest` / `forTest` in both languages; never throws), `database/vapid_keys.php`, helpers `after_response()` / `notify_owners_later()`. Wired into `place_order`, `place_table_order`, `bulk_request` and `table_alert` (Request bill; `TableService::raiseAlert` now returns whether a new alert was added).
+- Owner page `order/owner/` (`index.php`, `manifest.json`, `offline.php`), `order/sw.js`, `assets/js/owner.js`, `assets/css/owner.css`, placeholder icons. APIs: `owner_action.php`, `push_subscribe.php`, `poll.php?view=owner`; `OrderCard::bulk`. Admin dashboard tile "Owner phone page"; admin login supports `?next=/owner/`; `Auth::requireAdmin($loginUrl)`.
+- Counter: print queue (one print at a time) + `Counter.printKot()` for `kot_pending` from the poll; Online and Tables tabs use it on Accept.
+- Checks: 301 PHPUnit tests pass (new: `PushServiceTest`, `OwnerPhoneTest`). Scripted HTTP run against a stand-in push service on 127.0.0.1:8002, with the "phone" decrypting each push (RFC 8291) using its own keys: login + `next`, staff refused (401), manifest / icons / sw.js / offline page, subscribe (bad / no-CSRF refused), test push decrypts to "चाचणी सूचना", takeaway / table / bulk / Request bill pushes with the right Marathi + English text and link, mute stops pushes and unmute restarts, owner Accept → counter `kot_pending`, owner cancels an accepted order without PIN, bulk approve with ₹500 advance (too high refused) and cancel, 410 phone removed while an unreachable one is kept and the order still saves. Headless Chrome (DevTools protocol): login → owner page, cards render, Accept, Cancel and Approve dialogs (bad input refused), service worker active, a delivered push shows a Marathi notification and an English one after switching the page language, a foreign link in a push opens `/owner/`, "No internet" page when the server is down and back to the page after, no layout overflow at 360 px, no script errors. Page crawl: 39 pages complete.
+- Found and fixed while checking: in a Chrome profile whose Cache Storage fails, the service worker never installed and the notification panel stayed on "Loading…" → the offline-page cache is now optional and the page gives up waiting for the worker after 15 s.
+- Not verified here (needs an Android phone + HTTPS on staging): notification with the screen locked, tapping it, "Add to Home screen". Checklist in DEPLOYMENT §7. Before staging: generate staging VAPID keys there (`php database/vapid_keys.php`), never copy the local ones.
+- Next: M7 (Reports & customers) after the developer confirms M6.
 
 ### 2026-11-26 – M5 Bulk orders
 

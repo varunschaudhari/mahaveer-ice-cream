@@ -348,6 +348,24 @@ final class OrderService
         ];
     }
 
+    /**
+     * Ids of table orders accepted in the last 10 minutes. The counter prints their kitchen ticket
+     * unless it already has (decision 2026-11-26: accepting on the owner's phone still prints a
+     * KOT at the counter). The counter remembers what it printed, so nothing prints twice.
+     *
+     * @return list<int>
+     */
+    public function recentlyAcceptedTableOrders(DateTimeImmutable $now): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id FROM orders
+             WHERE order_type = 'table' AND accepted_at >= ? AND status IN ('preparing', 'served')
+             ORDER BY id"
+        );
+        $stmt->execute([$now->modify('-10 minutes')->format('Y-m-d H:i:s')]);
+        return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
+
     /** The order only if $key is its secret order_key (customer status page). */
     public function findForCustomer(int $id, string $key): ?array
     {

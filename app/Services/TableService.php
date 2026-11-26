@@ -219,8 +219,11 @@ final class TableService
     // Customer buttons: Call staff / Request bill (SPEC §7.5)
     // ---------------------------------------------------------------
 
-    /** Raises an alert for the counter. One per 30 s per table; Request bill needs an open visit. */
-    public function raiseAlert(int $tableId, string $type, DateTimeImmutable $now): void
+    /**
+     * Raises an alert for the counter. One per 30 s per table; Request bill needs an open visit.
+     * @return bool true when a new alert was added (false: the same alert is still open)
+     */
+    public function raiseAlert(int $tableId, string $type, DateTimeImmutable $now): bool
     {
         if (!in_array($type, self::ALERT_TYPES, true)) {
             throw ValidationException::one('_', 'error.generic');
@@ -233,11 +236,12 @@ final class TableService
             throw ValidationException::one('_', 'table.error.no_bill');
         }
 
-        Db::transaction(function () use ($tableId, $type, $session, $now): void {
+        return Db::transaction(function () use ($tableId, $type, $session, $now): bool {
             // A second tap of the same button while it is still open does not add another alert.
             $stmt = $this->db->prepare("SELECT id FROM table_alerts WHERE table_id = ? AND type = ? AND status = 'open'");
             $stmt->execute([$tableId, $type]);
-            if ($stmt->fetchColumn() === false) {
+            $added = $stmt->fetchColumn() === false;
+            if ($added) {
                 $this->db->prepare(
                     "INSERT INTO table_alerts (table_id, session_id, type, status, created_at) VALUES (?, ?, ?, 'open', ?)"
                 )->execute([$tableId, $session['id'] ?? null, $type, $now->format('Y-m-d H:i:s')]);
@@ -245,6 +249,7 @@ final class TableService
             if ($type === 'request_bill') {
                 $this->db->prepare("UPDATE table_sessions SET status = 'bill_requested' WHERE id = ?")->execute([$session['id']]);
             }
+            return $added;
         });
     }
 

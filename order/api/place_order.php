@@ -10,6 +10,7 @@ use App\RateLimiter;
 use App\RecentOrders;
 use App\Services\MenuService;
 use App\Services\OrderService;
+use App\Services\PushService;
 use App\ValidationException;
 
 require __DIR__ . '/../boot.php';
@@ -54,6 +55,7 @@ if (!$order['duplicate']) {
     foreach ($limitKeys as $limitKey) {
         RateLimiter::hit($limitKey);
     }
+    notify_owners_later(PushService::forOrder($order)); // after the reply; the order is already saved
 }
 RecentOrders::remember((int) $order['id'], $order['order_key']);
 

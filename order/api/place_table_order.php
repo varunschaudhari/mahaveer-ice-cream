@@ -9,6 +9,7 @@ use App\Csrf;
 use App\RateLimiter;
 use App\Services\MenuService;
 use App\Services\OrderService;
+use App\Services\PushService;
 use App\ValidationException;
 
 require __DIR__ . '/../boot.php';
@@ -45,6 +46,7 @@ try {
 
 if (!$order['duplicate']) {
     RateLimiter::hit($limitKey);
+    notify_owners_later(PushService::forOrder($order)); // after the reply; the order is already saved
 }
 json_response(['ok' => true, 'data' => [
     'id' => (int) $order['id'],

@@ -163,6 +163,7 @@ window.Counter = (function () {
     try {
       var data = await api('/api/poll.php' + (params.length ? '?' + params.join('&') : ''));
       updateAlerts(data);
+      (data.kot_pending || []).forEach(printKot);
       document.dispatchEvent(new CustomEvent('counter:poll', { detail: data }));
     } catch (e) { /* offline banner is already shown by api() */ }
   }
@@ -190,15 +191,16 @@ window.Counter = (function () {
   // ---------- printing ----------
 
   var frame = document.querySelector('[data-print-frame]');
+  var printQueue = Promise.resolve();
 
-  function print(url) {
+  function printNow(url) {
     return new Promise(function (resolve) {
       frame.onload = function () {
         var doc = frame.contentDocument;
         var go = function () {
           frame.contentWindow.focus();
           frame.contentWindow.print();
-          resolve();
+          window.setTimeout(resolve, 500); // let the job reach the spooler before the frame is reused
         };
         if (doc && doc.fonts && doc.fonts.ready) {
           doc.fonts.ready.then(go);
@@ -208,6 +210,35 @@ window.Counter = (function () {
       };
       frame.src = url;
     });
+  }
+
+  /** Prints a page silently; jobs wait for each other because they share one hidden frame. */
+  function print(url) {
+    printQueue = printQueue.then(function () { return printNow(url); });
+    return printQueue;
+  }
+
+  // ---------- kitchen tickets (table orders) ----------
+  // A KOT prints once, whichever comes first: Accept on this counter, or the poll noticing an
+  // order accepted on the owner's phone. Printed ids are kept in this counter's localStorage.
+
+  var KOT_KEY = 'mahavir.counter.kots';
+
+  function printKot(orderId) {
+    var printed;
+    try {
+      printed = JSON.parse(window.localStorage.getItem(KOT_KEY)) || [];
+    } catch (e) {
+      printed = [];
+    }
+    if (printed.indexOf(orderId) !== -1) {
+      return;
+    }
+    printed.push(orderId);
+    try {
+      window.localStorage.setItem(KOT_KEY, JSON.stringify(printed.slice(-200)));
+    } catch (e) { /* worst case the poll prints it again */ }
+    print('/counter/print.php?type=kot&id=' + orderId);
   }
 
   // ---------- toast ----------
@@ -534,6 +565,7 @@ window.Counter = (function () {
     beep: beep,
     t: t,
     acknowledge: acknowledge,
+    printKot: printKot,
     setPollFull: function (value) {
       pollFull = value;
       poll();

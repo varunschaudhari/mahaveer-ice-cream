@@ -431,6 +431,36 @@ function json_response(array $payload, int $status = 200): never
     exit;
 }
 
+/**
+ * Runs $task after the reply has been sent where the host allows it (PHP-FPM / LiteSpeed), so a
+ * slow push service never delays the customer's page; elsewhere it runs at the end of the
+ * request. Errors are logged, never shown.
+ */
+function after_response(callable $task): void
+{
+    register_shutdown_function(static function () use ($task): void {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } elseif (function_exists('litespeed_finish_request')) {
+            litespeed_finish_request();
+        }
+        try {
+            $task();
+        } catch (Throwable $e) {
+            app_log('error', 'After-response task failed: ' . $e->getMessage());
+        }
+    });
+}
+
+/** Notifies the owner's phones after the reply is sent (ARCHITECTURE §9: after commit, never fatal). */
+function notify_owners_later(array $message): void
+{
+    after_response(static fn () => (new App\Services\PushService())->notifyOwners($message));
+}
+
 /** Decoded JSON request body (API POSTs); [] when missing or invalid. */
 function json_body(): array
 {

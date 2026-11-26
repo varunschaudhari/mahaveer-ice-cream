@@ -49,7 +49,7 @@
 │   ├── t.php              table menu
 │   ├── bulk.php           bulk order form
 │   ├── counter/           index.php (PIN login), billing.php, online.php, tables.php, stock.php, today.php, print.php
-│   ├── owner/             index.php (live orders), manifest.json, push subscription page
+│   ├── owner/             index.php (live orders, sales, notifications + mute), manifest.json, offline.php
 │   ├── admin/             menu, items, settings, tables, qr, bulk, staff, customers, reports, content, audit
 │   ├── api/               JSON endpoints (see §6)
 │   ├── assets/            css/, js/, fonts/, img/
@@ -145,11 +145,12 @@ All responses `{ "ok": true, "data": … }` or `{ "ok": false, "error": "message
 | `table_status.php?t=` | public (table QR code) | The table's open visit: orders + statuses, running total |
 | `table_detail.php?id=` | staff | One table's visit for the Tables tab (orders, alerts, move targets) |
 | `bulk_action.php` | staff | Bulk tab: record a payment (advance), ready, complete (balance → bill) |
+| `owner_action.php` | owner (password login) | Owner's phone: `accept` (takeaway / table), `cancel` (any open order incl. bulk, reason; the password login is the owner's approval, no PIN), `approve` (bulk, advance in paise) |
+| `push_subscribe.php` | owner (password login) | This phone's Web Push subscription: `subscribe` (keeps an existing mute), `unsubscribe`, `mute`, `status`, `test` (test notification to this phone only) |
 
 `table_action.php` also handles `close` (visit with nothing to bill), `reprint` and `cancel_bill` (settled table bill, owner PIN). `order_action.php` handles `serve` and returns the KOT print URL when a table order is accepted.
 
-`poll.php` is also the counter's connection check (the "No internet" banner) and returns 401 when the login has ended; it does not count as activity, so an idle counter still logs out after 12 h. Without `?full=1` it returns only counts (badge + beep); the Online tab asks for the full list.
-| `push_subscribe.php` | owner | Save/remove Web Push subscription, mute |
+`poll.php` is also the counter's connection check (the "No internet" banner) and returns 401 when the login has ended; it does not count as activity, so an idle counter still logs out after 12 h. Without `?full=1` it returns only counts (badge + beep); the Online tab asks for the full list. It also returns `kot_pending`: table orders accepted in the last 10 minutes; the counter prints each one's KOT once (printed ids kept in the counter's localStorage), so a table order accepted on the owner's phone still prints at the counter, and one accepted at the counter is not printed twice. `?view=owner` (owner / super-admin with a password login, else 401) adds today's sales, active orders, open bulk orders and open table alerts for the owner's phone.
 
 Rate limits (simple, stored in a `rate_limits` table keyed by IP + action, or in APCu if available): `place_order` max 5 per 10 min per IP and per mobile; `table_alert` max 1 per 30 s per table; login max 5 failures then 15 min lock.
 
@@ -172,11 +173,12 @@ Shared hosting has no WebSockets. Use short polling:
 
 ## 9. Web Push (owner's Android phone)
 
-- Generate VAPID keys once locally (`vendor/bin` script or a tiny PHP script using the library) and put them in config.
-- `order/owner/` registers `sw.js`, asks notification permission on a button tap, posts the subscription to `push_subscribe.php`.
-- `PushService::notifyOwners($title, $body, $url)` sends to every non-muted subscription; delete subscriptions that return 404/410.
-- Triggered on: new takeaway order, new table order, new bulk request, Request bill. Send push after the DB transaction commits; never let a push failure break order placement (catch + log).
-- Requires HTTPS.
+- VAPID keys: `php database/vapid_keys.php`, once per server, pasted into that server's `app/config.php` (never committed). Keep production's keys: new keys silently cut off every subscribed phone until its owner page is opened again (the page then re-subscribes by itself).
+- `order/owner/` registers `/sw.js` with scope `/owner/`, asks notification permission on a button tap, posts the subscription to `push_subscribe.php`, and sends it again on every page load (the browser may renew it). Mute is per phone (`push_subscriptions.is_muted`).
+- `PushService::notifyOwners($message)` sends to every non-muted subscription of active owners / super-admins (never staff); subscriptions answered with 404/410 are deleted, other failures are logged. A message carries the title and body in **both** languages (`['title' => ['mr' => …, 'en' => …], 'body' => …, 'url' => '/owner/?order=ID', 'tag' => …]`); `sw.js` shows the language the owner page last used on that phone (kept in Cache Storage `mahavir-prefs`, read by the service worker; Marathi if unknown). Notification tap opens / focuses `/owner/` and scrolls to the order; the worker only opens `/owner/` URLs.
+- Triggered on: new takeaway order, new table order, new bulk request, a new Request bill (not repeated while the same alert is still open). Sent with `notify_owners_later()`: after the reply (PHP-FPM / LiteSpeed finish the request first), so the customer never waits for the push service; a push failure never breaks order placement (caught + logged).
+- `sw.js` caches only the "No internet" page (`owner/offline.php`, both languages) and its two stylesheets. Order data is never cached. Bump `CACHE` in `sw.js` when the offline page changes.
+- Requires HTTPS (or `localhost` / `127.0.0.1` for local testing in desktop Chrome).
 
 ## 10. Browser rules
 

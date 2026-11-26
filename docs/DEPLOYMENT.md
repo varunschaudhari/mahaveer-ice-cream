@@ -25,7 +25,17 @@ php -S localhost:8001 -t website                 # website (second terminal)
 php tools/phpunit.phar
 ```
 
-Test customer pages from your phone on the same Wi-Fi: run `php -S 0.0.0.0:8000 -t order` and open `http://<your-PC-IP>:8000`. (Web Push needs HTTPS, so test push on staging.)
+Test customer pages from your phone on the same Wi-Fi: run `php -S 0.0.0.0:8000 -t order` and open `http://<your-PC-IP>:8000`. (Web Push needs HTTPS, so test push on a phone on staging.)
+
+**Web Push locally (M6):** create local VAPID keys once and paste the three lines into `app/config.php`. On Windows, PHP's OpenSSL can only create these keys when `OPENSSL_CONF` is set *before* PHP starts, both for the key script and for the server that sends pushes:
+
+```bash
+set OPENSSL_CONF=C:\xampp\php\extras\ssl\openssl.cnf     # cmd; Git Bash: export OPENSSL_CONF='C:\xampp\php\extras\ssl\openssl.cnf'
+php database/vapid_keys.php
+php -S localhost:8000 -t order                              # same terminal, so sending works too
+```
+
+Desktop Chrome treats `http://localhost:8000` as secure, so `/owner/` → "Turn on notifications" works there for a local check. Linux servers (cPanel) need no `OPENSSL_CONF`.
 
 ## 2. GitHub
 
@@ -49,6 +59,8 @@ Test customer pages from your phone on the same Wi-Fi: run `php -S 0.0.0.0:8000 
 
    (Staging: `WEBDIR` = document root of `mahaveer-site.foreverstory.in`, or a dummy folder if you skip the staging website.)
 6. **Config:** after the first deploy, create `/home/<user>/mahavir/app/config.php` from `config.example.php` with production values (`APP_ENV=production`, DB credentials, VAPID keys, URLs). The deploy never overwrites it.
+   - VAPID keys: over SSH run `php /home/<user>/mahavir/database/vapid_keys.php` **once** and paste the output; staging gets its own pair. Set `VAPID_SUBJECT` to `https://mahaveericecream.in` (a contact for the push services). Never regenerate production's keys: every subscribed phone would stop getting notifications until its owner page is opened again.
+   - Pushes are sent after the customer's reply. With PHP-FPM (or LiteSpeed's LSAPI) the reply goes out first; with plain CGI the order page waits up to ~10 s if the push service is slow. If MultiPHP Manager offers PHP-FPM for `order.mahaveericecream.in`, turn it on.
 7. **Git Version Control:**
    - cPanel → SSH Access → Manage SSH Keys → generate a key; add its public key to GitHub repo → Settings → Deploy keys (read-only).
    - cPanel → Git Version Control → Create → Clone URL `git@github.com:<you>/mahavir-icecream.git`, repository path `/home/<user>/repositories/mahavir-icecream`. Production checks out `main`; staging checks out `staging`.
@@ -109,7 +121,11 @@ Notes:
 
 ## 7. Owner's phone (Android)
 
-- [ ] Open `https://order.mahaveericecream.in/owner/` in Chrome, log in, "Add to Home screen".
-- [ ] Tap "Enable notifications" and allow.
-- [ ] Android settings → Apps → Chrome → Battery → Unrestricted (otherwise some phones delay notifications).
-- [ ] Place a test table order and confirm the notification arrives with the screen locked.
+- [ ] Open `https://order.mahaveericecream.in/owner/` in Chrome and log in with the owner's username + password (the login returns to the owner page). Admin → "Owner phone page" also leads there.
+- [ ] Chrome menu ⋮ → "Add to Home screen" (installs it like an app, icon "महावीर").
+- [ ] Tap "सूचना चालू करा / Turn on notifications" and allow. Then "Send a test": a notification must appear within a few seconds.
+- [ ] The notifications use the language the owner page shows on that phone (English / मराठी button at the top).
+- [ ] Android settings → Apps → Chrome → Battery → Unrestricted (otherwise some phones delay notifications). Also check Chrome's notifications are allowed in Android settings.
+- [ ] Lock the screen, place a test table order from another phone: the notification must arrive within a few seconds; tapping it opens the owner page at that order. Accepting it on the phone prints the KOT at the counter (the counter must be open).
+- [ ] Mute switch: muted → no notification for the next test order; unmuted → notifications again.
+- [ ] If notifications were blocked by mistake: Chrome ⋮ → Settings → Site settings → Notifications → allow `order.mahaveericecream.in`. Without notifications the page still checks every 10 s and beeps while it is open.

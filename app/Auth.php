@@ -278,11 +278,14 @@ final class Auth
         return self::user() ?? self::deny('/counter/');
     }
 
-    /** Admin pages: owner or super-admin who logged in with a password. */
-    public static function requireAdmin(): array
+    /**
+     * Admin and owner pages: owner or super-admin who logged in with a password. $loginUrl lets
+     * the owner page send people to the login with a way back (/admin/?next=/owner/).
+     */
+    public static function requireAdmin(string $loginUrl = '/admin/'): array
     {
         $user = self::user();
-        return self::isAdmin($user) ? $user : self::deny('/admin/');
+        return self::isAdmin($user) ? $user : self::deny($loginUrl);
     }
 
     private static function deny(string $loginUrl): never

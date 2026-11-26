@@ -201,9 +201,10 @@
     } else if (b.hasAttribute('data-dismiss')) {
       await act('/api/table_action.php', { action: 'dismiss', alert_id: parseInt(b.getAttribute('data-dismiss'), 10) });
     } else if (b.hasAttribute('data-order-action')) {
-      var result = await act('/api/order_action.php', { action: b.getAttribute('data-order-action'), order_id: parseInt(b.getAttribute('data-order'), 10) });
+      var orderId = parseInt(b.getAttribute('data-order'), 10);
+      var result = await act('/api/order_action.php', { action: b.getAttribute('data-order-action'), order_id: orderId });
       if (result && result.print_url) {
-        C.print(result.print_url); // kitchen ticket
+        C.printKot(orderId); // kitchen ticket, printed once
       }
     } else if (b.hasAttribute('data-move')) {
       var labels = current.move_targets.map(function (target) { return target.label; });

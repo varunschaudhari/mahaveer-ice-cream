@@ -146,7 +146,7 @@
     if (action === 'accept' || action === 'ready' || action === 'serve') {
       var result = await run(id, { action: action, order_id: id });
       if (result && result.print_url) {
-        C.print(result.print_url); // kitchen ticket for a table order
+        C.printKot(id); // kitchen ticket for a table order (printed once, even if the poll sees it too)
       }
     } else if (action === 'picked_up') {
       C.pay(order.total_paise, async function (method, cashPaise) {
