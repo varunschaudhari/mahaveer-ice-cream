@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Lang;
 
 define('APP_ROOT', dirname(__DIR__));
+define('SESSION_LIFETIME', 31 * 24 * 3600); // longest login (admin, 30 days idle) + margin
 
 require APP_ROOT . '/app/helpers.php';
 
@@ -90,11 +91,21 @@ function render_fatal_error(?Throwable $e): void
 // ---------------------------------------------------------------
 
 if (PHP_SAPI !== 'cli') {
+    // Sessions live in storage/ with a long lifetime: PHP's default (24 min, often in a shared
+    // /tmp cleaned by the host) would log the counter out. Auth enforces the real idle limits.
+    $sessionDir = APP_ROOT . '/storage/sessions';
+    if (!is_dir($sessionDir)) {
+        @mkdir($sessionDir, 0770, true);
+    }
+    session_save_path($sessionDir);
+    ini_set('session.gc_maxlifetime', (string) SESSION_LIFETIME);
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
     session_name((string) config('SESSION_NAME', 'mahavir_sid'));
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => SESSION_LIFETIME,
         'path' => '/',
         'httponly' => true,
         'samesite' => 'Lax',

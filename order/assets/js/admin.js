@@ -1,0 +1,23 @@
+/*
+ * Admin pages. Plain JavaScript (admin is also used on the Chrome 109 counter PC).
+ * - <form data-confirm="…"> asks before submitting (deactivate staff, …)
+ * - buttons are disabled after submit so a double tap does not save twice
+ */
+(function () {
+  'use strict';
+
+  document.addEventListener('submit', function (event) {
+    var form = event.target;
+    var message = form.getAttribute('data-confirm');
+    if (message && !window.confirm(message)) {
+      event.preventDefault();
+      return;
+    }
+    // Disable after the browser has collected the form data (which includes the clicked button).
+    window.setTimeout(function () {
+      form.querySelectorAll('button[type="submit"]').forEach(function (button) {
+        button.disabled = true;
+      });
+    }, 0);
+  });
+})();

@@ -4,8 +4,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 
 ## Milestones
 
-- [x] M0 – Project foundation (2026-11-26 – automated checks pass; awaiting developer's browser check)
-- [ ] M1 – Login, roles, admin menu & settings
+- [x] M0 – Project foundation (2026-11-26, commit a20f8d0)
+- [x] M1 – Login, roles, admin menu & settings (2026-11-26 – tests + scripted HTTP checks pass; awaiting developer's browser check)
 - [ ] M2 – Counter billing (pilot-ready)
 - [ ] M3 – Takeaway ordering + online orders panel
 - [ ] M4 – Table ordering
@@ -41,10 +41,24 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | `app/config.php` returns an array, read with `config('KEY')`. Tests use `DB_NAME_TEST` from `phpunit.xml` (must end in `_test`). |
 | 2026-11-26 | `website/assets/css/base.css` and the fonts are copies of `order/assets/` (two web roots can't share files); `AssetsSyncTest` fails if they drift. Edit the `order/` copy, then copy it over. |
 | 2026-11-26 | CSP is strict (`'self'` only, no inline scripts/styles): pass data to JS via `data-*` attributes or `<meta>` (e.g. `csrf_meta()`), never inline `<script>`. |
+| 2026-11-26 | **M1:** counter login works from any device, as the spec says (developer declined device registration). Risk accepted: the login page is public and shows staff names. Mitigation: per-account lock (5 → 15 min) plus max 20 wrong PINs per IP per 15 min (`rate_limits`). Admin password logins: max 10 failures per IP per 15 min. |
+| 2026-11-26 | **M1:** login lifetimes – admin (password) 30 days idle, counter (PIN) 12 hours idle. Sessions live in `storage/sessions` with a 31-day cookie refreshed on activity, because PHP's default (24 min, shared `/tmp`) would log the counter out. |
+| 2026-11-26 | **M1:** admin always needs a password login, even for an owner already logged in at the counter with his PIN. One user per session; the logged-in user is re-read each request, so deactivation logs out at once. |
+| 2026-11-26 | **M1:** menu rows are never deleted (old orders reference variants) – only deactivated. Rule: an active item needs ≥ 1 active variant and no active ₹0 variant. |
+| 2026-11-26 | **M1:** owner/super accounts need username + password (min 8 chars); staff need a PIN. Only a super-admin manages super-admin accounts; the last active owner cannot be demoted/deactivated; nobody can deactivate themselves. PINs/passwords never go in the audit log. |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M1 Login, roles, admin menu & settings
+
+- Built `Auth` (name + PIN counter login, password admin login, per-account lockout, per-IP limits, idle limits), `RateLimiter`, `ValidationException`; services `AuditService`, `StaffService`, `SettingsService`, `ImageService`, admin methods in `MenuService`.
+- Pages: `order/counter/` (index = name + PIN pad, billing.php placeholder, lock.php), `order/admin/` (index/login, logout, menu, items, settings, staff, audit), `order/media.php`; `admin.css`, `admin.js`, `pinpad.js`; `database/create_owner.php`.
+- Checks: 174 PHPUnit tests pass (incl. `LangKeysTest`: every key used in code exists in both languages). Scripted HTTP run on `php -S`: PIN login + countdown + lock + owner unlock, Lock button, admin needs password, Butterscotch Full ₹50 → ₹55 shows on order + website menus and in the audit log, Kulfi ₹0 activation refused with message, photo upload → 1200 px WebP served by media.php, CSRF 403, unauthenticated admin → redirect, 31-day session cookie.
+- Local dev DB has test accounts: owner `owner` / `owner-pass-1` (PIN 1111), staff Ramesh (PIN 2222). Butterscotch Full is ₹55 there. Reset with `php database/migrate.php --fresh`.
+- Not done (declined in session): `media.php` still sends PHP's session no-cache headers (`Pragma`, `Expires`) next to its long `Cache-Control`, so photos may be re-downloaded more than needed. Harmless; revisit in M8/M9.
+- Next: M2 counter billing, after the developer confirms M1. Open item for the M2 plan: `order_items.item_name` snapshot format (see M0 note).
 
 ### 2026-11-26 – M0 Project foundation
 

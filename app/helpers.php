@@ -70,6 +70,21 @@ function lang_field(array $row, string $base): string
     return $value !== '' ? $value : (string) ($row[$base . '_' . $other] ?? '');
 }
 
+function role_label(string $role): string
+{
+    return match ($role) {
+        'owner' => t('role.owner'),
+        'super' => t('role.super'),
+        default => t('role.staff'),
+    };
+}
+
+/** '1' / true → ' checked' for a checkbox. */
+function checked(mixed $value): string
+{
+    return !empty($value) ? ' checked' : '';
+}
+
 /** URL of the current page with ?lang= set, for the language toggle. */
 function lang_switch_url(string $lang): string
 {
@@ -175,9 +190,92 @@ function money(int $paise): string
     return $fraction === 0 ? $text : $text . '.' . str_pad((string) $fraction, 2, '0', STR_PAD_LEFT);
 }
 
+/**
+ * Price typed by the owner in admin → integer paise. Accepts '55', '55.5', '55.50', '₹55',
+ * '1,000'. Throws InvalidArgumentException for anything else (negative, 3 decimals, text).
+ */
+function parse_rupees(string $input): int
+{
+    $clean = str_replace(['₹', ',', ' '], '', trim($input));
+    if ($clean === '' || str_starts_with($clean, '-')) {
+        throw new InvalidArgumentException("Not a rupee amount: '{$input}'");
+    }
+    return decimal_to_hundredths($clean);
+}
+
+/** Paise → value for a form input: 5500 → '55', 5550 → '55.50'. */
+function rupees_input(int $paise): string
+{
+    return $paise % 100 === 0 ? (string) intdiv($paise, 100) : hundredths_to_decimal($paise);
+}
+
+// ---------------------------------------------------------------
+// Validation
+// ---------------------------------------------------------------
+
+function is_valid_pin(string $pin): bool
+{
+    return (bool) preg_match('/^\d{4}$/', $pin);
+}
+
+/** A person/item name: 1..$max characters after trimming, no control characters. */
+function is_valid_name(string $name, int $max = 60): bool
+{
+    $name = trim($name);
+    return $name !== '' && mb_strlen($name) <= $max && !preg_match('/[\x00-\x1F\x7F]/u', $name);
+}
+
+// ---------------------------------------------------------------
+// Dates
+// ---------------------------------------------------------------
+
+/** '2026-11-26 16:35:00' → '26/11/2026, 4:35 PM' (or 'दुपारी 4:35' style in Marathi). */
+function format_date_time(DateTimeInterface|string $value): string
+{
+    $dt = is_string($value) ? new DateTimeImmutable($value, new DateTimeZone('Asia/Kolkata')) : $value;
+    return $dt->format('d/m/Y') . ', ' . format_time($dt->format('H:i'));
+}
+
 // ---------------------------------------------------------------
 // Requests and responses
 // ---------------------------------------------------------------
+
+function is_post(): bool
+{
+    return ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+}
+
+/** Client address for rate limits. REMOTE_ADDR only: forwarded headers can be faked. */
+function client_ip(): string
+{
+    return (string) ($_SERVER['REMOTE_ADDR'] ?? 'cli');
+}
+
+/** One-time message shown on the next page (after a POST → redirect). */
+function flash(string $type, string $message): void
+{
+    $_SESSION['_flash'][] = ['type' => $type, 'message' => $message];
+}
+
+/** @return list<array{type: string, message: string}> and clears them */
+function flash_messages(): array
+{
+    $messages = $_SESSION['_flash'] ?? [];
+    unset($_SESSION['_flash']);
+    return is_array($messages) ? $messages : [];
+}
+
+/** Inline error under a form field; $errors maps field → lang key, or [lang key, params]. */
+function field_error(array $errors, string $field): string
+{
+    return isset($errors[$field]) ? '<p class="field-error">' . e(error_text($errors[$field])) . '</p>' : '';
+}
+
+/** Translates one ValidationException entry: 'key' or ['key', ['min' => 1]]. */
+function error_text(string|array $error): string
+{
+    return is_array($error) ? t($error[0], $error[1] ?? []) : t($error);
+}
 
 function csrf_field(): string
 {

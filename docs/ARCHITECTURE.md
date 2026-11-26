@@ -14,13 +14,19 @@
 │   ├── config.php         real secrets, gitignored
 │   ├── helpers.php        e(), t(), money(), csrf_field(), redirect(), json_response(), now()
 │   ├── Db.php             PDO singleton, transactions helper
-│   ├── Auth.php           staff PIN / owner password login, roles, lockout
+│   ├── Auth.php           counter name + PIN / admin password login, roles, lockout, idle limits
 │   ├── Csrf.php
 │   ├── Lang.php
 │   ├── Settings.php       cached key/value from `settings`
-│   ├── Views/             shared layout partials (header, footer, receipt templates)
+│   ├── Migrator.php       applies migrations (used by database/migrate.php and tests)
+│   ├── RateLimiter.php    counts events per key in `rate_limits` (failed logins per IP, …)
+│   ├── ValidationException.php  field → lang key errors thrown by services, shown by pages
+│   ├── Views/             shared layout partials (header, footer, admin/counter frames, receipt templates)
 │   └── Services/
-│       ├── MenuService.php
+│       ├── MenuService.php        public menu + admin CRUD (active-item ₹0 guard)
+│       ├── StaffService.php       staff accounts, PIN/password, unlock, last-owner guard
+│       ├── SettingsService.php    validates + saves settings, audit logged
+│       ├── ImageService.php       photo upload → 1200 px WebP in storage/uploads
 │       ├── CartService.php        validates a cart against DB (prices, availability, ₹0 rule)
 │       ├── PricingService.php     pure functions: totals in paise
 │       ├── SlotService.php        pickup slots + capacity
@@ -58,7 +64,7 @@
 │   ├── migrate.php
 │   ├── migrations/001_schema.sql …
 │   └── seed.sql
-├── storage/               gitignored: uploads/, logs/, backups/  (outside web roots)
+├── storage/               gitignored: uploads/, logs/, backups/, sessions/  (outside web roots)
 ├── tests/                 PHPUnit tests + bootstrap.php
 ├── tools/                 phpunit.phar (gitignored, see DEPLOYMENT.md)
 ├── vendor/                committed (composer install --no-dev)

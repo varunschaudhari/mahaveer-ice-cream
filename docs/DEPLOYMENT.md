@@ -38,7 +38,7 @@ Test customer pages from your phone on the same Wi-Fi: run `php -S 0.0.0.0:8000 
 1. **Domains:** `mahaveericecream.in` (website). Create subdomain `order.mahaveericecream.in` with document root `/home/<user>/mahavir/order`.
    Staging account: subdomain `mahaveer.foreverstory.in` with document root `/home/<user>/mahavir/order`; optional `mahaveer-site.foreverstory.in` for the staging website.
 2. **SSL:** cPanel → SSL/TLS Status → run AutoSSL for all domains. Force HTTPS redirect (cPanel → Domains → Force HTTPS Redirect).
-3. **PHP:** MultiPHP Manager → latest PHP for all domains. Extensions (Select PHP Version, if available): pdo_mysql, mbstring, openssl, curl, gd, fileinfo, intl, gmp, sodium.
+3. **PHP:** MultiPHP Manager → latest PHP for all domains. Extensions (Select PHP Version, if available): pdo_mysql, mbstring, openssl, curl, gd (with WebP), fileinfo, exif, intl, gmp, sodium. MultiPHP INI Editor: `upload_max_filesize = 8M` and `post_max_size = 10M` (phone photos are 3–5 MB; the host default is often 2M). Sessions are stored in `storage/sessions` (created automatically), not the shared `/tmp`.
 4. **Database:** MySQL Databases → create DB + user, grant ALL on that DB. Staging uses its own DB.
 5. **Deploy settings file** (one per server) – create `/home/<user>/mahavir_deploy.env` with File Manager:
 

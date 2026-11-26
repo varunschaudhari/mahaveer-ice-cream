@@ -87,3 +87,28 @@ body.counter input, body.counter textarea { user-select: text; -webkit-user-sele
 }
 .pin-pad { display: grid; grid-template-columns: repeat(3, 88px); gap: var(--space-3); }
 .pin-pad .counter-btn { min-height: 88px; font-size: var(--text-2xl); }
+
+/* ---------- Login: name buttons (left) + PIN pad (right) ---------- */
+
+body.counter .login-screen {
+  display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--space-5); align-items: start;
+  height: 100vh; padding: var(--space-5); overflow-y: auto;
+}
+.staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-3); margin-top: var(--space-4); }
+.staff-tile { min-height: 88px; font-size: var(--text-xl); }
+.login-pin {
+  display: flex; justify-content: center; padding: var(--space-5);
+  border-radius: var(--radius); background: var(--color-surface); box-shadow: var(--shadow); text-align: center;
+}
+.login-pin[hidden] { display: none; }
+.login-pin__name { font-size: var(--text-xl); font-weight: 700; color: var(--color-primary-dark); }
+.login-pin__hint { color: var(--color-muted); }
+.pin-dots { display: flex; justify-content: center; gap: var(--space-4); margin: var(--space-4) 0; }
+.pin-dots span { width: 24px; height: 24px; border: 3px solid var(--color-primary); border-radius: 50%; }
+.pin-dots span.is-filled { background: var(--color-primary); }
+.login-error { margin-bottom: var(--space-3); color: var(--color-danger); font-weight: 700; }
+.is-busy { opacity: 0.6; pointer-events: none; }
+
+/* ---------- Header actions ---------- */
+
+.counter-header .counter-btn { min-height: 44px; border-color: rgba(255, 255, 255, 0.7); background: transparent; color: var(--color-on-primary); }

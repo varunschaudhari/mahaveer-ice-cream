@@ -82,6 +82,44 @@ final class HelpersTest extends TestCase
         self::assertSame($expected, money($paise));
     }
 
+    public function testParseRupees(): void
+    {
+        self::assertSame(5500, parse_rupees('55'));
+        self::assertSame(5550, parse_rupees('55.5'));
+        self::assertSame(5550, parse_rupees(' ₹55.50 '));
+        self::assertSame(100000, parse_rupees('1,000'));
+        self::assertSame(0, parse_rupees('0'));
+        foreach (['', '-5', 'abc', '5.555', '₹'] as $bad) {
+            try {
+                parse_rupees($bad);
+                self::fail("accepted '{$bad}'");
+            } catch (InvalidArgumentException) {
+                self::addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function testRupeesInput(): void
+    {
+        self::assertSame('55', rupees_input(5500));
+        self::assertSame('55.50', rupees_input(5550));
+        self::assertSame('0', rupees_input(0));
+    }
+
+    public function testPinAndNameValidation(): void
+    {
+        self::assertTrue(is_valid_pin('0042'));
+        self::assertFalse(is_valid_pin('123'));
+        self::assertFalse(is_valid_pin('12345'));
+        self::assertFalse(is_valid_pin('12a4'));
+
+        self::assertTrue(is_valid_name('रमेश पाटील'));
+        self::assertFalse(is_valid_name('   '));
+        self::assertFalse(is_valid_name(str_repeat('a', 61)));
+        self::assertTrue(is_valid_name(str_repeat('अ', 100), 100), 'length counts characters, not bytes');
+        self::assertFalse(is_valid_name("Ram\x00esh"));
+    }
+
     public function testEscape(): void
     {
         self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', e('<script>alert(1)</script>'));

@@ -42,4 +42,11 @@ abstract class DatabaseTestCase extends TestCase
     {
         return Db::pdo();
     }
+
+    /** A real staff row to act as the owner (audit_log.staff_id must point at one). */
+    protected function makeOwner(): int
+    {
+        $this->db()->exec("INSERT INTO staff (name, role) VALUES ('Test Owner', 'owner')");
+        return (int) $this->db()->lastInsertId();
+    }
 }
