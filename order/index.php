@@ -53,6 +53,7 @@ view('header', ['title' => t('order.page_title'), 'css' => ['css/base.css', 'css
 
   <h1><?= e(t('order.heading')) ?></h1>
   <p class="muted"><?= e(t('order.intro')) ?></p>
+  <a class="party-link" href="/bulk.php"><?= e(t('bulk.link')) ?></a>
 
   <?php if ($recent !== []): ?>
   <section class="card stack-sm recent-orders">

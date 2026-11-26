@@ -205,35 +205,17 @@ final class OrderService
         return $this->find($orderId) + ['duplicate' => false];
     }
 
-    /**
-     * Name, mobile and note checked the same way for takeaway and table orders.
-     * @return array{0: string, 1: string, 2: string}
-     */
+    /** @return array{0: string, 1: string, 2: string} name, mobile, note */
     private function customerFields(array $input): array
     {
-        $name = trim((string) ($input['name'] ?? ''));
-        $mobile = normalize_mobile((string) ($input['mobile'] ?? ''));
-        $note = trim((string) ($input['note'] ?? ''));
-        $errors = [];
-        if (!is_valid_name($name, 60)) {
-            $errors['name'] = 'checkout.error.name';
-        }
-        if ($mobile === null) {
-            $errors['mobile'] = 'checkout.error.mobile';
-        }
-        if (mb_strlen($note) > 200 || preg_match('/[\x00-\x09\x0B-\x1F\x7F]/u', $note)) {
-            $errors['note'] = 'checkout.error.note';
-        }
-        if ($errors !== []) {
-            throw new ValidationException($errors);
-        }
-        return [$name, $mobile, $note];
+        $contact = CustomerService::validateContact($input);
+        return [$contact['name'], $contact['mobile'], $contact['note']];
     }
 
-    /** preparing → ready (the customer's status page shows "Ready"). */
+    /** preparing → ready (takeaway: the status page shows "Ready"; bulk: ready for pickup). */
     public function markReady(int $orderId, int $staffId, ?DateTimeImmutable $now = null): void
     {
-        $this->transition($orderId, ['preparing'], 'ready', ['takeaway'], ['ready_at' => ($now ?? now())->format('Y-m-d H:i:s')]);
+        $this->transition($orderId, ['preparing'], 'ready', ['takeaway', 'bulk'], ['ready_at' => ($now ?? now())->format('Y-m-d H:i:s')]);
     }
 
     /**
@@ -263,6 +245,10 @@ final class OrderService
     public function cancelByCustomer(int $orderId, string $key, ?DateTimeImmutable $now = null): void
     {
         $order = $this->findForCustomer($orderId, $key) ?? throw ValidationException::one('_', 'status.not_found');
+        if ($order['order_type'] === 'bulk' && $order['status'] === 'pending_approval') {
+            (new BulkService($this->db))->cancel($orderId, self::CUSTOMER_CANCEL_REASON, null, $now);
+            return;
+        }
         if ($order['order_type'] !== 'takeaway' || $order['status'] !== 'received') {
             throw ValidationException::one('_', 'order.error.cannot_cancel');
         }
@@ -594,7 +580,7 @@ final class OrderService
         $stmt->execute([$id]);
         $order['items'] = $stmt->fetchAll();
 
-        $stmt = $this->db->prepare('SELECT mode, amount, status FROM payments WHERE order_id = ? ORDER BY id');
+        $stmt = $this->db->prepare('SELECT mode, amount, status, created_at FROM payments WHERE order_id = ? ORDER BY id');
         $stmt->execute([$id]);
         $order['payments'] = $stmt->fetchAll();
         return $order;

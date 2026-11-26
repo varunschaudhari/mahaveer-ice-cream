@@ -84,10 +84,70 @@ function table_label(string $code, string $area = 'inside'): string
     return $area === 'outside' ? $label . ' ' . t('table.outside') : $label;
 }
 
+/**
+ * What the customer's status page shows for a takeaway or bulk order: status label, help line,
+ * whether the customer may still cancel, and the progress steps.
+ *
+ * @return array{label: string, help: string, can_cancel: bool, steps: list<array{key: string, label: string}>}
+ */
+function customer_status(array $order): array
+{
+    $status = (string) $order['status'];
+    $isBulk = $order['order_type'] === 'bulk';
+
+    if ($isBulk) {
+        $due = App\Services\BulkService::advanceDue($order);
+        $balance = App\Services\BulkService::balance($order);
+        $ownReason = (string) ($order['cancel_reason'] ?? '');
+        $help = match ($status) {
+            'pending_approval' => t('status.help.bulk_pending'),
+            'preparing' => $due > 0 ? t('status.help.bulk_advance', ['amount' => money($due)]) : t('status.help.bulk_approved'),
+            'ready' => t('status.help.bulk_ready', ['amount' => money($balance)]),
+            'completed' => t('status.help.completed'),
+            'cancelled' => $ownReason !== '' && $ownReason !== App\Services\OrderService::CUSTOMER_CANCEL_REASON
+                ? t('status.help.bulk_rejected', ['reason' => $ownReason])
+                : t('status.help.cancelled'),
+            default => '',
+        };
+        $steps = [
+            ['key' => 'pending_approval', 'label' => t('status.pending_approval')],
+            ['key' => 'preparing', 'label' => t('status.bulk_approved')],
+            ['key' => 'ready', 'label' => t('status.ready')],
+            ['key' => 'completed', 'label' => t('status.completed')],
+        ];
+        return [
+            'label' => $status === 'preparing' ? t('status.bulk_approved') : order_status_label($status),
+            'help' => $help,
+            'can_cancel' => $status === 'pending_approval',
+            'steps' => $steps,
+        ];
+    }
+
+    $help = match ($status) {
+        'received' => t('status.help.received'),
+        'preparing' => t('status.help.preparing'),
+        'ready' => t('status.help.ready', ['token' => $order['token_no']]),
+        'completed' => t('status.help.completed'),
+        'cancelled' => t('status.help.cancelled'),
+        'no_show' => t('status.help.no_show'),
+        default => '',
+    };
+    return [
+        'label' => order_status_label($status),
+        'help' => $help,
+        'can_cancel' => $order['order_type'] === 'takeaway' && $status === 'received',
+        'steps' => array_map(
+            static fn (string $key): array => ['key' => $key, 'label' => order_status_label($key)],
+            ['received', 'preparing', 'ready', 'completed']
+        ),
+    ];
+}
+
 /** Order status in words for customers and staff. */
 function order_status_label(string $status): string
 {
     return match ($status) {
+        'pending_approval' => t('status.pending_approval'),
         'received' => t('status.received'),
         'preparing' => t('status.preparing'),
         'ready' => t('status.ready'),

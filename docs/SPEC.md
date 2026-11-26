@@ -93,6 +93,8 @@ URL: `order.mahaveericecream.in/bulk.php` (also linked from website).
 - Status `pending_approval`; owner sees it in admin and on his phone.
 - Owner approves (sets `advance_amount`, can edit items/prices) or rejects with a reason.
 - Advance is paid at the shop or to the shop's UPI QR; staff records it as a payment row. Balance collected at pickup.
+- Sold by weight: the owner adds "1 किलो / 1 kg" variants with a price to the flavours sold per kg; the customer orders e.g. 2.5 × "1 kg". These variants also show as family packs on the menu and counter (decision 2026-11-26).
+- Staff handle approved bulk orders on the counter's **Bulk** tab (record advance, Ready, Picked up → balance → bill); the owner approves / edits / rejects in admin. The customer follows the order on the same status page as takeaway, may cancel while it is still pending, and sees the owner's reason if it is rejected.
 
 ## 9. Counter screen (Essae touchscreen PC)
 

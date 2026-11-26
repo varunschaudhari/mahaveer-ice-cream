@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Db;
 use App\Settings;
+use App\ValidationException;
 use DateTimeImmutable;
 use PDO;
 
@@ -22,6 +23,33 @@ final class CustomerService
     {
         $this->db = $db ?? Db::pdo();
         $this->audit = new AuditService($this->db);
+    }
+
+    /**
+     * Name, mobile and note as every customer form checks them (takeaway, table, bulk).
+     * Mobile: 10 digits starting 6–9, "+91 98765 43210" accepted (SPEC §6.3).
+     *
+     * @return array{name: string, mobile: string, note: string}
+     */
+    public static function validateContact(array $input, int $maxNote = 200): array
+    {
+        $name = trim((string) ($input['name'] ?? ''));
+        $mobile = normalize_mobile((string) ($input['mobile'] ?? ''));
+        $note = trim((string) ($input['note'] ?? ''));
+        $errors = [];
+        if (!is_valid_name($name, 60)) {
+            $errors['name'] = 'checkout.error.name';
+        }
+        if ($mobile === null) {
+            $errors['mobile'] = 'checkout.error.mobile';
+        }
+        if (mb_strlen($note) > $maxNote || preg_match('/[\x00-\x09\x0B-\x1F\x7F]/u', $note)) {
+            $errors['note'] = ['checkout.error.note_max', ['max' => $maxNote]];
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
+        return ['name' => $name, 'mobile' => $mobile, 'note' => $note];
     }
 
     public function isBlocked(string $mobile): bool

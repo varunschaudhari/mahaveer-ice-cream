@@ -8,8 +8,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - [x] M1 – Login, roles, admin menu & settings (2026-11-26, commit 93624a9)
 - [x] M2 – Counter billing (pilot-ready) (2026-11-26, commit 0741a7b; real 1024×768 + TM-T82 print check still open)
 - [x] M3 – Takeaway ordering + online orders panel (2026-11-26, commit ed77a87; phone + counter browser check still open)
-- [x] M4 – Table ordering (2026-11-26 – tests + scripted HTTP checks pass; awaiting a phone + counter browser check and a KOT print)
-- [ ] M5 – Bulk orders
+- [x] M4 – Table ordering (2026-11-26, commit ebee6f8; phone + counter browser check and a KOT print still open)
+- [x] M5 – Bulk orders (2026-11-26 – tests + scripted HTTP checks + page crawl pass; awaiting a browser check)
 - [ ] M6 – Owner's phone (PWA + Web Push)
 - [ ] M7 – Reports & customers
 - [ ] M8 – Public website
@@ -71,10 +71,24 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M4:** the day summary now counts money by payment time (`payments.created_at`, set explicitly by `PaymentService::record`), bills by the time they were issued (orders `completed_at`, visits `closed_at`), so bulk advances (M5) land on the day they were paid. |
 | 2026-11-26 | **M4:** Call staff / Request bill: max one alert per table per 30 s (checked against `table_alerts.created_at`); a button still open is not duplicated; customers may keep ordering after Request bill. Alerts join the counter's alert bar + beep (ack stored as newest order id + newest alert id). |
 | 2026-11-26 | **M4:** `BillFormatter` builds what a bill prints from an order or a table visit, so one template prints both; table bills show "टेबल 4" in place of the token and merge the same item from several orders into one line. KOT prints on Accept of a table order only (no prices, table number 44 px). |
+| 2026-11-26 | **M5:** bulk request = order_type `bulk`, status `pending_approval`, token on the request day, `event_date` + `pickup_at`, decimal quantities 0.01–999.99 (`CartService` channel `bulk`, which ignores today's sold-out marks), no parcel charge, totals rounded to the rupee. Event date ≥ today + bulk_notice_days and ≤ 90 days; pickup time within shop hours. 3 requests per hour per IP and per mobile. |
+| 2026-11-26 | **M5:** owner (admin): edit lines (qty, price per line; a blank price on a new line = menu price), approve with an advance (₹0 … total) → `preparing`, reject / cancel with a reason that the customer sees; an approved order's payments become `refunded` on cancel. A new total may not drop below what was already paid. Audit: bulk_approve / bulk_reject / bulk_update / cancel_order. |
+| 2026-11-26 | **M5:** staff (counter Bulk tab): record payments before pickup (cash / UPI, ≤ balance) → `orders.amount_paid`; Ready; Picked up collects the balance (cash / UPI / mixed, nothing if fully prepaid) → bill number → bill shows event date, "आगाऊ भरले" and "आत्ता भरले". Customer self-cancel works while the request is still pending. |
+| 2026-11-26 | **M5:** the customer status page (`order.php`) serves takeaway and bulk; label / help / cancel come from `customer_status()` so the page and its 10 s refresh agree (e.g. the advance due after approval). |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M5 Bulk orders
+
+- Services: `BulkService` (request, approve, cancel/reject, updateLines, recordPayment, markReady, complete, open, recent, balance, advanceDue); `CartService` channel `bulk` with decimal quantities (`parseQty`); `CustomerService::validateContact` shared by takeaway / table / bulk; `OrderService::markReady` and customer cancel cover bulk; `BillFormatter` bulk extras; helper `customer_status()`.
+- Customer: `order/bulk.php` + `bulk_form.js` (pick item + quantity, estimate, event date, pickup time, contact, note), link from the takeaway page; status page handles bulk (event date, advance due, paid / balance, rejection reason). API: `bulk_request`, `customer_cancel` (bulk pending).
+- Owner: `admin/bulk.php` (pending / approved / recent lists; detail with editable lines, approve with advance, reject / cancel with reason, payments); dashboard tile shows pending count. Counter: Bulk tab (`counter/bulk.php`, `bulk_counter.js`, API `bulk_action`).
+- **Bug fixed from M1:** `admin/items.php` stopped rendering at the variants table for any existing item (numeric array keys became ints → `str_starts_with()` TypeError under strict types), so prices could not be edited in a browser. The M1 scripted check only looked at text above the table. A page crawl (every admin / counter / customer / print page must return 200 and end with `</html>`, no new log errors) is now part of the checks.
+- Checks: 285 PHPUnit tests pass. Scripted HTTP run (PHP script, so Marathi text is sent intact): owner adds "1 किलो" Mawa ₹400 in admin → customer requests 3 kg Mawa + 2× Shrikhand 500 g (today refused, day after tomorrow accepted, status "मंजुरी बाकी", ₹1,600) → owner approves with ₹500 advance (customer sees "आगाऊ ₹500 …") → Bulk tab records ₹500 cash (overpay refused), Ready, Picked up by UPI → bill with "आगाऊ भरले ₹500 / आत्ता भरले ₹1,100" → customer sees "घेऊन गेले"; rejection reason shown to the customer; self-cancel while pending; 4th request in an hour refused; day summary cash ₹500 + UPI ₹1,100. Crawl: 36 pages complete, website home renders, no new errors.
+- Not verified here: the pages in a real phone / Chrome 109 browser and printing. The local dev DB holds test data from the scripted runs.
+- Next: M6 (owner's phone: PWA + Web Push) after the developer confirms M5. Before M6: enable `gmp` (and `intl`, `sodium`) in `C:\xampp\php\php.ini`; Web Push needs HTTPS, so test it on staging.
 
 ### 2026-11-26 – M4 Table ordering
 

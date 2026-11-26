@@ -39,7 +39,33 @@ final class BillFormatter
             'round_off' => $total - ($subtotal + $parcel - $discount),
             'total' => $total,
             'payments' => self::payments($order['payments']),
+            'extras' => $order['order_type'] === 'bulk' ? self::bulkExtras($order) : [],
         ];
+    }
+
+    /** Bulk bill: what was paid before pickup (advance) and what was paid now (balance). */
+    private static function bulkExtras(array $order): array
+    {
+        $billedAt = (string) ($order['completed_at'] ?? '9999-12-31');
+        $before = 0;
+        $now = 0;
+        foreach ($order['payments'] as $payment) {
+            if ($payment['status'] === 'refunded') {
+                continue;
+            }
+            if (($payment['created_at'] ?? '') < $billedAt) {
+                $before += self::paise($payment['amount']);
+            } else {
+                $now += self::paise($payment['amount']);
+            }
+        }
+        $extras = [];
+        if ($order['event_date'] !== null) {
+            $extras[] = ['label' => t('print.event_date'), 'value' => date('d/m/Y', strtotime($order['event_date']))];
+        }
+        $extras[] = ['label' => t('print.advance_paid'), 'value' => money($before)];
+        $extras[] = ['label' => t('print.paid_now'), 'value' => money($now)];
+        return $extras;
     }
 
     /**
@@ -67,6 +93,7 @@ final class BillFormatter
             'round_off' => $total - ($subtotal - $discount),
             'total' => $total,
             'payments' => self::payments($payments),
+            'extras' => [],
         ];
     }
 

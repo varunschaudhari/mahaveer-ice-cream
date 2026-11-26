@@ -144,6 +144,7 @@ All responses `{ "ok": true, "data": … }` or `{ "ok": false, "error": "message
 | `place_table_order.php` | public (table QR code) | Table order (takeaway orders use `place_order.php`) |
 | `table_status.php?t=` | public (table QR code) | The table's open visit: orders + statuses, running total |
 | `table_detail.php?id=` | staff | One table's visit for the Tables tab (orders, alerts, move targets) |
+| `bulk_action.php` | staff | Bulk tab: record a payment (advance), ready, complete (balance → bill) |
 
 `table_action.php` also handles `close` (visit with nothing to bill), `reprint` and `cancel_bill` (settled table bill, owner PIN). `order_action.php` handles `serve` and returns the KOT print URL when a table order is accepted.
 

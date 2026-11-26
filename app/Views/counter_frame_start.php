@@ -14,6 +14,7 @@ $tabs = [
     'billing' => ['/counter/billing.php', t('counter.tab.billing')],
     'online' => ['/counter/online.php', t('counter.tab.online')],
     'tables' => ['/counter/tables.php', t('counter.tab.tables')],
+    'bulk' => ['/counter/bulk.php', t('counter.tab.bulk')],
     'stock' => ['/counter/stock.php', t('counter.tab.stock')],
     'today' => ['/counter/today.php', t('counter.tab.today')],
 ];

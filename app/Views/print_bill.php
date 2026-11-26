@@ -70,6 +70,9 @@ $modeLabel = static fn (string $mode): string => $mode === 'cash' ? t('billing.p
   <tr><td><?= e(t('billing.round_off')) ?></td><td class="num"><?= e(money($bill['round_off'])) ?></td></tr>
   <?php endif; ?>
   <tr class="receipt-grand"><td><?= e(t('billing.total')) ?></td><td class="num"><?= e(money($bill['total'])) ?></td></tr>
+  <?php foreach ($bill['extras'] ?? [] as $extra): ?>
+  <tr><td><?= e($extra['label']) ?></td><td class="num"><?= e($extra['value']) ?></td></tr>
+  <?php endforeach; ?>
 </table>
 
 <?php if ($bill['payments'] !== []): ?>

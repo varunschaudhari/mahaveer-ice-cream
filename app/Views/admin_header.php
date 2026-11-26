@@ -15,6 +15,7 @@ $nav = [
     'settings' => ['/admin/settings.php', t('admin.nav.settings')],
     'staff' => ['/admin/staff.php', t('admin.nav.staff')],
     'audit' => ['/admin/audit.php', t('admin.nav.audit')],
+    'bulk' => ['/admin/bulk.php', t('admin.nav.bulk')],
     'tables' => ['/admin/tables.php', t('admin.nav.tables')],
     'blocked' => ['/admin/blocked.php', t('admin.nav.blocked')],
     'qr' => ['/admin/qr.php', t('admin.nav.qr')],

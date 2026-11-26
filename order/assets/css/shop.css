@@ -75,6 +75,15 @@
 .table-buttons [hidden] { display: none; }
 .link-btn { min-height: 0; padding: 0; border: 0; background: none; color: var(--color-primary-dark); font: inherit; text-decoration: underline; cursor: pointer; }
 
+/* ---------- bulk order form (bulk.php) ---------- */
+
+.bulk-add { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem auto; gap: var(--space-2); }
+.bulk-qty { text-align: center; }
+.bulk-line { display: grid; grid-template-columns: minmax(0, 1fr) auto 44px; gap: var(--space-2); align-items: center; padding-block: var(--space-2); border-bottom: 1px solid var(--color-border); }
+.bulk-line .btn { padding: 0; }
+.bulk-estimate { font-size: var(--text-lg); }
+.party-link { display: block; margin-block: var(--space-3); }
+
 /* ---------- status page ---------- */
 
 .status-token { text-align: center; }

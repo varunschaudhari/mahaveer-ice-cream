@@ -146,7 +146,7 @@ view('admin_header', ['title' => $title, 'active' => 'menu', 'user' => $user]);
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($rows as $key => $row): $p = "variants.{$key}."; $n = 'variants[' . e($key) . ']'; ?>
+          <?php foreach ($rows as $key => $row): $key = (string) $key; /* PHP turns '19' keys into ints */ $p = "variants.{$key}."; $n = 'variants[' . e($key) . ']'; ?>
           <tr<?= str_starts_with($key, 'new') ? ' class="is-new"' : '' ?>>
             <td>
               <input class="input" name="<?= $n ?>[label_mr]" value="<?= e($row['label_mr'] ?? '') ?>" maxlength="50"

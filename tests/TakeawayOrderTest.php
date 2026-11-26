@@ -151,7 +151,7 @@ final class TakeawayOrderTest extends DatabaseTestCase
             $this->place(['name' => ' ', 'mobile' => '12345', 'note' => str_repeat('x', 201)]);
             self::fail('accepted bad input');
         } catch (ValidationException $e) {
-            self::assertSame(['name' => 'checkout.error.name', 'mobile' => 'checkout.error.mobile', 'note' => 'checkout.error.note'], $e->errors);
+            self::assertSame(['name' => 'checkout.error.name', 'mobile' => 'checkout.error.mobile', 'note' => ['checkout.error.note_max', ['max' => 200]]], $e->errors);
         }
         self::assertSame('9876543210', $this->place(['mobile' => '+91-98765-43210'])['customer_mobile']);
     }
@@ -185,7 +185,7 @@ final class TakeawayOrderTest extends DatabaseTestCase
         self::assertSame('completed', $order['status']);
         self::assertSame(1, (int) $order['bill_no'], 'bill number assigned at pickup');
         self::assertSame('165.00', $order['amount_paid']);
-        self::assertSame([['mode' => 'cash', 'amount' => '165.00', 'status' => 'success']], $order['payments']);
+        self::assertSame([['mode' => 'cash', 'amount' => '165.00', 'status' => 'success', 'created_at' => '2026-11-26 19:30:00']], $order['payments']);
         self::assertSame('Ramesh', $order['staff_name']);
     }
 

@@ -83,7 +83,7 @@ final class CounterOrderTest extends DatabaseTestCase
             [['बदाम शेक (फुल) / Badam Shake (Full)', '80.00', '2.00', '160.00'], ['वॅनिला (हाफ) / Vanilla (Half)', '15.00', '1.00', '15.00']],
             array_map(static fn ($l) => [$l['item_name'], $l['unit_price'], $l['qty'], $l['line_total']], $order['items'])
         );
-        self::assertSame([['mode' => 'cash', 'amount' => '180.00', 'status' => 'success']], $order['payments']);
+        self::assertSame([['mode' => 'cash', 'amount' => '180.00', 'status' => 'success', 'created_at' => '2026-11-26 19:30:00']], $order['payments']);
         self::assertFalse($order['duplicate']);
     }
 

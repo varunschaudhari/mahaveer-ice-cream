@@ -223,6 +223,14 @@ a.counter-tab { display: flex; align-items: center; justify-content: center; tex
 .order-card__total { font-size: var(--text-xl); font-weight: 700; text-align: right; }
 .order-card__actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--space-2); }
 
+/* ---------- Bulk tab ---------- */
+
+.bulk-card .totals { margin: 0; }
+.bulk-card .totals > div { display: flex; justify-content: space-between; }
+.bulk-card .totals dt, .bulk-card .totals dd { margin: 0; }
+.bulk-card.is-today { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(255, 179, 0, 0.35); }
+.online-grid.is-pending { opacity: 0.6; }
+
 /* ---------- Tables tab ---------- */
 
 .table-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }

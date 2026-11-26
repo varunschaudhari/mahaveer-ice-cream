@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-// Customer cancels their own takeaway order before the shop accepts it. Body (JSON): id, k.
+// Customer cancels their own order before the shop takes it on: a takeaway order still Received,
+// or a bulk request still Pending approval. Body (JSON): id, k.
 
 use App\Csrf;
 use App\Services\OrderService;

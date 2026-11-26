@@ -24,9 +24,13 @@ final class CartService
         $this->db = $db ?? Db::pdo();
     }
 
+    /** Bulk orders: quantities in hundredths (kg, packs), 0.01 … 999.99 (ARCHITECTURE §11). */
+    public const MAX_BULK_QTY_HUNDREDTHS = 99999;
+
     /**
-     * @param array $lines list of ['variant_id' => int, 'qty' => int]; repeated variants are merged
-     * @param string $channel 'counter' or 'online' (online also needs items.online_enabled)
+     * @param array $lines list of ['variant_id' => int, 'qty' => int|string]; repeated variants are merged
+     * @param string $channel 'counter', 'online' (also needs items.online_enabled) or 'bulk'
+     *        (online items, decimal quantities, sold-out ignored: the event is days away)
      * @return list<array{variant_id: int, item_name: string, unit_paise: int, qty: string}>
      */
     public function validate(array $lines, string $channel = 'counter'): array
@@ -38,16 +42,21 @@ final class CartService
             throw ValidationException::one('_', 'cart.error.too_many');
         }
 
+        $isBulk = $channel === 'bulk';
+        $max = $isBulk ? self::MAX_BULK_QTY_HUNDREDTHS : self::MAX_QTY * 100;
+        $qtyError = $isBulk ? 'cart.error.bulk_qty' : ['cart.error.qty', ['max' => self::MAX_QTY]];
+
+        // Quantities are counted in hundredths so 2.5 kg and 3 packs use the same code.
         $qtyByVariant = [];
         foreach ($lines as $line) {
             $variantId = is_array($line) ? filter_var($line['variant_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
-            $qty = is_array($line) ? filter_var($line['qty'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) : false;
-            if ($variantId === false || $qty === false) {
-                throw ValidationException::one('_', ['cart.error.qty', ['max' => self::MAX_QTY]]);
+            $hundredths = is_array($line) ? self::parseQty($line['qty'] ?? null, $isBulk) : null;
+            if ($variantId === false || $hundredths === null || $hundredths < 1) {
+                throw ValidationException::one('_', $qtyError);
             }
-            $qtyByVariant[$variantId] = ($qtyByVariant[$variantId] ?? 0) + $qty;
-            if ($qtyByVariant[$variantId] > self::MAX_QTY) {
-                throw ValidationException::one('_', ['cart.error.qty', ['max' => self::MAX_QTY]]);
+            $qtyByVariant[$variantId] = ($qtyByVariant[$variantId] ?? 0) + $hundredths;
+            if ($qtyByVariant[$variantId] > $max) {
+                throw ValidationException::one('_', $qtyError);
             }
         }
 
@@ -75,11 +84,11 @@ final class CartService
             }
             $price = paise_from_decimal((string) $row['price']);
             $sellable = $row['variant_active'] && $row['item_active'] && $row['category_active'] && $price > 0
-                && ($channel !== 'online' || $row['online_enabled']);
+                && ($channel === 'counter' || $row['online_enabled']);
             if (!$sellable) {
                 throw ValidationException::one('_', ['cart.error.unavailable', ['item' => $row['name_mr']]]);
             }
-            if (!$row['is_available']) {
+            if (!$isBulk && !$row['is_available']) {
                 throw ValidationException::one('_', ['cart.error.sold_out', ['item' => $row['name_mr']]]);
             }
 
@@ -87,10 +96,32 @@ final class CartService
                 'variant_id' => $variantId,
                 'item_name' => self::snapshotName($row),
                 'unit_paise' => $price,
-                'qty' => (string) $qty,
+                'qty' => $qty % 100 === 0 ? (string) intdiv($qty, 100) : hundredths_to_decimal($qty),
             ];
         }
         return $priced;
+    }
+
+    /**
+     * Quantity → hundredths, or null. Normal orders: whole numbers only. Bulk: up to 2 decimals
+     * ('2.5' kg → 250). Accepts ints and numeric strings from JSON / forms.
+     */
+    public static function parseQty(mixed $qty, bool $allowDecimals): ?int
+    {
+        if (is_int($qty)) {
+            return $qty * 100;
+        }
+        if (is_float($qty) && $allowDecimals) {
+            $qty = (string) round($qty, 2);
+        }
+        if (!is_string($qty)) {
+            return null;
+        }
+        $qty = trim($qty);
+        if (!preg_match($allowDecimals ? '/^\d{1,3}(\.\d{1,2})?$/' : '/^\d{1,3}$/', $qty)) {
+            return null;
+        }
+        return decimal_to_hundredths($qty);
     }
 
     /**

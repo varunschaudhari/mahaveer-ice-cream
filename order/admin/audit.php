@@ -51,6 +51,9 @@ $actionLabel = static fn (string $action): string => match ($action) {
     'table_activate' => t('audit.action.table_activate'),
     'table_deactivate' => t('audit.action.table_deactivate'),
     'cancel_table_bill' => t('audit.action.cancel_table_bill'),
+    'bulk_approve' => t('audit.action.bulk_approve'),
+    'bulk_reject' => t('audit.action.bulk_reject'),
+    'bulk_update' => t('audit.action.bulk_update'),
     default => $action,
 };
 
