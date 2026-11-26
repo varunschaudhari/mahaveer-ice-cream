@@ -1,0 +1,263 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Csrf;
+use App\Lang;
+
+// ---------------------------------------------------------------
+// Config and environment
+// ---------------------------------------------------------------
+
+/**
+ * Holds the array returned by app/config.php. Tests replace it to point at mahavir_test.
+ * @internal call config() to read values
+ */
+function config_store(?array $replace = null): array
+{
+    static $store = [];
+    if ($replace !== null) {
+        $store = $replace;
+    }
+    return $store;
+}
+
+function config(string $key, mixed $default = null): mixed
+{
+    return config_store()[$key] ?? $default;
+}
+
+function app_env(): string
+{
+    return (string) config('APP_ENV', 'production');
+}
+
+function is_local(): bool
+{
+    return app_env() === 'local';
+}
+
+function now(): DateTimeImmutable
+{
+    return new DateTimeImmutable('now', new DateTimeZone('Asia/Kolkata'));
+}
+
+// ---------------------------------------------------------------
+// Output
+// ---------------------------------------------------------------
+
+function e(string|int|float|null $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function t(string $key, array $params = []): string
+{
+    return Lang::get($key, $params);
+}
+
+/** Current language code: 'mr' or 'en'. */
+function lang(): string
+{
+    return Lang::current();
+}
+
+/** Picks $row["{$base}_mr"] or $row["{$base}_en"] for the current language, falling back to the other. */
+function lang_field(array $row, string $base): string
+{
+    $other = lang() === 'mr' ? 'en' : 'mr';
+    $value = (string) ($row[$base . '_' . lang()] ?? '');
+    return $value !== '' ? $value : (string) ($row[$base . '_' . $other] ?? '');
+}
+
+/** URL of the current page with ?lang= set, for the language toggle. */
+function lang_switch_url(string $lang): string
+{
+    $query = $_GET;
+    $query['lang'] = $lang;
+    return current_path() . '?' . http_build_query($query);
+}
+
+/**
+ * '22:30' → '10:30 PM' (en) or 'रात्री 10:30' (mr). Marathi names the part of the day instead
+ * of AM/PM; both come from the lang files (time.format + time.morning/afternoon/evening/night).
+ */
+function format_time(string $hhmm): string
+{
+    [$hour, $minute] = array_map('intval', explode(':', $hhmm) + [1 => '0']);
+    $part = match (true) {
+        $hour < 12 => 'time.morning',
+        $hour < 16 => 'time.afternoon',
+        $hour < 19 => 'time.evening',
+        default => 'time.night',
+    };
+    $clock = sprintf('%d:%02d', $hour % 12 ?: 12, $minute);
+    return t('time.format', ['time' => $clock, 'part' => t($part)]);
+}
+
+/** Path of the current request, always a single leading slash (never "//host"). */
+function current_path(): string
+{
+    $path = (string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH);
+    return '/' . ltrim($path, '/');
+}
+
+/** Web path to a file in the current web root's assets/ folder, with a cache-busting version. */
+function asset(string $path): string
+{
+    $path = ltrim($path, '/');
+    $file = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? ''), '/\\') . '/assets/' . $path;
+    $version = is_file($file) ? '?v=' . filemtime($file) : '';
+    return '/assets/' . $path . $version;
+}
+
+/** Renders app/Views/{$name}.php with $vars as local variables. */
+function view(string $name, array $vars = []): void
+{
+    extract($vars, EXTR_SKIP);
+    require APP_ROOT . '/app/Views/' . $name . '.php';
+}
+
+// ---------------------------------------------------------------
+// Money (integer paise; never floats)
+// ---------------------------------------------------------------
+
+/**
+ * Parses a fixed-point decimal string with at most 2 decimals into an integer ×100.
+ * '40' → 4000, '40.5' → 4050, '0.05' → 5, '-5.00' → -500.
+ */
+function decimal_to_hundredths(string $value): int
+{
+    $value = trim($value);
+    if (!preg_match('/^(-?)(\d{1,12})(?:\.(\d{1,2}))?$/', $value, $m)) {
+        throw new InvalidArgumentException("Not a decimal with at most 2 places: '{$value}'");
+    }
+    $result = (int) $m[2] * 100 + (int) str_pad($m[3] ?? '', 2, '0');
+    return $m[1] === '-' ? -$result : $result;
+}
+
+/** 4000 → '40.00', 5 → '0.05', -500 → '-5.00'. */
+function hundredths_to_decimal(int $value): string
+{
+    $sign = $value < 0 ? '-' : '';
+    $abs = abs($value);
+    return $sign . intdiv($abs, 100) . '.' . str_pad((string) ($abs % 100), 2, '0', STR_PAD_LEFT);
+}
+
+/** DECIMAL column value (PDO returns a string) → integer paise. */
+function paise_from_decimal(string $value): int
+{
+    return decimal_to_hundredths($value);
+}
+
+/** Integer paise → string for a DECIMAL(10,2) column. */
+function decimal_from_paise(int $paise): string
+{
+    return hundredths_to_decimal($paise);
+}
+
+/** 4000 → '₹40', 4050 → '₹40.50', 12500000 → '₹1,25,000' (Indian digit grouping). */
+function money(int $paise): string
+{
+    $sign = $paise < 0 ? '-' : '';
+    $abs = abs($paise);
+    $rupees = (string) intdiv($abs, 100);
+    $fraction = $abs % 100;
+
+    if (strlen($rupees) > 3) {
+        $last3 = substr($rupees, -3);
+        $rest = substr($rupees, 0, -3);
+        $rest = ltrim(strrev(chunk_split(strrev($rest), 2, ',')), ',');
+        $rupees = $rest . ',' . $last3;
+    }
+
+    $text = $sign . '₹' . $rupees;
+    return $fraction === 0 ? $text : $text . '.' . str_pad((string) $fraction, 2, '0', STR_PAD_LEFT);
+}
+
+// ---------------------------------------------------------------
+// Requests and responses
+// ---------------------------------------------------------------
+
+function csrf_field(): string
+{
+    return '<input type="hidden" name="_csrf" value="' . e(Csrf::token()) . '">';
+}
+
+/** For JavaScript: fetch() calls send this value in the X-CSRF-Token header. */
+function csrf_meta(): string
+{
+    return '<meta name="csrf-token" content="' . e(Csrf::token()) . '">';
+}
+
+function redirect(string $url, int $status = 302): never
+{
+    header('Location: ' . $url, true, $status);
+    exit;
+}
+
+/** Sends a JSON body. Shape by convention: ['ok' => true, 'data' => …] or ['ok' => false, 'error' => 'message_key']. */
+function json_response(array $payload, int $status = 200): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    exit;
+}
+
+/** True for API calls, where errors must come back as JSON instead of an HTML page. */
+function wants_json(): bool
+{
+    return str_contains(current_path(), '/api/')
+        || str_contains((string) ($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
+}
+
+function is_https(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+}
+
+/**
+ * Security headers for every HTML/JSON response. Pages that embed a frame (the Google Map on
+ * the website location page) call this again with the extra frame origins; header() replaces.
+ */
+function send_security_headers(array $frameSrc = []): void
+{
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: same-origin');
+    header('X-Frame-Options: SAMEORIGIN');
+
+    $frames = $frameSrc === [] ? "'none'" : implode(' ', $frameSrc);
+    header(
+        "Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self'; "
+        . "script-src 'self'; font-src 'self'; connect-src 'self'; frame-src {$frames}; "
+        . "base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    );
+}
+
+// ---------------------------------------------------------------
+// Logging
+// ---------------------------------------------------------------
+
+/** Appends a line to storage/logs/app-YYYY-MM-DD.log. Never throws: logging must not break a request. */
+function app_log(string $level, string $message, array $context = []): void
+{
+    try {
+        $dir = APP_ROOT . '/storage/logs';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        $line = sprintf(
+            "[%s] %s: %s%s\n",
+            now()->format('Y-m-d H:i:s'),
+            strtoupper($level),
+            $message,
+            $context === [] ? '' : ' ' . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
+        @file_put_contents($dir . '/app-' . now()->format('Y-m-d') . '.log', $line, FILE_APPEND | LOCK_EX);
+    } catch (Throwable) {
+        // nothing sensible left to do
+    }
+}

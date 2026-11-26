@@ -1,0 +1,18 @@
+{
+    "name": "mahavir/ordering",
+    "description": "Mahavir Ice Cream ordering, billing and website system",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2",
+        "chillerlan/php-qrcode": "^6.0",
+        "minishlink/web-push": "^10.1"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

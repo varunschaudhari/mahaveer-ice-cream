@@ -1,0 +1,89 @@
+/*
+ * Counter screen (Essae touchscreen PC, Windows 7, Chrome 109). Load after base.css.
+ * Landscape, 1024×768 minimum, touch only: no hover-only actions, buttons ≥ 56px tall, text ≥ 16px.
+ * Chrome 109: no CSS nesting, no color-mix(), no @scope, no subgrid, no text-wrap: balance.
+ */
+
+:root {
+  --tap-min: 56px;
+  --counter-header: 56px;
+  --counter-tabs: 64px;
+  --counter-cart: 340px;
+}
+
+html, body { height: 100%; }
+body.counter {
+  overflow: hidden;              /* the app scrolls inside its panels, never the whole page */
+  font-size: 18px;
+  user-select: none; -webkit-user-select: none;
+  touch-action: manipulation;    /* no double-tap zoom delay */
+}
+body.counter input, body.counter textarea { user-select: text; -webkit-user-select: text; }
+
+/* ---------- App frame: header / tabs / main + cart ---------- */
+
+.counter-app {
+  display: grid;
+  grid-template-rows: var(--counter-header) var(--counter-tabs) minmax(0, 1fr);
+  height: 100vh;
+  min-width: 1024px;
+}
+.counter-header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding-inline: var(--space-4); background: var(--color-primary); color: var(--color-on-primary);
+}
+.counter-header__title { font-size: var(--text-lg); font-weight: 700; }
+.counter-header__staff { font-weight: 700; }
+
+.counter-tabs { display: flex; gap: var(--space-1); padding: var(--space-1); background: var(--color-primary-dark); }
+.counter-tab {
+  position: relative; flex: 1; min-height: var(--tap-min);
+  border: 0; border-radius: var(--radius); background: transparent;
+  color: var(--color-on-primary); font-size: var(--text-lg); font-weight: 700;
+}
+.counter-tab.is-active { background: var(--color-bg); color: var(--color-primary-dark); }
+.counter-tab .badge { position: absolute; top: 4px; right: 8px; background: var(--color-danger); font-size: 16px; }
+
+.counter-main { display: grid; grid-template-columns: minmax(0, 1fr) var(--counter-cart); min-height: 0; }
+.counter-main.no-cart { grid-template-columns: minmax(0, 1fr); }
+.counter-panel { min-height: 0; overflow-y: auto; padding: var(--space-3); -webkit-overflow-scrolling: touch; }
+.counter-cart {
+  display: flex; flex-direction: column; min-height: 0;
+  border-left: 2px solid var(--color-border); background: var(--color-surface);
+}
+.counter-cart__lines { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-3); }
+.counter-cart__footer { padding: var(--space-3); border-top: 2px solid var(--color-border); }
+.counter-cart__total { font-size: var(--text-2xl); font-weight: 700; }
+
+/* ---------- Touch buttons and grids ---------- */
+
+.counter-btn {
+  min-height: var(--tap-min); padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--color-border); border-radius: var(--radius);
+  background: var(--color-surface); color: var(--color-text);
+  font-size: var(--text-lg); font-weight: 700; line-height: 1.2;
+}
+.counter-btn:active { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.counter-btn.is-selected { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+.counter-btn:disabled { opacity: 0.4; }
+
+.category-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); overflow-x: auto; }
+.category-bar .counter-btn { flex-shrink: 0; }
+.item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-2); }
+.item-grid .counter-btn { min-height: 80px; }
+.variant-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--space-2); }
+
+/* qty stepper in the cart: big − / + */
+.stepper { display: inline-grid; grid-template-columns: var(--tap-min) 3rem var(--tap-min); align-items: center; text-align: center; }
+.stepper .counter-btn { padding: 0; font-size: var(--text-xl); }
+
+/* ---------- Overlays (PIN screen, "Tap to start" audio unlock) ---------- */
+
+.counter-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(43, 27, 23, 0.85); color: var(--color-on-primary);
+  font-size: var(--text-2xl); font-weight: 700; text-align: center;
+}
+.pin-pad { display: grid; grid-template-columns: repeat(3, 88px); gap: var(--space-3); }
+.pin-pad .counter-btn { min-height: 88px; font-size: var(--text-2xl); }

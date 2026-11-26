@@ -1,0 +1,25 @@
+# secrets and local files
+app/config.php
+website/approot.php
+order/approot.php
+.env
+*.sql.gz
+
+# runtime data
+storage/*
+!storage/.gitkeep
+
+# tools
+tools/*.phar
+.phpunit.cache/
+.phpunit.result.cache
+
+# OS / editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# source kit, already unpacked into the repo
+/mahavir-claude-code-kit.zip

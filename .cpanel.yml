@@ -1,0 +1,13 @@
+---
+deployment:
+  tasks:
+    - . $HOME/mahavir_deploy.env
+    - /bin/mkdir -p $APPDIR/storage/uploads $APPDIR/storage/logs $APPDIR/storage/backups
+    - /usr/bin/rsync -a --delete --exclude 'config.php' app/ $APPDIR/app/
+    - /usr/bin/rsync -a --delete lang/ $APPDIR/lang/
+    - /usr/bin/rsync -a --delete vendor/ $APPDIR/vendor/
+    - /usr/bin/rsync -a --delete cron/ $APPDIR/cron/
+    - /usr/bin/rsync -a --delete database/ $APPDIR/database/
+    - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' order/ $APPDIR/order/
+    - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' website/ $WEBDIR/
+    - echo "<?php return '$APPDIR';" > $WEBDIR/approot.php

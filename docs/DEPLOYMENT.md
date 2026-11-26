@@ -1,0 +1,115 @@
+# Setup & Deployment
+
+## 1. Local development (Windows 11)
+
+Install once:
+
+1. **XAMPP** (free) – used for MySQL/MariaDB (start "MySQL" in the XAMPP control panel). You can also use XAMPP's bundled PHP.
+2. **PHP** – use the same major version as the cPanel server (check cPanel → MultiPHP Manager). If XAMPP's PHP is older, download PHP for Windows (Thread Safe x64 zip) from windows.php.net, unzip to `C:\php`, add it to PATH. Minimum PHP 8.2.
+3. In `php.ini` enable: `pdo_mysql`, `mbstring`, `openssl`, `curl`, `gd`, `fileinfo`, `intl`, `gmp`, `sodium`.
+4. **Composer** for Windows (getcomposer.org) – only used locally to refresh `vendor/`.
+5. **Git** for Windows, and a GitHub account.
+6. **PHPUnit phar** – download `phpunit-11.phar` (works with PHP 8.2+) from phar.phpunit.de and save it as `tools/phpunit.phar` (gitignored).
+7. **Claude Code** – install per the official docs and run it from the repo root.
+
+Create databases in phpMyAdmin (http://localhost/phpmyadmin): `mahavir` and `mahavir_test`, collation `utf8mb4_unicode_ci`.
+
+```bash
+git clone git@github.com:<you>/mahavir-icecream.git
+cd mahavir-icecream
+copy app\config.example.php app\config.php      # then edit DB credentials, APP_ENV=local
+php database/migrate.php --fresh
+php database/create_owner.php                    # owner login + staff PINs (from M1)
+php -S localhost:8000 -t order                   # ordering app
+php -S localhost:8001 -t website                 # website (second terminal)
+php tools/phpunit.phar
+```
+
+Test customer pages from your phone on the same Wi-Fi: run `php -S 0.0.0.0:8000 -t order` and open `http://<your-PC-IP>:8000`. (Web Push needs HTTPS, so test push on staging.)
+
+## 2. GitHub
+
+- Private repository, e.g. `mahavir-icecream`.
+- Branches: `main` = production, `staging` = staging. Work on feature branches, merge to `staging`, test on staging, then merge `staging` → `main`.
+- Never commit `app/config.php`, `storage/`, `tools/*.phar`, or database dumps.
+
+## 3. cPanel one-time setup (repeat on the staging account)
+
+1. **Domains:** `mahaveericecream.in` (website). Create subdomain `order.mahaveericecream.in` with document root `/home/<user>/mahavir/order`.
+   Staging account: subdomain `mahaveer.foreverstory.in` with document root `/home/<user>/mahavir/order`; optional `mahaveer-site.foreverstory.in` for the staging website.
+2. **SSL:** cPanel → SSL/TLS Status → run AutoSSL for all domains. Force HTTPS redirect (cPanel → Domains → Force HTTPS Redirect).
+3. **PHP:** MultiPHP Manager → latest PHP for all domains. Extensions (Select PHP Version, if available): pdo_mysql, mbstring, openssl, curl, gd, fileinfo, intl, gmp, sodium.
+4. **Database:** MySQL Databases → create DB + user, grant ALL on that DB. Staging uses its own DB.
+5. **Deploy settings file** (one per server) – create `/home/<user>/mahavir_deploy.env` with File Manager:
+
+   ```sh
+   APPDIR=/home/<user>/mahavir
+   WEBDIR=/home/<user>/public_html
+   ```
+
+   (Staging: `WEBDIR` = document root of `mahaveer-site.foreverstory.in`, or a dummy folder if you skip the staging website.)
+6. **Config:** after the first deploy, create `/home/<user>/mahavir/app/config.php` from `config.example.php` with production values (`APP_ENV=production`, DB credentials, VAPID keys, URLs). The deploy never overwrites it.
+7. **Git Version Control:**
+   - cPanel → SSH Access → Manage SSH Keys → generate a key; add its public key to GitHub repo → Settings → Deploy keys (read-only).
+   - cPanel → Git Version Control → Create → Clone URL `git@github.com:<you>/mahavir-icecream.git`, repository path `/home/<user>/repositories/mahavir-icecream`. Production checks out `main`; staging checks out `staging`.
+8. **First database load:** phpMyAdmin → import `database/migrations/001_schema.sql`, then `database/seed.sql` (or run `php database/migrate.php --seed` over SSH). Then run `php /home/<user>/mahavir/database/create_owner.php` over SSH.
+9. **Cron jobs** (cPanel → Cron Jobs). Find the PHP binary path in MultiPHP or use `/usr/local/bin/php`:
+
+   ```
+   */5 * * * *  /usr/local/bin/php /home/<user>/mahavir/cron/auto_noshow.php >/dev/null 2>&1
+   30 23 * * *  /usr/local/bin/php /home/<user>/mahavir/cron/backup.php      >/dev/null 2>&1
+   0 4 * * 0    /usr/local/bin/php /home/<user>/mahavir/cron/cleanup.php     >/dev/null 2>&1
+   ```
+
+## 4. `.cpanel.yml` (repo root)
+
+```yaml
+---
+deployment:
+  tasks:
+    - . $HOME/mahavir_deploy.env
+    - /bin/mkdir -p $APPDIR/storage/uploads $APPDIR/storage/logs $APPDIR/storage/backups
+    - /usr/bin/rsync -a --delete --exclude 'config.php' app/ $APPDIR/app/
+    - /usr/bin/rsync -a --delete lang/ $APPDIR/lang/
+    - /usr/bin/rsync -a --delete vendor/ $APPDIR/vendor/
+    - /usr/bin/rsync -a --delete cron/ $APPDIR/cron/
+    - /usr/bin/rsync -a --delete database/ $APPDIR/database/
+    - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' order/ $APPDIR/order/
+    - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' website/ $WEBDIR/
+    - echo "<?php return '$APPDIR';" > $WEBDIR/approot.php
+```
+
+Notes:
+- Web roots are copied **without** `--delete` so cPanel's `.well-known` (SSL) and `.htaccess` (PHP version handler) are never removed. If a page is deleted from the repo, delete it on the server by hand.
+- `tests/`, `tools/`, `docs/` are never deployed.
+- If `rsync` is missing on the host, replace each line with `/bin/cp -R`.
+
+**Deploying:** push to GitHub → cPanel → Git Version Control → Manage → Pull or Deploy → "Update from Remote" → "Deploy HEAD Commit". Then run new migrations: `php $HOME/mahavir/database/migrate.php` over SSH (or import the new `.sql` in phpMyAdmin).
+
+## 5. Release checklist
+
+- [ ] Tests pass locally
+- [ ] Deployed to staging, migrations applied, manual test of the milestone checklist
+- [ ] Merge to `main`, deploy production, apply migrations
+- [ ] Check `storage/logs` for errors after the first hour
+- [ ] QR stickers and posters are printed only from production URLs
+
+## 6. Counter PC setup (at the shop)
+
+- [ ] Replace CMOS battery (CR2032); set correct date, time and time zone (India). Wrong date breaks HTTPS.
+- [ ] Confirm Windows 7 SP1; Chrome 109 installed.
+- [ ] Install Epson TM-T82 Windows driver; set it as **default printer**; paper 80 mm × receipt; print a Windows test page.
+- [ ] Chrome: allow sound for `order.mahaveericecream.in`; turn off "Offer to translate"; turn off password-save prompts for the counter.
+- [ ] Desktop shortcut "Mahavir Counter", target:
+  `"C:\Program Files\Google\Chrome\Application\chrome.exe" --app=https://order.mahaveericecream.in/counter/ --kiosk-printing`
+  (path may be `Program Files (x86)`). Copy it to the Startup folder so it opens on boot.
+- [ ] Power options: never sleep, screen off after 30 min at most.
+- [ ] Internet backup: keep a phone with mobile hotspot (or a 4G dongle) for when the shop internet drops. Connect the counter PC to it once and save the password, so staff only have to switch the hotspot on. If the PC has no Wi-Fi, use a USB Wi-Fi adapter or the phone's USB tethering. Test: switch off the shop router, switch on the hotspot, print a bill.
+- [ ] Test: bill with Marathi item names prints clearly; KOT prints; beep is audible over shop noise.
+
+## 7. Owner's phone (Android)
+
+- [ ] Open `https://order.mahaveericecream.in/owner/` in Chrome, log in, "Add to Home screen".
+- [ ] Tap "Enable notifications" and allow.
+- [ ] Android settings → Apps → Chrome → Battery → Unrestricted (otherwise some phones delay notifications).
+- [ ] Place a test table order and confirm the notification arrives with the screen locked.
