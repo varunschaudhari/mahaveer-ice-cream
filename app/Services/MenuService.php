@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Db;
+use App\Settings;
 use App\ValidationException;
+use DateTimeImmutable;
 use PDO;
 
 final class MenuService
@@ -28,6 +30,18 @@ final class MenuService
      */
     public function publicMenu(): array
     {
+        return $this->sellableMenu(true);
+    }
+
+    /** Counter billing menu: same shape as publicMenu(), plus counter-only items (online_enabled = 0). */
+    public function counterMenu(): array
+    {
+        return $this->sellableMenu(false);
+    }
+
+    private function sellableMenu(bool $onlineOnly): array
+    {
+        $onlineFilter = $onlineOnly ? 'AND i.online_enabled = 1' : '';
         $rows = $this->db->query(
             'SELECT c.id AS c_id, c.name_mr AS c_name_mr, c.name_en AS c_name_en,
                     i.id AS i_id, i.name_mr AS i_name_mr, i.name_en AS i_name_en,
@@ -37,7 +51,7 @@ final class MenuService
              JOIN items i         ON i.category_id = c.id
              JOIN item_variants v ON v.item_id = i.id
              WHERE c.is_active = 1
-               AND i.is_active = 1 AND i.online_enabled = 1
+               AND i.is_active = 1 ' . $onlineFilter . '
                AND v.is_active = 1 AND v.price > 0
              ORDER BY c.sort_order, c.id, i.sort_order, i.id, v.sort_order, v.id'
         )->fetchAll();
@@ -74,6 +88,61 @@ final class MenuService
             $category['items'] = array_values($category['items']);
             return $category;
         }, $menu));
+    }
+
+    // ---------------------------------------------------------------
+    // Daily stock (counter Stock tab)
+    // ---------------------------------------------------------------
+
+    /** Sold-out switch for today (SPEC §9 Stock tab), audit logged. Only active items. */
+    public function setAvailability(int $itemId, bool $available, int $staffId): void
+    {
+        $stmt = $this->db->prepare('SELECT id, name_mr, is_available FROM items WHERE id = ? AND is_active = 1');
+        $stmt->execute([$itemId]);
+        $item = $stmt->fetch() ?: throw ValidationException::one('_', 'menu.error.not_found');
+        if ((bool) $item['is_available'] === $available) {
+            return;
+        }
+        Db::transaction(function () use ($item, $available, $staffId): void {
+            $this->db->prepare('UPDATE items SET is_available = ? WHERE id = ?')->execute([$available ? 1 : 0, $item['id']]);
+            $this->audit()->log($staffId, 'stock_toggle', 'item', (int) $item['id'], [
+                'item' => $item['name_mr'],
+                'available' => $available,
+            ]);
+        });
+    }
+
+    /**
+     * Sold-out marks last one day: the first call on a new day makes every item available again.
+     * The last reset date is kept in settings ('stock_reset_date'). Called by the menu pages and
+     * the counter before they read availability, so no cron job is needed.
+     *
+     * @return bool true when this call did the reset
+     */
+    public function resetStockIfNewDay(?DateTimeImmutable $now = null): bool
+    {
+        $today = ($now ?? now())->format('Y-m-d');
+        $stmt = $this->db->prepare("SELECT setting_value FROM settings WHERE setting_key = 'stock_reset_date'");
+        $stmt->execute();
+        if ($stmt->fetchColumn() === $today) {
+            return false;
+        }
+
+        return Db::transaction(function () use ($today): bool {
+            // Lock the marker row so two requests right after midnight reset only once.
+            $this->db->exec("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('stock_reset_date', '')");
+            $last = $this->db->query("SELECT setting_value FROM settings WHERE setting_key = 'stock_reset_date' FOR UPDATE")->fetchColumn();
+            if ($last === $today) {
+                return false;
+            }
+            $count = $this->db->exec('UPDATE items SET is_available = 1 WHERE is_available = 0');
+            $this->db->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'stock_reset_date'")->execute([$today]);
+            if ($count > 0) {
+                $this->audit()->log(null, 'stock_reset', 'item', null, ['items' => $count]);
+            }
+            Settings::clearCache();
+            return true;
+        });
     }
 
     // ---------------------------------------------------------------

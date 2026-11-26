@@ -23,8 +23,15 @@ final class ValidationException extends RuntimeException
         )));
     }
 
-    public static function one(string $field, string $langKey): self
+    /** @param string|array{0: string, 1: array} $error lang key, or [lang key, params] */
+    public static function one(string $field, string|array $error): self
     {
-        return new self([$field => $langKey]);
+        return new self([$field => $error]);
+    }
+
+    /** The first error (for API responses that show one message). */
+    public function first(): string|array
+    {
+        return $this->errors[array_key_first($this->errors)];
     }
 }

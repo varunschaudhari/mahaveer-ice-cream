@@ -23,6 +23,7 @@ final class Auth
     public const IP_MAX_PIN_FAILURES = 20;
     public const IP_MAX_PASSWORD_FAILURES = 10;
     public const IP_WINDOW_MINUTES = 15;
+    public const IP_MAX_OWNER_PIN_FAILURES = 5;
     public const ADMIN_ROLES = ['owner', 'super'];
 
     private const SESSION_KEY = 'auth';
@@ -116,6 +117,37 @@ final class Auth
         return ['ok' => false, 'error' => $wrongKey, 'attempts_left' => self::MAX_ATTEMPTS - $attempts];
     }
 
+    /**
+     * Owner approval at the counter (cancel a bill, give a discount): the PIN of any active owner
+     * or super-admin, typed on the counter while a staff member is logged in. 5 wrong PINs per
+     * 15 minutes from one address block approvals for a while.
+     *
+     * @return array{ok: bool, error?: string, owner?: array{id: int, name: string}}
+     */
+    public static function verifyOwnerPin(string $pin): array
+    {
+        $ipKey = 'owner_pin_fail:' . client_ip();
+        if (RateLimiter::tooMany($ipKey, self::IP_MAX_OWNER_PIN_FAILURES, self::IP_WINDOW_MINUTES)) {
+            return ['ok' => false, 'error' => 'auth.too_many'];
+        }
+
+        if (is_valid_pin($pin)) {
+            $owners = Db::pdo()->query(
+                "SELECT id, name, pin_hash FROM staff
+                 WHERE is_active = 1 AND role IN ('owner', 'super') AND pin_hash IS NOT NULL"
+            )->fetchAll();
+            foreach ($owners as $owner) {
+                if (password_verify($pin, $owner['pin_hash'])) {
+                    return ['ok' => true, 'owner' => ['id' => (int) $owner['id'], 'name' => $owner['name']]];
+                }
+            }
+        }
+
+        RateLimiter::hit($ipKey);
+        app_log('warning', 'Owner PIN approval failed', ['ip' => client_ip()]);
+        return ['ok' => false, 'error' => 'auth.wrong_owner_pin'];
+    }
+
     // ---------------------------------------------------------------
     // Login / logout (session)
     // ---------------------------------------------------------------
@@ -192,9 +224,12 @@ final class Auth
      * The logged-in user, re-read from the database on every request so a deactivated account is
      * logged out at once. Null when not logged in or idle for too long.
      *
+     * $touch = false checks without counting as activity: the counter's 15-second connection
+     * check must not keep a forgotten login alive overnight.
+     *
      * @return array{id: int, name: string, role: string, username: ?string, method: string}|null
      */
-    public static function user(): ?array
+    public static function user(bool $touch = true): ?array
     {
         if (self::$loaded) {
             return self::$user;
@@ -220,8 +255,10 @@ final class Auth
             return self::$user = null;
         }
 
-        $_SESSION[self::SESSION_KEY]['last_seen'] = time();
-        self::refreshCookie();
+        if ($touch) {
+            $_SESSION[self::SESSION_KEY]['last_seen'] = time();
+            self::refreshCookie();
+        }
 
         $row['id'] = (int) $row['id'];
         $row['method'] = $auth['method'];
@@ -251,7 +288,7 @@ final class Auth
     private static function deny(string $loginUrl): never
     {
         if (wants_json()) {
-            json_response(['ok' => false, 'error' => 'auth.required'], 401);
+            json_error('auth.required', 401);
         }
         redirect($loginUrl);
     }

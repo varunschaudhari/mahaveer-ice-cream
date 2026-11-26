@@ -137,6 +137,8 @@ All responses `{ "ok": true, "data": … }` or `{ "ok": false, "error": "message
 | `counter_bill.php` | staff | Save a counter bill |
 | `table_action.php` | staff | move order, settle, dismiss alert |
 | `stock.php` | staff | Toggle availability |
+| `discount_approve.php` | staff + owner PIN | Owner approves a counter discount (amount, reason); kept in the session 10 min, used once by `counter_bill.php` |
+| `ping.php` | staff | Connection check every 15 s for the "No internet" banner; 401 when the login ended; does not count as activity |
 | `push_subscribe.php` | owner | Save/remove Web Push subscription, mute |
 
 Rate limits (simple, stored in a `rate_limits` table keyed by IP + action, or in APCu if available): `place_order` max 5 per 10 min per IP and per mobile; `table_alert` max 1 per 30 s per table; login max 5 failures then 15 min lock.

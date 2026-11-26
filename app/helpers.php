@@ -203,6 +203,19 @@ function parse_rupees(string $input): int
     return decimal_to_hundredths($clean);
 }
 
+/** DECIMAL quantity → display: '2.00' → '2', '2.50' → '2.5'. */
+function format_qty(string $qty): string
+{
+    return str_contains($qty, '.') ? rtrim(rtrim($qty, '0'), '.') : $qty;
+}
+
+/** Marathi part of an order-line name snapshot: "बदाम शेक (फुल) / Badam Shake (Full)" → "बदाम शेक (फुल)". */
+function marathi_name(string $snapshot): string
+{
+    $pos = mb_strpos($snapshot, ' / ');
+    return $pos === false ? $snapshot : mb_substr($snapshot, 0, $pos);
+}
+
 /** Paise → value for a form input: 5500 → '55', 5550 → '55.50'. */
 function rupees_input(int $paise): string
 {
@@ -302,6 +315,23 @@ function json_response(array $payload, int $status = 200): never
     header('Cache-Control: no-store');
     echo json_encode($payload, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     exit;
+}
+
+/** Decoded JSON request body (API POSTs); [] when missing or invalid. */
+function json_body(): array
+{
+    $data = json_decode((string) file_get_contents('php://input'), true);
+    return is_array($data) ? $data : [];
+}
+
+/** JSON error for the counter screen: the lang key plus the translated message to show. */
+function json_error(string|array $error, int $status = 422): never
+{
+    json_response([
+        'ok' => false,
+        'error' => is_array($error) ? $error[0] : $error,
+        'message' => error_text($error),
+    ], $status);
 }
 
 /** True for API calls, where errors must come back as JSON instead of an HTML page. */

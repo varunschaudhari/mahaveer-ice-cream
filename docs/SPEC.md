@@ -95,7 +95,7 @@ URL: `order.mahaveericecream.in/bulk.php` (also linked from website).
 
 ## 9. Counter screen (Essae touchscreen PC)
 
-Opened as a Chrome app window: `chrome.exe --app=https://order.mahaveericecream.in/counter/ --kiosk-printing`.
+Opened as a Chrome app window: `chrome.exe --app=https://order.mahaveericecream.in/counter/ --kiosk-printing --autoplay-policy=no-user-gesture-required`.
 
 Layout (landscape, 1024×768 minimum, touch only, no hover-dependent UI):
 
@@ -105,7 +105,7 @@ Layout (landscape, 1024×768 minimum, touch only, no hover-dependent UI):
 - **Stock tab:** every item with an on/off switch for today's availability.
 - **Today tab:** today's bills, reprint, cancel (owner PIN), day close summary (totals by Cash / UPI counter, counts by order type), print day summary.
 - Alerts: new takeaway/table order, Call staff, Request bill → sound (Web Audio beep, repeated every 10 s until acknowledged) + red badge on the tab.
-- First tap after login unlocks audio ("Tap to start" overlay) because Chrome blocks autoplay.
+- Sound: Chrome blocks audio until the page is tapped. The counter shortcut adds `--autoplay-policy=no-user-gesture-required` so alerts always sound; without it, a small "Tap anywhere to turn on sound" hint shows and the first tap anywhere unlocks audio (non-blocking instead of a full-screen "Tap to start" overlay, because each tab is its own page).
 - Staff switch: "Lock" button returns to the name + PIN screen (no auto-lock); every order records `staff_id`.
 - No internet: when requests to the server fail, a red full-width banner "इंटरनेट नाही – मोबाइल हॉटस्पॉट चालू करा" / "No internet – switch on the mobile hotspot" appears, and Save & Print is disabled until the connection is back. Backup connection is a phone hotspot (DEPLOYMENT.md §6); there is no offline billing in V1.
 

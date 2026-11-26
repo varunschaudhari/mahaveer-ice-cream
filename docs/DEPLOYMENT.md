@@ -101,7 +101,7 @@ Notes:
 - [ ] Install Epson TM-T82 Windows driver; set it as **default printer**; paper 80 mm × receipt; print a Windows test page.
 - [ ] Chrome: allow sound for `order.mahaveericecream.in`; turn off "Offer to translate"; turn off password-save prompts for the counter.
 - [ ] Desktop shortcut "Mahavir Counter", target:
-  `"C:\Program Files\Google\Chrome\Application\chrome.exe" --app=https://order.mahaveericecream.in/counter/ --kiosk-printing`
+  `"C:\Program Files\Google\Chrome\Application\chrome.exe" --app=https://order.mahaveericecream.in/counter/ --kiosk-printing --autoplay-policy=no-user-gesture-required`
   (path may be `Program Files (x86)`). Copy it to the Startup folder so it opens on boot.
 - [ ] Power options: never sleep, screen off after 30 min at most.
 - [ ] Internet backup: keep a phone with mobile hotspot (or a 4G dongle) for when the shop internet drops. Connect the counter PC to it once and save the password, so staff only have to switch the hotspot on. If the PC has no Wi-Fi, use a USB Wi-Fi adapter or the phone's USB tethering. Test: switch off the shop router, switch on the hotspot, print a bill.

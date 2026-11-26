@@ -5,8 +5,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Milestones
 
 - [x] M0 – Project foundation (2026-11-26, commit a20f8d0)
-- [x] M1 – Login, roles, admin menu & settings (2026-11-26 – tests + scripted HTTP checks pass; awaiting developer's browser check)
-- [ ] M2 – Counter billing (pilot-ready)
+- [x] M1 – Login, roles, admin menu & settings (2026-11-26, commit 93624a9)
+- [x] M2 – Counter billing (pilot-ready) (2026-11-26 – tests + scripted HTTP checks pass; awaiting developer's check at 1024×768 and a real print on the TM-T82)
 - [ ] M3 – Takeaway ordering + online orders panel
 - [ ] M4 – Table ordering
 - [ ] M5 – Bulk orders
@@ -46,10 +46,27 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M1:** admin always needs a password login, even for an owner already logged in at the counter with his PIN. One user per session; the logged-in user is re-read each request, so deactivation logs out at once. |
 | 2026-11-26 | **M1:** menu rows are never deleted (old orders reference variants) – only deactivated. Rule: an active item needs ≥ 1 active variant and no active ₹0 variant. |
 | 2026-11-26 | **M1:** owner/super accounts need username + password (min 8 chars); staff need a PIN. Only a super-admin manages super-admin accounts; the last active owner cannot be demoted/deactivated; nobody can deactivate themselves. PINs/passwords never go in the audit log. |
+| 2026-11-26 | **M2 (developer):** sold-out marks reset automatically each new day (first menu/counter request after midnight; last reset date in settings row `stock_reset_date`, audit `stock_reset`). |
+| 2026-11-26 | **M2 (developer):** only today's bills can be cancelled (Today tab, owner PIN + reason). Cancelled bills keep their number; their payments become `refunded`; day totals leave them out. |
+| 2026-11-26 | **M2 (developer):** counter discount included: ₹ amount + reason, approved immediately by owner PIN (`api/discount_approve.php`, approval held 10 min in the session, used once). Reason + approving owner go to the audit log (`orders` has no discount-reason column). |
+| 2026-11-26 | **M2:** `order_items.item_name` stores "मराठी (variant) / English (variant)" as the schema comment shows; bills print the part before " / " (`marathi_name()`). |
+| 2026-11-26 | **M2:** double-save protection without a schema change: the counter screen makes the bill's `order_key` before the first save; a repeated key returns the saved bill (`duplicate: true`). The screen also sends the total it showed; if prices changed meanwhile the save is refused and the page reloads. |
+| 2026-11-26 | **M2:** payment UI = three buttons (Cash / UPI / Cash + UPI). UPI saves at once; Cash opens a dialog with Exact / next ₹50 / ₹100 / ₹500 / Other and shows the change; Mixed asks for the cash part. Keeps the cart visible at 1024×768 with 56 px buttons. |
+| 2026-11-26 | **M2:** sound unlock is a non-blocking "tap anywhere" hint, not a full-screen overlay (each tab is its own page, so an overlay would return on every tab). The counter shortcut gets `--autoplay-policy=no-user-gesture-required` so sound works without a tap (SPEC §9, DEPLOYMENT §6 updated). |
+| 2026-11-26 | **M2:** owner PIN approvals check the PIN of any active owner/super-admin; 5 wrong owner PINs per 15 min per address block approvals. |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M2 Counter billing
+
+- Services: `SequenceService` (daily token, continuous bill no, row locks, must run in a transaction), `CartService` (DB prices, active/₹0/sold-out/qty 1–50 checks; counter vs online channel), `PaymentService` (cash/UPI/mixed split, change), `OrderService` (createCounterOrder, cancel, logReprint, find, forDay), `ReportService::daySummary`; `MenuService::counterMenu/setAvailability/resetStockIfNewDay`; `Auth::verifyOwnerPin`, `Auth::user(touch: false)`.
+- Counter: `billing.php`, `stock.php`, `today.php`, `print.php` (bill + day summary, 80 mm `print.css`), shared frame (tabs, offline banner, toast, number pad + reason dialogs, hidden print iframe), `counter.js` / `billing.js` / `stock.js` / `today.js`. API: `counter_bill`, `discount_approve`, `stock`, `order_action` (reprint, cancel), `ping`.
+- Checks: 221 PHPUnit tests pass. Scripted HTTP run on `php -S`: the M2 example bill = ₹180 (token 1, bill 1, Marathi-only names, parcel line); repeated key returns the same bill; stale price refused; UPI + mixed bills; wrong / missing / used-up discount approvals refused, ₹10 discount printed; sold-out Mango refused then restored; reprint marked DUPLICATE; cancel needs owner PIN, second cancel refused; day summary cash ₹200 / UPI ₹60 / total ₹260 / 3 bills (cancelled left out); ping 401 after Lock; no errors in the app log. No post-Chrome-109 features in counter/print CSS or JS.
+- Not verified here (needs the developer / shop): the layout in a real 1024×768 Chrome window, and printing on the Epson TM-T82 with `--kiosk-printing` (bill width, Marathi rendering, token size).
+- Local dev DB now has a few test bills from the scripted run (bill 1 cancelled). Reset with `php database/migrate.php --fresh` and re-run `create_owner.php`.
+- Next: pilot deploy of M0–M2 to staging (DEPLOYMENT.md), then M3 after the developer confirms M2.
 
 ### 2026-11-26 – M1 Login, roles, admin menu & settings
 

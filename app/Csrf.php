@@ -38,7 +38,7 @@ final class Csrf
 
         app_log('warning', 'CSRF check failed', ['url' => $_SERVER['REQUEST_URI'] ?? null]);
         if (wants_json()) {
-            json_response(['ok' => false, 'error' => 'error.csrf'], 403);
+            json_error('error.csrf', 403);
         }
         http_response_code(403);
         view('error', ['message' => t('error.csrf')]);

@@ -39,6 +39,11 @@ $actionLabel = static fn (string $action): string => match ($action) {
     'staff_activate' => t('audit.action.staff_activate'),
     'staff_deactivate' => t('audit.action.staff_deactivate'),
     'staff_unlock' => t('audit.action.staff_unlock'),
+    'discount' => t('audit.action.discount'),
+    'cancel_order' => t('audit.action.cancel_order'),
+    'bill_reprint' => t('audit.action.bill_reprint'),
+    'stock_toggle' => t('audit.action.stock_toggle'),
+    'stock_reset' => t('audit.action.stock_reset'),
     default => $action,
 };
 
@@ -64,6 +69,20 @@ $describe = static function (array $row) use ($show): array {
         if (isset($details[$key]) && is_scalar($details[$key])) {
             $lines[] = (string) $details[$key];
         }
+    }
+    if (isset($details['bill_no'])) {
+        $lines[] = t('print.bill_no') . ' ' . $details['bill_no'];
+    }
+    foreach (['amount' => t('audit.amount'), 'total' => t('billing.total')] as $key => $label) {
+        if (isset($details[$key]) && is_string($details[$key])) {
+            $lines[] = $label . ': ' . $show('price', $details[$key]);
+        }
+    }
+    if (isset($details['reason'])) {
+        $lines[] = t('audit.reason') . ': ' . $details['reason'];
+    }
+    if (array_key_exists('available', $details)) {
+        $lines[] = $details['available'] ? t('stock.available') : t('menu.sold_out');
     }
     $before = $details['before'] ?? null;
     $after = $details['after'] ?? null;
