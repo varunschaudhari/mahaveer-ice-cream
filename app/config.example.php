@@ -22,4 +22,8 @@ return [
     'VAPID_SUBJECT' => 'mailto:owner@example.com',
 
     'SESSION_NAME' => 'mahavir_sid',
+
+    // Optional: full path to mysqldump if it is not /usr/bin or /usr/local/bin (cron/backup.php
+    // falls back to a PHP dump when mysqldump cannot run, so this is rarely needed).
+    // 'MYSQLDUMP_PATH' => '/usr/bin/mysqldump',
 ];

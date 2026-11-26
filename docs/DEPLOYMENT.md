@@ -103,8 +103,12 @@ Notes:
 - [ ] Tests pass locally
 - [ ] Deployed to staging, migrations applied, manual test of the milestone checklist
 - [ ] Merge to `main`, deploy production, apply migrations
-- [ ] Check `storage/logs` for errors after the first hour
-- [ ] QR stickers and posters are printed only from production URLs
+- [ ] admin → System health (super-admin): crons OK, recent backup, no errors in today's log; check again after the first hour
+- [ ] QR stickers and posters are printed only from production URLs (anywhere else they carry a "TEST – DO NOT USE" stamp)
+
+First go-live: follow `docs/GO_LIVE.md` step by step.
+
+**Restoring a backup:** backups are `storage/backups/mahavir-YYYY-MM-DD-HHMM.sql.gz` (last 30 nights). phpMyAdmin → select the database → Import → the file; or over SSH `gunzip -c FILE | mysql -u USER -p DBNAME`. The file recreates every table, so restore into the right database. Copies only live on this account: make sure the hosting plan has its own account backups, and download a backup to your PC now and then.
 
 ## 6. Counter PC setup (at the shop)
 

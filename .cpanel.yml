@@ -1,13 +1,17 @@
 ---
+# cPanel Git deploy (DEPLOYMENT.md §3-§4). $APPDIR / $WEBDIR come from ~/mahavir_deploy.env.
+# order/ is a folder of its own: --delete removes pages deleted from the code. public_html also
+# holds cPanel and Google files, so the website copy only adds and updates.
+# Never deployed: tests/, docs/, tools/, app/config.php (each server keeps its own).
 deployment:
   tasks:
     - . $HOME/mahavir_deploy.env
-    - /bin/mkdir -p $APPDIR/storage/uploads $APPDIR/storage/logs $APPDIR/storage/backups
+    - /bin/mkdir -p $APPDIR/storage/uploads $APPDIR/storage/logs $APPDIR/storage/backups $APPDIR/storage/sessions $APPDIR/storage/cron
     - /usr/bin/rsync -a --delete --exclude 'config.php' app/ $APPDIR/app/
     - /usr/bin/rsync -a --delete lang/ $APPDIR/lang/
     - /usr/bin/rsync -a --delete vendor/ $APPDIR/vendor/
     - /usr/bin/rsync -a --delete cron/ $APPDIR/cron/
     - /usr/bin/rsync -a --delete database/ $APPDIR/database/
-    - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' order/ $APPDIR/order/
+    - /usr/bin/rsync -a --delete --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' --exclude '.user.ini' --exclude 'php.ini' --exclude 'error_log' order/ $APPDIR/order/
     - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' website/ $WEBDIR/
     - echo "<?php return '$APPDIR';" > $WEBDIR/approot.php

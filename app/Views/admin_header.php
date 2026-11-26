@@ -22,6 +22,9 @@ $nav = [
     'website' => ['/admin/website.php', t('admin.nav.website')],
     'qr' => ['/admin/qr.php', t('admin.nav.qr')],
 ];
+if (($user['role'] ?? '') === 'super') {
+    $nav['health'] = ['/admin/health.php', t('admin.nav.health')]; // developer only
+}
 ?>
 <!doctype html>
 <html lang="<?= e(lang()) ?>">

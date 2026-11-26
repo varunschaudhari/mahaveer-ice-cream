@@ -30,7 +30,7 @@ final class DatabaseSetupTest extends DatabaseTestCase
         $migrator = new Migrator($this->db(), APP_ROOT . '/database');
         self::assertSame([], $migrator->pending());
         self::assertSame(
-            ['001_schema.sql'],
+            ['001_schema.sql', '002_report_indexes.sql'],
             $this->db()->query('SELECT filename FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN)
         );
     }

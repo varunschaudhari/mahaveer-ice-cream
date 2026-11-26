@@ -14,10 +14,13 @@ if (PHP_SAPI !== 'cli') {
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 
+use App\Cron;
 use App\Services\OrderService;
 
-$count = (new OrderService())->markNoShows();
-if ($count > 0) {
-    app_log('info', "auto_noshow: {$count} order(s) marked no-show");
-}
-echo $count, " order(s) marked no-show\n";
+Cron::run('auto_noshow', static function (): string {
+    $count = (new OrderService())->markNoShows();
+    if ($count > 0) {
+        app_log('info', "auto_noshow: {$count} order(s) marked no-show");
+    }
+    return "{$count} order(s) marked no-show";
+});

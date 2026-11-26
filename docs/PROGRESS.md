@@ -12,8 +12,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - [x] M5 – Bulk orders (2026-11-26, commit f05b019; browser check still open)
 - [x] M6 – Owner's phone (PWA + Web Push) (2026-11-26, commit d764b3e; "Done when" needs an Android phone on staging, see DEPLOYMENT §7)
 - [x] M7 – Reports & customers (2026-11-26, commit c7f3e90; opening a CSV in Excel is left to the developer)
-- [x] M8 – Public website (2026-11-26 – tests, HTTP checks, headless Chrome + throttled speed check pass; the Lighthouse run itself is left to the developer, see DEPLOYMENT §8)
-- [ ] M9 – Hardening & go-live
+- [x] M8 – Public website (2026-11-26, commit adc8784; the Lighthouse run itself is left to the developer, see DEPLOYMENT §8)
+- [ ] M9 – Hardening & go-live (code done 2026-11-26: security review, backup / cleanup crons, System health, deploy config; the go-live itself – staging, production, printing, the first real evening – follows docs/GO_LIVE.md)
 
 ## Waiting on the owner
 
@@ -95,10 +95,26 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M8:** pages = `SiteService::PAGES` (home, menu, about, bulk, gallery, location, contact); the bulk page is `website/bulk.php` (ARCHITECTURE had `bulk-orders.php`, which also breaks the snake_case rule). `sitemap.xml` is a static file with production URLs kept right by `SiteFilesTest` instead of an admin "regenerate" button (pages only change with code). ARCHITECTURE updated. |
 | 2026-11-26 | **M8:** hero = the first visible gallery photo (`fetchpriority="high"`, width/height from the file); without photos a brand-colour placeholder with a cone drawing. JSON-LD `IceCreamShop` on home / location / contact: names mr + en, phone, address (postcode from the address, locality Amalner), daily hours from Settings, map link, and geo read from the embed code (`!2d<lng>!3d<lat>`). |
 | 2026-11-26 | **M8:** admin → Website content: About (mr/en, up to 5,000 characters each, blank line = new paragraph, shown as text, never HTML), banner (mr/en, one line up to 200, on/off, shown on every page), gallery (upload through the same 1200 px WebP pipeline, captions mr/en, order, show/hide, delete removes the file). All audit-logged. |
+| 2026-11-26 | **M9 (developer):** backups stay on the server (30 nightly copies in `storage/backups`) plus the host's own account backups; nothing is emailed, so customer data never leaves the server automatically. GO_LIVE.md asks to check the hosting plan has account backups, to download a copy now and then, and to test-restore once before go-live. |
+| 2026-11-26 | **M9 (developer):** admin → System health for the super-admin only (owner gets 403, no nav link): cron last runs, latest backup, today's errors / warnings with the last lines, pending migrations, PHP / DB versions, APP_ENV, HTTPS, display_errors, push keys, disk, writable storage. Crons record their last run in `storage/cron/<name>.json` via `App\Cron` (also: lock against overlapping runs, exit 1 on failure). |
+| 2026-11-26 | **M9:** security review (docs/SECURITY_REVIEW.md): all 11 ARCHITECTURE §11 items pass. Added `Permissions-Policy`, HSTS (production over HTTPS only, 1 year, no subdomains), removed `X-Powered-By`. Finding: seeded table QR tokens come from MySQL `MD5(UUID(), RAND())` → regenerate every table's QR in production before printing stickers (GO_LIVE.md step 4). Off production the QR poster / stickers print a "TEST – DO NOT USE / चाचणी – वापरू नका" stamp across every QR. |
+| 2026-11-26 | **M9:** backup = mysqldump via `proc_open` (password in a 0600 temporary options file; `--single-transaction --no-tablespaces`; errors to a file) gzipped by PHP, falling back to a PHP dump (consistent snapshot, rows streamed unbuffered) when mysqldump cannot run; written as `.part` then renamed; old ones pruned only after a good backup. Both restore checked: all 20 tables identical by CHECKSUM. Cleanup: logs > 90 days, rate_limits > 24 h, sessions > 31 days, unused photo files > 7 days. |
+| 2026-11-26 | **M9 (schema, approved):** migration `002_report_indexes.sql` adds `orders(completed_at)` and `table_sessions(closed_at)` indexes for the reports / day close. No column or table changes. |
+| 2026-11-26 | **M9:** `.cpanel.yml` copies `order/` with `--delete` (pages removed from the code disappear; cPanel's `.well-known`, `.htaccess`, `cgi-bin`, `.user.ini`, `php.ini`, `error_log` protected); `public_html` stays add / update only; creates `storage/sessions` and `storage/cron` too. `DeployConfigTest` guards what is deployed. |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M9 Hardening & go-live (code part)
+
+- Security review line by line → `docs/SECURITY_REVIEW.md` (all 11 items pass; token scans of every SQL call with a variable and every unescaped output, CSRF on all 25 POST handlers, auth guard per endpoint, randomness, uploads). Added headers (Permissions-Policy, HSTS in production, no X-Powered-By); TEST stamp on non-production QR sheets.
+- Crons: `cron/backup.php` (BackupService), `cron/cleanup.php` (CleanupService), `cron/auto_noshow.php` now through `App\Cron` (lock, last run, exit code). Migration 002 (two indexes, applied locally). admin → System health (`HealthService`, super-admin only). `.cpanel.yml` final; `config.example.php` notes the optional `MYSQLDUMP_PATH`.
+- Docs: `docs/GO_LIVE.md` (staging → full test of every milestone on real devices → production → printing → shop → first evening → rollback / restore), DEPLOYMENT release checklist + restore steps, ARCHITECTURE §13 (backups, cleanup, crons, health, headers).
+- Checks: 346 PHPUnit tests pass (new: `BackupTest` – PHP dump restored into the test DB, every table identical incl. quotes / backslashes / `;` / line breaks / Marathi / NULLs; `CronAndCleanupTest`; `DeployConfigTest`). Ran the three crons locally: backups by PHP dump and by XAMPP's mysqldump both restored into a scratch database with all 20 tables identical (CHECKSUM). HTTP: headers on order pages, an API and website pages; System health 403 for the owner, 200 with 14 checks for the super-admin, nav link only for super; TEST stamp on the poster and all 7 stickers (checked in a printed PDF too); `/cron/` not reachable from the web. Page crawl complete.
+- Dev data: a `dev` super-admin login was added to the local database only, to check the health page.
+- Not doable here: staging / production deploys, Lighthouse, the phone and printer checks, the shop setup and the real evening – all in GO_LIVE.md.
+- Next: the go-live itself. After the first evening without errors, tick M9.
 
 ### 2026-11-26 – M8 Public website
 

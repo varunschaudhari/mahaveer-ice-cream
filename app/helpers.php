@@ -497,9 +497,18 @@ function is_https(): bool
  */
 function send_security_headers(array $frameSrc = []): void
 {
+    header_remove('X-Powered-By'); // do not advertise the PHP version
     header('X-Content-Type-Options: nosniff');
     header('Referrer-Policy: same-origin');
     header('X-Frame-Options: SAMEORIGIN');
+    // Nothing here uses the camera, microphone, location or payment APIs (notifications are not
+    // governed by this header, so the owner's phone keeps working).
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+    // Production is HTTPS only (cPanel "Force HTTPS"): browsers remember that for a year. Not on
+    // staging / local, so a test server without a certificate never gets locked out.
+    if (app_env() === 'production' && is_https()) {
+        header('Strict-Transport-Security: max-age=31536000');
+    }
 
     $frames = $frameSrc === [] ? "'none'" : implode(' ', $frameSrc);
     header(

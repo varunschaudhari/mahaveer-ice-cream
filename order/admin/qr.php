@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 // Admin: A4 takeaway QR poster for the door / counter (SPEC §12). The QR points to
 // APP_URL_ORDER of this server, so print posters only from production (DEPLOYMENT.md §5).
+// Anywhere else a "TEST – do not use" stamp is printed across the QR, so it can never be used.
 
 use App\Auth;
 use App\Lang;
@@ -44,7 +45,10 @@ $en = Lang::strings('en');
   <p class="poster-shop-en"><?= e($shop['shop_name_en'] ?? '') ?></p>
   <p class="poster-title"><?= e($mr['qr.poster_title']) ?></p>
   <p class="poster-title-en"><?= e($en['qr.poster_title']) ?></p>
-  <img class="poster-qr" src="<?= e(QrService::svgDataUri($url)) ?>" alt="QR: <?= e($url) ?>" width="560" height="560">
+  <div class="qr-box">
+    <img class="poster-qr" src="<?= e(QrService::svgDataUri($url)) ?>" alt="QR: <?= e($url) ?>" width="560" height="560">
+    <?php if (!$isProduction): ?><span class="test-stamp"><?= e($mr['qr.test_stamp']) ?><br><?= e($en['qr.test_stamp']) ?></span><?php endif; ?>
+  </div>
   <ol class="poster-steps">
     <?php foreach (['qr.poster_step_scan', 'qr.poster_step_order', 'qr.poster_step_pickup'] as $step): ?>
     <li><?= e($mr[$step]) ?> · <?= e($en[$step]) ?></li>

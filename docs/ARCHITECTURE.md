@@ -232,4 +232,11 @@ Target current Android Chrome and iOS Safari; still avoid the list above to keep
 
 - App log: `storage/logs/app-YYYY-MM-DD.log` (errors, push failures, auth failures).
 - `audit_log` table: cancellations, discounts, price changes, settings changes, stock toggles, staff changes.
-- `cron/backup.php`: nightly `mysqldump` (via `exec`, gzip) to `storage/backups/`, keep 30 days. If `exec` is disabled on the host, fall back to a PHP-based dump of all tables.
+- `cron/backup.php`: nightly `mysqldump` (started with `proc_open`, credentials in a private temporary options file, never on the command line; output gzipped by PHP) to `storage/backups/mahavir-YYYY-MM-DD-HHMM.sql.gz`, keep 30 days (deleted only after a good backup). If `proc_open` is disabled or mysqldump is missing, a PHP dump of all tables (one consistent snapshot, rows streamed). Both restore with `gunzip -c FILE | mysql DB` or phpMyAdmin → Import; `BackupTest` restores the PHP dump and compares every table.
+- `cron/cleanup.php` (weekly): logs older than 90 days, `rate_limits` rows older than a day, session files older than 31 days, uploaded photos no item or gallery row uses (older than 7 days).
+- Every cron runs through `App\Cron`: CLI only, one at a time (lock file), last run + result in `storage/cron/<name>.json`, exit code 1 on failure.
+- admin → System health (`admin/health.php`, super-admin only): cron last runs (late / failed / never), latest backup, today's errors and warnings with the last lines, pending migrations, PHP / database versions, `APP_ENV`, HTTPS, `display_errors`, push keys, disk space, writable `storage/`.
+
+### Security headers (all responses, `send_security_headers()`)
+
+`X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-Frame-Options: SAMEORIGIN`, the CSP from §11 (frames only for the Google map on the website location page, and only once the map code is set), `Permissions-Policy` (no camera, microphone, location, payment, USB), `Strict-Transport-Security: max-age=31536000` in production over HTTPS only, and no `X-Powered-By`. The full line-by-line review is in `docs/SECURITY_REVIEW.md`.

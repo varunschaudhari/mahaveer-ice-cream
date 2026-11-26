@@ -18,7 +18,7 @@ final class LangKeysTest extends TestCase
 {
     private const PREFIXES = 'auth|admin|counter|menu|common|staff|settings|audit|role|image|error|shop|lang|time|order|site'
         . '|billing|cart|payment|discount|cancel|today|stock|print'
-        . '|online|checkout|status|qr|blocked|table|tables|bulk|push|owner|report|customers';
+        . '|online|checkout|status|qr|blocked|table|tables|bulk|push|owner|report|customers|health';
 
     public function testEveryKeyUsedInCodeExistsInBothLanguages(): void
     {
@@ -45,6 +45,9 @@ final class LangKeysTest extends TestCase
         }
         foreach (\App\Services\CustomerService::FILTERS as $filter) {
             $used['customers.filter.' . $filter][] = 'order/admin/customers.php';
+        }
+        foreach (\App\Services\HealthService::CHECK_KEYS as $check) {
+            $used['health.check.' . $check][] = 'order/admin/health.php';
         }
         foreach (array_keys(\App\Services\SiteService::PAGES) as $page) {
             foreach (['site.title.', 'site.desc.', 'site.nav.'] as $prefix) {

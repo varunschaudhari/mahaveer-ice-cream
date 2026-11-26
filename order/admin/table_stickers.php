@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 // Admin: A4 sheet of table QR stickers (SPEC §12): table number + QR + "Scan to order", both
-// languages. Print only from production — the QR codes point to this server's APP_URL_ORDER.
+// languages. Print only from production — the QR codes point to this server's APP_URL_ORDER;
+// anywhere else a "TEST – do not use" stamp is printed across each QR.
 
 use App\Auth;
 use App\Lang;
@@ -42,7 +43,10 @@ $en = Lang::strings('en');
   <section class="sticker">
     <p class="sticker-table"><?= e(str_replace('{n}', $number, $mr['table.label'])) ?></p>
     <p class="sticker-table-en"><?= e(str_replace('{n}', $number, $en['table.label'])) ?><?= $table['area'] === 'outside' ? ' · ' . e($en['table.outside']) : '' ?></p>
-    <img class="sticker-qr" src="<?= e(QrService::svgDataUri($base . '/t.php?t=' . $table['qr_token'])) ?>" alt="QR <?= e($table['code']) ?>" width="240" height="240">
+    <div class="qr-box">
+      <img class="sticker-qr" src="<?= e(QrService::svgDataUri($base . '/t.php?t=' . $table['qr_token'])) ?>" alt="QR <?= e($table['code']) ?>" width="240" height="240">
+      <?php if (!$isProduction): ?><span class="test-stamp"><?= e($mr['qr.test_stamp']) ?><br><?= e($en['qr.test_stamp']) ?></span><?php endif; ?>
+    </div>
     <p class="sticker-scan"><?= e($mr['tables.sticker_scan']) ?></p>
     <p class="sticker-scan-en"><?= e($en['tables.sticker_scan']) ?></p>
   </section>
