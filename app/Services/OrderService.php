@@ -67,22 +67,7 @@ final class OrderService
             return $existing + ['duplicate' => true];
         }
 
-        $name = trim((string) ($input['name'] ?? ''));
-        $mobile = normalize_mobile((string) ($input['mobile'] ?? ''));
-        $note = trim((string) ($input['note'] ?? ''));
-        $errors = [];
-        if (!is_valid_name($name, 60)) {
-            $errors['name'] = 'checkout.error.name';
-        }
-        if ($mobile === null) {
-            $errors['mobile'] = 'checkout.error.mobile';
-        }
-        if (mb_strlen($note) > 200 || preg_match('/[\x00-\x09\x0B-\x1F\x7F]/u', $note)) {
-            $errors['note'] = 'checkout.error.note';
-        }
-        if ($errors !== []) {
-            throw new ValidationException($errors);
-        }
+        [$name, $mobile, $note] = $this->customerFields($input);
         if ($this->customers->isBlocked($mobile)) {
             throw ValidationException::one('_', 'checkout.error.blocked');
         }
@@ -147,11 +132,102 @@ final class OrderService
         return $this->find($orderId) + ['duplicate' => false];
     }
 
-    /** Staff accepts a new online order: received → preparing. */
+    /** Staff accepts a new takeaway or table order: received → preparing (table orders print a KOT). */
     public function accept(int $orderId, int $staffId, ?DateTimeImmutable $now = null): void
     {
         $at = ($now ?? now())->format('Y-m-d H:i:s');
-        $this->transition($orderId, ['received'], 'preparing', ['takeaway'], ['accepted_at' => $at, 'staff_id' => $staffId]);
+        $this->transition($orderId, ['received'], 'preparing', ['takeaway', 'table'], ['accepted_at' => $at, 'staff_id' => $staffId]);
+    }
+
+    /** Table order brought to the table: preparing → served (completed when the table settles). */
+    public function markServed(int $orderId, int $staffId, ?DateTimeImmutable $now = null): void
+    {
+        $this->transition($orderId, ['preparing'], 'served', ['table'], ['ready_at' => ($now ?? now())->format('Y-m-d H:i:s')]);
+    }
+
+    /**
+     * Customer orders at a table (SPEC §7): no slot, no parcel charge, added to the table's
+     * open visit (opened by the first order; any phone at the table joins it).
+     *
+     * $input: table_token, order_key, name, mobile, note, lines.
+     */
+    public function placeTableOrder(array $input, ?DateTimeImmutable $now = null): array
+    {
+        $now ??= now();
+        $tables = new TableService($this->db);
+        $table = $tables->findByToken((string) ($input['table_token'] ?? ''))
+            ?? throw ValidationException::one('_', 'table.error.invalid');
+
+        $key = (string) ($input['order_key'] ?? '');
+        if (!preg_match('/^[a-f0-9]{32}$/', $key)) {
+            throw ValidationException::one('_', 'error.generic');
+        }
+        $existing = $this->findByKey($key);
+        if ($existing !== null) {
+            return $existing + ['duplicate' => true];
+        }
+
+        [$name, $mobile, $note] = $this->customerFields($input);
+        $lines = $this->cart->validate(is_array($input['lines'] ?? null) ? $input['lines'] : [], 'online');
+        $totals = PricingService::totals(
+            'table',
+            array_map(static fn (array $l): array => ['unit_paise' => $l['unit_paise'], 'qty' => $l['qty']], $lines),
+            false,
+            0,
+        );
+
+        try {
+            $orderId = Db::transaction(function () use ($tables, $table, $key, $name, $mobile, $note, $lines, $totals, $now): int {
+                $token = $this->sequences->nextToken($now);
+                $customerId = $this->customers->recordOrder($mobile, $name, $now);
+                $session = $tables->sessionForNewOrder((int) $table['id'], $customerId, $now);
+
+                $this->db->prepare(
+                    "INSERT INTO orders (order_key, token_no, token_date, order_type, service_type, customer_id, table_session_id,
+                                         status, subtotal, parcel_charge, discount, total, amount_paid, payment_pref, note, created_at)
+                     VALUES (?, ?, ?, 'table', 'dine_in', ?, ?, 'received', ?, 0, 0, ?, 0, 'counter', ?, ?)"
+                )->execute([
+                    $key, $token, $now->format('Y-m-d'), $customerId, $session['id'],
+                    decimal_from_paise($totals['subtotal']), decimal_from_paise($totals['total']),
+                    $note === '' ? null : $note, $now->format('Y-m-d H:i:s'),
+                ]);
+                $orderId = (int) $this->db->lastInsertId();
+                $this->insertLines($orderId, $lines, $totals['lines']);
+                return $orderId;
+            });
+        } catch (PDOException $e) {
+            $existing = ($e->errorInfo[1] ?? null) === 1062 ? $this->findByKey($key) : null;
+            if ($existing === null) {
+                throw $e;
+            }
+            return $existing + ['duplicate' => true];
+        }
+        return $this->find($orderId) + ['duplicate' => false];
+    }
+
+    /**
+     * Name, mobile and note checked the same way for takeaway and table orders.
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function customerFields(array $input): array
+    {
+        $name = trim((string) ($input['name'] ?? ''));
+        $mobile = normalize_mobile((string) ($input['mobile'] ?? ''));
+        $note = trim((string) ($input['note'] ?? ''));
+        $errors = [];
+        if (!is_valid_name($name, 60)) {
+            $errors['name'] = 'checkout.error.name';
+        }
+        if ($mobile === null) {
+            $errors['mobile'] = 'checkout.error.mobile';
+        }
+        if (mb_strlen($note) > 200 || preg_match('/[\x00-\x09\x0B-\x1F\x7F]/u', $note)) {
+            $errors['note'] = 'checkout.error.note';
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
+        return [$name, $mobile, $note];
     }
 
     /** preparing → ready (the customer's status page shows "Ready"). */
@@ -178,7 +254,7 @@ final class OrderService
             $this->db->prepare(
                 "UPDATE orders SET status = 'completed', bill_no = ?, amount_paid = ?, completed_at = ?, staff_id = ? WHERE id = ?"
             )->execute([$billNo, $order['total'], $now->format('Y-m-d H:i:s'), $staffId, $orderId]);
-            $this->payments->record($orderId, $payments, $staffId);
+            $this->payments->record($orderId, $payments, $staffId, $now);
         });
         return $this->find($orderId);
     }
@@ -234,9 +310,12 @@ final class OrderService
     {
         $stmt = $this->db->prepare(
             "SELECT o.id, o.token_no, o.order_type, o.status, o.pickup_at, o.total, o.note, o.created_at,
-                    cu.name AS customer_name, cu.mobile AS customer_mobile
-             FROM orders o LEFT JOIN customers cu ON cu.id = o.customer_id
-             WHERE o.token_date = ? AND o.order_type = 'takeaway' AND o.status IN ('received', 'preparing', 'ready')
+                    cu.name AS customer_name, cu.mobile AS customer_mobile, t.code AS table_code
+             FROM orders o
+             LEFT JOIN customers cu ON cu.id = o.customer_id
+             LEFT JOIN table_sessions ts ON ts.id = o.table_session_id
+             LEFT JOIN dining_tables t ON t.id = ts.table_id
+             WHERE o.token_date = ? AND o.order_type IN ('takeaway', 'table') AND o.status IN ('received', 'preparing', 'ready')
              ORDER BY o.id"
         );
         $stmt->execute([$day->format('Y-m-d')]);
@@ -261,20 +340,26 @@ final class OrderService
     }
 
     /**
-     * For the counter's 5-second poll: how many online orders wait to be accepted and the newest
-     * one's id (the screen beeps until that id has been acknowledged).
+     * For the counter's 5-second poll: online/table orders waiting to be accepted and open table
+     * alerts, with the newest id of each (the screen beeps until they are acknowledged).
      *
-     * @return array{new_count: int, latest_new_id: int}
+     * @return array{new_count: int, latest_new_id: int, alert_count: int, latest_alert_id: int}
      */
     public function newOnlineSummary(DateTimeImmutable $day): array
     {
         $stmt = $this->db->prepare(
             "SELECT COUNT(*) AS n, COALESCE(MAX(id), 0) AS latest FROM orders
-             WHERE token_date = ? AND order_type = 'takeaway' AND status = 'received'"
+             WHERE token_date = ? AND order_type IN ('takeaway', 'table') AND status = 'received'"
         );
         $stmt->execute([$day->format('Y-m-d')]);
-        $row = $stmt->fetch();
-        return ['new_count' => (int) $row['n'], 'latest_new_id' => (int) $row['latest']];
+        $orders = $stmt->fetch();
+        $alerts = $this->db->query("SELECT COUNT(*) AS n, COALESCE(MAX(id), 0) AS latest FROM table_alerts WHERE status = 'open'")->fetch();
+        return [
+            'new_count' => (int) $orders['n'],
+            'latest_new_id' => (int) $orders['latest'],
+            'alert_count' => (int) $alerts['n'],
+            'latest_alert_id' => (int) $alerts['latest'],
+        ];
     }
 
     /** The order only if $key is its secret order_key (customer status page). */
@@ -402,7 +487,7 @@ final class OrderService
                     ]);
                 }
 
-                $this->payments->record($orderId, $payments, $staffId);
+                $this->payments->record($orderId, $payments, $staffId, $now);
 
                 if ($discount !== null && $totals['discount'] > 0) {
                     $this->audit->log((int) $discount['owner_id'], 'discount', 'order', $orderId, [
@@ -448,7 +533,8 @@ final class OrderService
             if ($order['status'] === 'cancelled') {
                 throw ValidationException::one('_', 'cancel.error.already');
             }
-            if ($order['status'] === 'no_show') {
+            // No-shows are final; a settled table order is cancelled with its whole bill (TableService::cancelBill).
+            if ($order['status'] === 'no_show' || ($order['order_type'] === 'table' && $order['status'] === 'completed')) {
                 throw ValidationException::one('_', 'order.error.wrong_status');
             }
             if ($order['token_date'] !== $now->format('Y-m-d')) {
@@ -470,6 +556,10 @@ final class OrderService
                 'status_before' => $order['status'],
                 'requested_by' => $staffId,
             ]);
+            // A table whose only orders are now cancelled becomes free again.
+            if ($order['table_session_id'] !== null) {
+                (new TableService($this->db))->closeIfEmpty((int) $order['table_session_id'], $ownerId ?? $staffId, $now);
+            }
         });
     }
 
@@ -485,11 +575,13 @@ final class OrderService
     {
         $stmt = $this->db->prepare(
             'SELECT o.*, s.name AS staff_name, c.name AS cancelled_by_name,
-                    cu.name AS customer_name, cu.mobile AS customer_mobile
+                    cu.name AS customer_name, cu.mobile AS customer_mobile, dt.code AS table_code
              FROM orders o
              LEFT JOIN staff s ON s.id = o.staff_id
              LEFT JOIN staff c ON c.id = o.cancelled_by
              LEFT JOIN customers cu ON cu.id = o.customer_id
+             LEFT JOIN table_sessions ts ON ts.id = o.table_session_id
+             LEFT JOIN dining_tables dt ON dt.id = ts.table_id
              WHERE o.id = ?'
         );
         $stmt->execute([$id]);

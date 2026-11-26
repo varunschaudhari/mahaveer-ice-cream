@@ -7,8 +7,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - [x] M0 – Project foundation (2026-11-26, commit a20f8d0)
 - [x] M1 – Login, roles, admin menu & settings (2026-11-26, commit 93624a9)
 - [x] M2 – Counter billing (pilot-ready) (2026-11-26, commit 0741a7b; real 1024×768 + TM-T82 print check still open)
-- [x] M3 – Takeaway ordering + online orders panel (2026-11-26 – tests + scripted HTTP checks pass; awaiting a phone + counter browser check)
-- [ ] M4 – Table ordering
+- [x] M3 – Takeaway ordering + online orders panel (2026-11-26, commit ed77a87; phone + counter browser check still open)
+- [x] M4 – Table ordering (2026-11-26 – tests + scripted HTTP checks pass; awaiting a phone + counter browser check and a KOT print)
 - [ ] M5 – Bulk orders
 - [ ] M6 – Owner's phone (PWA + Web Push)
 - [ ] M7 – Reports & customers
@@ -20,6 +20,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - Prices for Kulfi, Cone, Chocobar, Mango Dolly, Rajberry Dolly, Frosty (seeded inactive at ₹0)
 - Logo file, shop/owner/ice cream photos, founding year and family story, Google Maps link
 - WhatsApp number (website button stays hidden until set; WhatsApp messaging itself is phase 2)
+- For bulk orders by weight (M5): which flavours are sold per kg and at what price – the owner adds a "1 किलो / 1 kg" variant to each in admin
 
 ## Decisions log
 
@@ -63,10 +64,27 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | **M3:** no-show cutoff = slot start + slot_mins + noshow_after_mins (slot 7:30–7:45 → no-show from 8:15). Unblocking a number resets its no-show count. A small admin "Blocked numbers" page (unblock) exists before the full customers page (M7). |
 | 2026-11-26 | **M3:** new-order alert: the counter polls `api/poll.php` every 5 s on every tab (replaces `ping.php`). It beeps at once and every 10 s while there is a Received order newer than the last acknowledged one; tapping the alert bar acknowledges (stored in the counter's localStorage) and opens the Online tab; accepting the order also stops it. |
 | 2026-11-26 | **M3:** the place-order rate limit (5 per 10 min per IP and per mobile) counts successful orders only. All phones on the shop's own Wi-Fi share one IP – if that becomes a problem, raise the IP limit. |
+| 2026-11-26 | **M4 (developer):** any phone scanning a table's QR joins that table's open visit (one running bill per table); each new phone gives name + mobile once (remembered on the phone per visit, SPEC §7.2 updated). |
+| 2026-11-26 | **M5 (developer, decided now):** bulk orders by weight use "1 किलो / 1 kg" variants the owner adds in admin (they also show as family packs on menu + counter); staff handle approved bulk orders on a new counter Bulk tab; the owner approves / edits / rejects in admin. |
+| 2026-11-26 | **M4:** a table visit = a `table_sessions` row, opened by the first order (table row locked so two phones share one visit), closed at settlement with ONE bill number; table orders keep `bill_no` NULL and never pay parcel. Settling completes every non-cancelled order (confirmation if some are unserved), clears the table's alerts, records payments on `payments.table_session_id`. A visit with nothing billable (all cancelled / moved away) closes without a bill; cancelling or moving the last order does this automatically. |
+| 2026-11-26 | **M4:** table discounts use the same owner-PIN approval as counter bills. A settled table bill is cancelled from the Today tab with owner PIN (today only): its orders become cancelled, its payments refunded, the visit keeps its bill number. A single order of a settled visit cannot be cancelled on its own. |
+| 2026-11-26 | **M4:** the day summary now counts money by payment time (`payments.created_at`, set explicitly by `PaymentService::record`), bills by the time they were issued (orders `completed_at`, visits `closed_at`), so bulk advances (M5) land on the day they were paid. |
+| 2026-11-26 | **M4:** Call staff / Request bill: max one alert per table per 30 s (checked against `table_alerts.created_at`); a button still open is not duplicated; customers may keep ordering after Request bill. Alerts join the counter's alert bar + beep (ack stored as newest order id + newest alert id). |
+| 2026-11-26 | **M4:** `BillFormatter` builds what a bill prints from an order or a table visit, so one template prints both; table bills show "टेबल 4" in place of the token and merge the same item from several orders into one line. KOT prints on Accept of a table order only (no prices, table number 44 px). |
 
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-26 – M4 Table ordering
+
+- Services: `TableService` (visits, running total, combined lines, alerts, move, settle, close-if-empty, cancel settled bill, regenerate QR, overview for tiles), `BillFormatter`; `OrderService::placeTableOrder` / `markServed`, accept for table orders, table cancel rules; `PaymentService::record` takes the payment time (+ table visit); `ReportService::daySummary` by payment / bill time incl. table bills.
+- Customer: `order/t.php` (banner "टेबल 4 / Table 4", table's orders with live status, Call staff / Request bill, menu, checkout without slot or parcel), `table.js`, table mode in `shop.js`; menu and checkout markup moved to partials `shop_menu` / `shop_checkout` (used by the takeaway page too). API: `place_table_order`, `table_status`, `table_alert`.
+- Counter: Tables tab (`tables.php`, `tables.js`: tiles + detail dialog with Accept / Served / Move / Cancel, dismiss alerts, discount, Settle & Print, free an empty table); Online tab shows table orders with a large "TABLE 4" and Accept → KOT print, Served; alert bar + beep + Tables badge for table alerts; Today tab lists settled table bills (reprint, cancel with owner PIN). API: `table_detail`, `table_action`; `order_action` gains `serve`; `poll` gains `view=tables` and alert counts. Print: `print.php?type=table|kot`, `print_kot` view.
+- Admin: Tables page (active, regenerate QR, open page), A4 sticker sheet (2 × 4).
+- Checks: 271 PHPUnit tests pass. Scripted HTTP run: two phones at T4 → one visit, running total ₹255; counter sees "TABLE 4", Accept → KOT (table number, items, note, no prices), Served shows on the table page; Call staff on T7 → alert count + T7 tile alert (Outside), second tap within 30 s refused; Request bill → tile "Bill requested"; Settle → bill 1, combined (3 × Badam Shake), T4 free; move T5 → T6; regenerated T4 QR → old link shows the friendly error, new one works; sticker sheet renders; Today tab table bill → reprint DUPLICATE → cancel needs owner PIN → day total ₹255 → ₹0; no errors in the app log. (Devanagari typed in curl arguments arrives as "?" in Git Bash – a test-shell issue, not the app; sending a UTF-8 file body printed the note on the KOT correctly.)
+- Not verified here: phone + Chrome 109 counter in a real browser, KOT/bill on the TM-T82. The local dev DB holds test data from the scripted run.
+- Next: M5 (bulk orders) after the developer confirms M4.
 
 ### 2026-11-26 – M3 Takeaway ordering + online orders panel
 

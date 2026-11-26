@@ -28,6 +28,7 @@
 │       ├── StaffService.php       staff accounts, PIN/password, unlock, last-owner guard
 │       ├── SettingsService.php    validates + saves settings, audit logged
 │       ├── ImageService.php       photo upload → 1200 px WebP in storage/uploads
+│       ├── BillFormatter.php      order or table visit → what the 80 mm bill prints
 │       ├── CartService.php        validates a cart against DB (prices, availability, ₹0 rule)
 │       ├── PricingService.php     pure functions: totals in paise
 │       ├── SlotService.php        pickup slots + capacity
@@ -140,6 +141,11 @@ All responses `{ "ok": true, "data": … }` or `{ "ok": false, "error": "message
 | `stock.php` | staff | Toggle availability |
 | `discount_approve.php` | staff + owner PIN | Owner approves a counter discount (amount, reason); kept in the session 10 min, used once by `counter_bill.php` |
 | `customer_cancel.php` | public (order key) | Customer cancels their own takeaway order while it is still `received` |
+| `place_table_order.php` | public (table QR code) | Table order (takeaway orders use `place_order.php`) |
+| `table_status.php?t=` | public (table QR code) | The table's open visit: orders + statuses, running total |
+| `table_detail.php?id=` | staff | One table's visit for the Tables tab (orders, alerts, move targets) |
+
+`table_action.php` also handles `close` (visit with nothing to bill), `reprint` and `cancel_bill` (settled table bill, owner PIN). `order_action.php` handles `serve` and returns the KOT print URL when a table order is accepted.
 
 `poll.php` is also the counter's connection check (the "No internet" banner) and returns 401 when the login has ended; it does not count as activity, so an idle counter still logs out after 12 h. Without `?full=1` it returns only counts (badge + beep); the Online tab asks for the full list.
 | `push_subscribe.php` | owner | Save/remove Web Push subscription, mute |

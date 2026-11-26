@@ -13,6 +13,7 @@ $otherLang = lang() === 'mr' ? 'en' : 'mr';
 $tabs = [
     'billing' => ['/counter/billing.php', t('counter.tab.billing')],
     'online' => ['/counter/online.php', t('counter.tab.online')],
+    'tables' => ['/counter/tables.php', t('counter.tab.tables')],
     'stock' => ['/counter/stock.php', t('counter.tab.stock')],
     'today' => ['/counter/today.php', t('counter.tab.today')],
 ];
@@ -25,6 +26,7 @@ $i18n = [
     'other' => t('counter.other'),
     'owner_pin' => t('counter.owner_pin'),
     'new_orders' => t('online.new_orders'),
+    'table_alerts' => t('tables.new_alerts'),
     'pay_title' => t('online.pay_title'),
     'pay_cash' => t('billing.pay_cash'),
     'pay_upi' => t('billing.pay_upi'),
@@ -54,6 +56,7 @@ $i18n = [
     <a class="counter-tab<?= $key === $active ? ' is-active' : '' ?>" href="<?= e($href) ?>"<?= $key === $active ? ' aria-current="page"' : '' ?>>
       <?= e($label) ?>
       <?php if ($key === 'online'): ?><span class="badge" data-online-badge hidden></span><?php endif; ?>
+      <?php if ($key === 'tables'): ?><span class="badge" data-tables-badge hidden></span><?php endif; ?>
     </a>
     <?php endforeach; ?>
   </nav>

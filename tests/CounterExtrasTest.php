@@ -84,7 +84,7 @@ final class CounterExtrasTest extends DatabaseTestCase
     {
         Lang::set('mr');
         ob_start();
-        view('print_bill', ['order' => $order, 'copy' => $copy, 'shop' => \App\Settings::all()]);
+        view('print_bill', ['bill' => \App\Services\BillFormatter::fromOrder($order), 'copy' => $copy, 'shop' => \App\Settings::all()]);
         return (string) ob_get_clean();
     }
 

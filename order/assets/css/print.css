@@ -67,6 +67,13 @@ th.num, td.num { padding-left: 2mm; }
 .receipt-small { font-size: 10px; }
 .receipt-foot { margin-top: 3mm; padding-top: 2mm; border-top: 1px dashed #000; text-align: center; font-weight: 700; }
 
+/* Kitchen ticket (table orders): big table number, big items, no prices. */
+.kot-table { font-size: 44px; font-weight: 700; line-height: 1.1; text-align: center; }
+.kot-table-en { padding-bottom: 1mm; border-bottom: 2px solid #000; font-size: 20px; font-weight: 700; text-align: center; }
+.kot-items td { padding: 1mm 0; font-size: 16px; }
+.kot-qty { width: 3.2em; font-weight: 700; white-space: nowrap; }
+.kot-note { margin-top: 2mm; padding: 1mm 2mm; border: 2px dashed #000; font-size: 16px; font-weight: 700; }
+
 @media screen {
   body.receipt { margin: 4mm auto; padding: 3mm; box-shadow: 0 0 0 1px #ccc; }
 }

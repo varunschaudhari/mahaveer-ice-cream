@@ -24,6 +24,8 @@ $texts = [
     'cancel_title' => t('online.cancel_title'),
     'cancelled' => t('online.cancelled_done'),
     'empty' => t('online.empty'),
+    'table' => t('online.table'),
+    'serve' => t('online.serve'),
 ];
 $cancelReasons = [t('cancel.reason.customer_called'), t('cancel.reason.out_of_stock'), t('cancel.reason.duplicate')];
 

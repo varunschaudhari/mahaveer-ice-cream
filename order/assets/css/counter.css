@@ -211,6 +211,7 @@ a.counter-tab { display: flex; align-items: center; justify-content: center; tex
 .order-card.status-received { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(255, 179, 0, 0.35); }
 .order-card.status-ready { border-color: var(--color-success); }
 .order-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.order-card__table { margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) 0; padding: var(--space-1) var(--space-3); border-radius: var(--radius) var(--radius) 0 0; background: var(--color-primary-dark); color: var(--color-on-primary); font-size: 2.5rem; font-weight: 700; line-height: 1.2; text-align: center; letter-spacing: 0.05em; }
 .order-card__token { font-size: 2rem; font-weight: 700; line-height: 1.1; }
 .order-card__status { padding: 2px var(--space-2); border-radius: var(--radius-pill); background: var(--color-primary-soft); color: var(--color-primary-dark); font-size: var(--text-sm); font-weight: 700; }
 .order-card.status-ready .order-card__status { background: #E8F5E9; color: var(--color-success); }
@@ -221,6 +222,29 @@ a.counter-tab { display: flex; align-items: center; justify-content: center; tex
 .order-card__note { padding: var(--space-2); border-radius: var(--radius); background: #FFF3CD; }
 .order-card__total { font-size: var(--text-xl); font-weight: 700; text-align: right; }
 .order-card__actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--space-2); }
+
+/* ---------- Tables tab ---------- */
+
+.table-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+.table-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 150px; padding: var(--space-3); border-width: 3px; text-align: left; }
+.table-tile.status-occupied { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.table-tile.status-bill_requested { border-color: var(--color-accent); background: #FFF3CD; }
+.table-tile.has-alert { box-shadow: 0 0 0 4px var(--color-danger); }
+.table-tile__number { font-size: 2.5rem; line-height: 1; }
+.table-tile__area, .table-tile__minutes { color: var(--color-muted); font-size: var(--text-sm); font-weight: 400; }
+.table-tile__total { font-size: var(--text-xl); }
+.table-tile__chip { padding: 0 var(--space-2); border-radius: var(--radius-pill); background: var(--color-border); font-size: var(--text-sm); }
+.table-tile__chip.is-alert { background: var(--color-danger); color: #fff; }
+.table-tile__chip.is-warning { background: var(--color-accent); }
+.table-dialog { width: 680px; max-height: 92vh; overflow-y: auto; }
+.td-alert { margin-bottom: var(--space-2); padding: var(--space-2); border-radius: var(--radius); background: #FFEBEE; }
+.td-orders { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3); }
+.td-order { padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); }
+.td-order.status-cancelled { opacity: 0.5; text-decoration: line-through; }
+.td-order__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
+.td-order__total { flex: 1; font-weight: 700; }
+.td-close-empty { width: 100%; margin-top: var(--space-3); }
+.td-close-empty[hidden] { display: none; }
 
 /* ---------- Stock tab ---------- */
 

@@ -84,54 +84,84 @@ window.Counter = (function () {
     return data.data;
   }
 
-  // ---------- poll (every 5 s): new online orders + connection check ----------
-  // The Online tab asks for the full order list (setPollFull); other tabs only need counts.
-  // Pages listen for the 'counter:poll' event.
+  // ---------- poll (every 5 s): new orders, table alerts, connection check ----------
+  // The Online tab asks for the full order list (setPollFull), the Tables tab for the tiles
+  // (setPollView('tables')); other tabs only need counts. Pages listen for 'counter:poll'.
+  // The alert bar + beep repeat until a staff member taps the bar (ARCHITECTURE §7); what was
+  // acknowledged (newest order id, newest alert id) is kept in this counter's localStorage.
 
   var pollFull = false;
-  var ACK_KEY = 'mahavir.counter.ack';
+  var pollView = '';
+  var ACK_KEY = 'mahavir.counter.ack2';
   var badge = document.querySelector('[data-online-badge]');
+  var tablesBadge = document.querySelector('[data-tables-badge]');
   var alertBar = document.querySelector('[data-alert-bar]');
-  var latestNew = 0;
-  var lastSeenNew = 0;
+  var latest = { o: 0, a: 0 };
+  var lastSeen = { o: 0, a: 0 };
+  var unacked = { o: false, a: false };
 
-  function ackedId() {
+  function acked() {
     try {
-      return parseInt(window.localStorage.getItem(ACK_KEY), 10) || 0;
+      var value = JSON.parse(window.localStorage.getItem(ACK_KEY));
+      return value && typeof value === 'object' ? { o: value.o || 0, a: value.a || 0 } : { o: 0, a: 0 };
     } catch (e) {
-      return 0;
+      return { o: 0, a: 0 };
     }
   }
 
   function acknowledge() {
     try {
-      window.localStorage.setItem(ACK_KEY, String(latestNew));
+      window.localStorage.setItem(ACK_KEY, JSON.stringify(latest));
     } catch (e) { /* the bar shows again on the next poll */ }
+    unacked = { o: false, a: false };
     if (alertBar) {
       alertBar.hidden = true;
     }
   }
 
+  function setBadge(el, count) {
+    if (el) {
+      el.textContent = count;
+      el.hidden = count === 0;
+    }
+  }
+
   function updateAlerts(data) {
-    latestNew = data.latest_new_id;
-    if (badge) {
-      badge.textContent = data.new_count;
-      badge.hidden = data.new_count === 0;
-    }
-    var unacknowledged = data.new_count > 0 && data.latest_new_id > ackedId();
+    latest = { o: data.latest_new_id, a: data.latest_alert_id };
+    setBadge(badge, data.new_count);
+    setBadge(tablesBadge, data.alert_count);
+    var seen = acked();
+    unacked = {
+      o: data.new_count > 0 && data.latest_new_id > seen.o,
+      a: data.alert_count > 0 && data.latest_alert_id > seen.a
+    };
     if (alertBar) {
-      alertBar.hidden = !unacknowledged;
-      alertBar.textContent = t('new_orders', { n: data.new_count });
+      var parts = [];
+      if (unacked.o) {
+        parts.push(t('new_orders', { n: data.new_count }));
+      }
+      if (unacked.a) {
+        parts.push(t('table_alerts', { n: data.alert_count }));
+      }
+      alertBar.hidden = parts.length === 0;
+      alertBar.textContent = parts.join(' · ');
     }
-    if (unacknowledged && data.latest_new_id > lastSeenNew) {
-      beep(); // a new order just arrived: beep at once, then every 10 s
+    if ((unacked.o && data.latest_new_id > lastSeen.o) || (unacked.a && data.latest_alert_id > lastSeen.a)) {
+      beep(); // something new just arrived: beep at once, then every 10 s
     }
-    lastSeenNew = data.latest_new_id;
+    lastSeen = { o: data.latest_new_id, a: data.latest_alert_id };
   }
 
   async function poll() {
+    var params = [];
+    if (pollFull) {
+      params.push('full=1');
+    }
+    if (pollView) {
+      params.push('view=' + pollView);
+    }
     try {
-      var data = await api('/api/poll.php' + (pollFull ? '?full=1' : ''));
+      var data = await api('/api/poll.php' + (params.length ? '?' + params.join('&') : ''));
       updateAlerts(data);
       document.dispatchEvent(new CustomEvent('counter:poll', { detail: data }));
     } catch (e) { /* offline banner is already shown by api() */ }
@@ -149,9 +179,10 @@ window.Counter = (function () {
 
   if (alertBar) {
     alertBar.addEventListener('click', function () {
+      var target = unacked.o ? '/counter/online.php' : '/counter/tables.php';
       acknowledge();
-      if (window.location.pathname !== '/counter/online.php') {
-        window.location.href = '/counter/online.php';
+      if (window.location.pathname !== target) {
+        window.location.href = target;
       }
     });
   }
@@ -507,6 +538,11 @@ window.Counter = (function () {
       pollFull = value;
       poll();
     },
+    setPollView: function (view) {
+      pollView = view;
+      poll();
+    },
+    refresh: poll,
     isOnline: function () { return online; }
   };
 })();

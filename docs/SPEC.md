@@ -77,7 +77,7 @@ URL: `order.mahaveericecream.in/` (takeaway QR on door/counter poster, links fro
 URL: `order.mahaveericecream.in/t.php?t=<32-char token>` printed as a QR sticker on each table.
 
 1. Menu opens with "टेबल 4 / Table 4" at the top. No slot, no parcel charge.
-2. First order of the visit asks name + mobile; remembered for that table session in a cookie.
+2. First order of the visit asks name + mobile; the phone remembers that it already ordered in this visit (browser storage) and does not ask again. Any phone scanning the table's QR joins the table's open visit (one running bill per table); each new phone gives its name + mobile once.
 3. Payment: at the counter before leaving (cash or the shop's UPI QR).
 4. Customer can order again any time; each order adds to the table's running bill (the open `table_sessions` row for that table).
 5. Buttons: **Call staff** and **Request bill** (create `table_alerts`; Request bill also sets session status `bill_requested`).

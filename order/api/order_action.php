@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // Actions on a saved order from the counter. Body (JSON): action, order_id, …
-//   accept / ready          online order status (Online tab)
+//   accept / ready / serve  online + table order status (accept on a table order → KOT print URL)
 //   pickup  method, cash_paise   collect payment → bill number → returns the print URL
 //   reprint                 logs the reprint, returns the print URL (marked DUPLICATE)
 //   cancel  reason[, pin]   reason always; the owner PIN once the order is accepted (SPEC §3)
@@ -29,7 +29,16 @@ try {
     switch ((string) ($body['action'] ?? '')) {
         case 'accept':
             $orders->accept($orderId, $user['id']);
-            json_response(['ok' => true, 'data' => ['status' => 'preparing']]);
+            $isTable = ($orders->find($orderId)['order_type'] ?? '') === 'table';
+            json_response(['ok' => true, 'data' => [
+                'status' => 'preparing',
+                // Table orders print a kitchen ticket on Accept (SPEC §10); takeaway does not.
+                'print_url' => $isTable ? '/counter/print.php?type=kot&id=' . $orderId : null,
+            ]]);
+
+        case 'serve':
+            $orders->markServed($orderId, $user['id']);
+            json_response(['ok' => true, 'data' => ['status' => 'served']]);
 
         case 'ready':
             $orders->markReady($orderId, $user['id']);

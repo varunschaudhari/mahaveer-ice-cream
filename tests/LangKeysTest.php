@@ -18,7 +18,7 @@ final class LangKeysTest extends TestCase
 {
     private const PREFIXES = 'auth|admin|counter|menu|common|staff|settings|audit|role|image|error|shop|lang|time|order|site'
         . '|billing|cart|payment|discount|cancel|today|stock|print'
-        . '|online|checkout|status|qr|blocked';
+        . '|online|checkout|status|qr|blocked|table|tables';
 
     public function testEveryKeyUsedInCodeExistsInBothLanguages(): void
     {

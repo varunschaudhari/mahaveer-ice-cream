@@ -75,86 +75,8 @@ view('header', ['title' => t('order.page_title'), 'css' => ['css/base.css', 'css
   </section>
   <?php endif; ?>
 
-  <?php if ($menu === []): ?>
-  <p class="muted"><?= e(t('menu.empty')) ?></p>
-  <?php else: ?>
-  <nav class="chip-row" aria-label="<?= e(t('menu.categories')) ?>">
-    <?php foreach ($menu as $category): ?>
-    <a class="chip" href="#cat-<?= (int) $category['id'] ?>"><?= e(lang_field($category, 'name')) ?></a>
-    <?php endforeach; ?>
-  </nav>
-
-  <?php foreach ($menu as $category): ?>
-  <section class="menu-category" id="cat-<?= (int) $category['id'] ?>">
-    <h2 class="menu-category__title"><?= e(lang_field($category, 'name')) ?></h2>
-    <ul class="shop-list">
-      <?php foreach ($category['items'] as $item): $name = lang_field($item, 'name'); ?>
-      <li class="shop-item<?= $item['is_available'] ? '' : ' is-sold-out' ?>">
-        <div class="shop-item__name">
-          <?= e($name) ?>
-          <?php if (!$item['is_available']): ?><span class="badge badge-muted"><?= e(t('menu.sold_out')) ?></span><?php endif; ?>
-        </div>
-        <div class="shop-item__variants">
-          <?php foreach ($item['variants'] as $variant): ?>
-          <button type="button" class="btn btn-secondary add-btn"
-                  data-variant="<?= (int) $variant['id'] ?>" data-name="<?= e($name) ?>"
-                  data-label="<?= e(lang_field($variant, 'label')) ?>" data-price="<?= (int) $variant['price_paise'] ?>"
-                  <?= $item['is_available'] ? '' : 'disabled' ?>>
-            <?= e(lang_field($variant, 'label')) ?> <?= e(money($variant['price_paise'])) ?> <span aria-hidden="true">+</span>
-          </button>
-          <?php endforeach; ?>
-        </div>
-      </li>
-      <?php endforeach; ?>
-    </ul>
-  </section>
-  <?php endforeach; ?>
-  <?php endif; ?>
-
-  <section class="card stack checkout" id="checkout" data-checkout hidden>
-    <h2><?= e(t('order.your_order')) ?></h2>
-    <div class="checkout-lines" data-cart-lines></div>
-    <dl class="totals">
-      <div><dt><?= e(t('billing.subtotal')) ?></dt><dd data-subtotal></dd></div>
-      <div><dt><?= e(t('billing.parcel_charge')) ?></dt><dd data-parcel-amount></dd></div>
-      <div class="totals__grand"><dt><?= e(t('billing.total')) ?></dt><dd data-total></dd></div>
-    </dl>
-
-    <form class="stack" data-checkout-form novalidate>
-      <div class="field">
-        <label for="c-name"><?= e(t('checkout.name')) ?></label>
-        <input class="input" id="c-name" name="name" maxlength="60" autocomplete="name" required>
-        <p class="field-error" data-error-for="name" hidden></p>
-      </div>
-      <div class="field">
-        <label for="c-mobile"><?= e(t('checkout.mobile')) ?></label>
-        <input class="input" id="c-mobile" name="mobile" type="tel" inputmode="numeric" maxlength="14" autocomplete="tel" required>
-        <p class="field-error" data-error-for="mobile" hidden></p>
-      </div>
-      <fieldset class="field slot-field">
-        <legend><?= e(t('checkout.slot')) ?></legend>
-        <div class="slot-grid" data-slots>
-          <?php foreach ($slots['slots'] as $slot): ?>
-          <label class="slot<?= $slot['full'] ? ' is-full' : '' ?>">
-            <input type="radio" name="slot" value="<?= e($slot['start']) ?>"<?= $slot['full'] ? ' disabled' : '' ?>>
-            <span><?= e(format_time($slot['start'])) ?></span>
-            <?php if ($slot['full']): ?><small><?= e(t('order.slot_full')) ?></small><?php endif; ?>
-          </label>
-          <?php endforeach; ?>
-        </div>
-        <p class="field-error" data-error-for="slot" hidden></p>
-      </fieldset>
-      <div class="field">
-        <label for="c-note"><?= e(t('checkout.note')) ?></label>
-        <textarea class="textarea" id="c-note" name="note" maxlength="200" placeholder="<?= e(t('checkout.note_hint')) ?>"></textarea>
-        <p class="field-error" data-error-for="note" hidden></p>
-      </div>
-      <p class="notice"><?= e(t('checkout.pay_at_counter')) ?></p>
-      <p class="flash flash-error" data-error-for="_" role="alert" hidden></p>
-      <button type="submit" class="btn btn-primary btn-block btn-lg" data-place<?= $slots['open'] ? '' : ' disabled' ?>><?= e(t('checkout.place')) ?></button>
-      <button type="button" class="btn btn-secondary btn-block" data-back><?= e(t('checkout.add_more')) ?></button>
-    </form>
-  </section>
+  <?php view('shop_menu', ['menu' => $menu]); ?>
+  <?php view('shop_checkout', ['mode' => 'takeaway', 'slots' => $slots, 'open' => $slots['open']]); ?>
 </div>
 
 <div class="cart-bar" data-cart-bar hidden>

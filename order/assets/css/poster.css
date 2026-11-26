@@ -14,6 +14,15 @@
 .poster-url { margin-top: 6mm; font-size: 22px; font-weight: 700; }
 .poster-phone { font-size: 22px; }
 
+/* Table stickers: 2 × 4 on an A4 sheet, cut along the dashed lines. */
+.sticker-sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; max-width: 186mm; margin: 0 auto; }
+.sticker { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 68mm; padding: 3mm; border: 1px dashed #999; color: #000; text-align: center; break-inside: avoid; }
+.sticker-table { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.sticker-table-en { font-size: 16px; font-weight: 700; }
+.sticker-qr { width: 38mm; height: 38mm; margin: 1mm 0; }
+.sticker-scan { font-size: 15px; font-weight: 700; }
+.sticker-scan-en { font-size: 12px; }
+
 @media print {
   .poster-toolbar { display: none; }
   .poster { padding: 0; }

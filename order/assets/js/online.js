@@ -27,9 +27,15 @@
   }
 
   var ACTIONS = {
-    received: ['accept', 'cancel'],
-    preparing: ['ready', 'picked_up', 'cancel'],
-    ready: ['picked_up', 'cancel']
+    takeaway: {
+      received: ['accept', 'cancel'],
+      preparing: ['ready', 'picked_up', 'cancel'],
+      ready: ['picked_up', 'cancel']
+    },
+    table: {
+      received: ['accept', 'cancel'],
+      preparing: ['serve', 'cancel']
+    }
   };
 
   function el(tag, className, content) {
@@ -44,15 +50,20 @@
   }
 
   function card(order) {
-    var article = el('article', 'order-card status-' + order.status);
+    var article = el('article', 'order-card status-' + order.status + ' type-' + order.type);
 
+    if (order.type === 'table') {
+      article.appendChild(el('p', 'order-card__table', text('table', { n: order.table })));
+    }
     var head = el('header', 'order-card__head');
     head.appendChild(el('span', 'order-card__token', text('token', { n: order.token })));
     head.appendChild(el('span', 'order-card__status', order.status_label));
     head.appendChild(el('span', 'order-card__age', order.age_mins < 1 ? text('just_now') : text('age', { n: order.age_mins })));
     article.appendChild(head);
 
-    article.appendChild(el('p', 'order-card__slot', text('pickup', { slot: order.slot })));
+    if (order.slot) {
+      article.appendChild(el('p', 'order-card__slot', text('pickup', { slot: order.slot })));
+    }
 
     var who = el('p', 'order-card__customer', order.customer + ' ');
     if (order.mobile) {
@@ -74,7 +85,7 @@
     article.appendChild(el('p', 'order-card__total', C.money(order.total_paise)));
 
     var actions = el('div', 'order-card__actions');
-    (ACTIONS[order.status] || []).forEach(function (action) {
+    ((ACTIONS[order.type] || {})[order.status] || []).forEach(function (action) {
       var button = el('button', 'counter-btn' + (action === 'cancel' ? ' btn-danger-c' : ' btn-go'), text(action));
       button.type = 'button';
       button.setAttribute('data-action', action);
@@ -132,8 +143,11 @@
     }
     var action = button.getAttribute('data-action');
 
-    if (action === 'accept' || action === 'ready') {
-      await run(id, { action: action, order_id: id });
+    if (action === 'accept' || action === 'ready' || action === 'serve') {
+      var result = await run(id, { action: action, order_id: id });
+      if (result && result.print_url) {
+        C.print(result.print_url); // kitchen ticket for a table order
+      }
     } else if (action === 'picked_up') {
       C.pay(order.total_paise, async function (method, cashPaise) {
         var result = await run(id, { action: 'pickup', order_id: id, method: method, cash_paise: cashPaise }, function (r) {

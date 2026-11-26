@@ -1,6 +1,9 @@
 /*
- * Takeaway ordering on the customer's phone: cart in sessionStorage (SPEC §6.2), checkout,
- * place order. The server re-checks every line, price, slot and the mobile number.
+ * Ordering on the customer's phone, two modes (data-mode on [data-shop]):
+ *  - takeaway (index.php): pickup slot, ₹5 parcel charge, goes to the status page after ordering
+ *  - table (t.php): no slot, no parcel charge, name + mobile asked once per table visit, the
+ *    page reloads to show the order in the table's list
+ * Cart in sessionStorage (SPEC §6.2); the server re-checks every line, price, slot and number.
  * Name and mobile are remembered in this phone's localStorage to pre-fill the next order.
  */
 (function () {
@@ -11,11 +14,16 @@
     return;
   }
 
+  var MODE = root.getAttribute('data-mode') || 'takeaway';
+  var IS_TABLE = MODE === 'table';
+  var TABLE_TOKEN = root.getAttribute('data-table-token') || '';
+  var SESSION = root.getAttribute('data-session') || '';
   var PARCEL = parseInt(root.getAttribute('data-parcel'), 10) || 0;
   var OPEN = root.getAttribute('data-open') === '1';
   var TEXT = JSON.parse(root.getAttribute('data-texts'));
-  var CART_KEY = 'mahavir.shop.cart';
+  var CART_KEY = 'mahavir.shop.cart.' + MODE + TABLE_TOKEN;
   var CUSTOMER_KEY = 'mahavir.customer';
+  var VISIT_KEY = 'mahavir.table.visit'; // table visit (session id) this phone already ordered in
   var ORDER_KEY = 'mahavir.shop.key';
   var MAX_QTY = 50;
   var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
@@ -135,7 +143,10 @@
       linesEl.appendChild(row);
     });
     root.querySelector('[data-subtotal]').textContent = money(t.subtotal);
-    root.querySelector('[data-parcel-amount]').textContent = money(t.parcel);
+    var parcelEl = root.querySelector('[data-parcel-amount]');
+    if (parcelEl) {
+      parcelEl.textContent = money(t.parcel);
+    }
     root.querySelector('[data-total]').textContent = money(t.total);
     form.querySelector('[data-place]').disabled = !OPEN || placing || lines.length === 0;
 
@@ -204,8 +215,25 @@
       nameInput.value = nameInput.value || saved.name || '';
       mobileInput.value = mobileInput.value || saved.mobile || '';
     }
-    refreshSlots();
+    if (IS_TABLE) {
+      // Already ordered in this visit from this phone: don't ask name + mobile again (SPEC §7.2).
+      var known = saved && SESSION !== '' && read(window.localStorage, VISIT_KEY) === SESSION;
+      form.querySelector('[data-identity]').hidden = !!known;
+      form.querySelector('[data-identity-known]').hidden = !known;
+      if (known) {
+        form.querySelector('[data-identity-name]').textContent = text('ordered_as', { name: saved.name });
+      }
+    } else {
+      refreshSlots();
+    }
     checkout.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  if (IS_TABLE) {
+    form.querySelector('[data-identity-change]').addEventListener('click', function () {
+      form.querySelector('[data-identity]').hidden = false;
+      form.querySelector('[data-identity-known]').hidden = true;
+    });
   }
 
   function closeCheckout() {
@@ -273,6 +301,14 @@
     if (placing) {
       return;
     }
+    if (IS_TABLE && form.querySelector('[data-identity]').hidden) {
+      // Hidden because this phone already ordered in this visit: use what it remembers.
+      try {
+        var saved = JSON.parse(read(window.localStorage, CUSTOMER_KEY)) || {};
+        nameInput.value = saved.name || '';
+        mobileInput.value = saved.mobile || '';
+      } catch (e) { /* the fields will show their errors */ }
+    }
     var mobile = mobileInput.value.replace(/\D/g, '').replace(/^(91|0)(?=[6-9]\d{9}$)/, '');
     var slot = (form.querySelector('input[name="slot"]:checked') || {}).value;
     var errors = {};
@@ -282,7 +318,7 @@
     if (!/^[6-9]\d{9}$/.test(mobile)) {
       errors.mobile = text('mobile_invalid');
     }
-    if (!slot) {
+    if (!slot && !IS_TABLE) {
       errors.slot = text('slot_required');
     }
     showErrors(errors);
@@ -297,15 +333,16 @@
     placing = true;
     render();
     try {
-      var response = await fetch('/api/place_order.php', {
+      var response = await fetch(IS_TABLE ? '/api/place_table_order.php' : '/api/place_order.php', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf },
         body: JSON.stringify({
           order_key: key,
+          table_token: TABLE_TOKEN,
           name: nameInput.value.trim(),
           mobile: mobile,
-          slot: slot,
+          slot: slot || '',
           note: noteInput.value.trim(),
           lines: lines.map(function (l) { return { variant_id: l.variant, qty: l.qty }; })
         })
@@ -324,7 +361,14 @@
       store(window.localStorage, CUSTOMER_KEY, { name: nameInput.value.trim(), mobile: mobile });
       store(window.sessionStorage, CART_KEY, null);
       store(window.sessionStorage, ORDER_KEY, null);
-      window.location.href = data.data.status_url;
+      if (IS_TABLE) {
+        store(window.localStorage, VISIT_KEY, String(data.data.session_id));
+        lines = [];
+        window.alert(text('placed', { token: data.data.token_no }));
+        window.location.reload(); // shows the order in the table's list
+      } else {
+        window.location.href = data.data.status_url;
+      }
     } catch (e) {
       showErrors({ _: text('offline') }); // keep the key: retrying returns the same order
     } finally {

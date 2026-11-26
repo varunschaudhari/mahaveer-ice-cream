@@ -70,6 +70,20 @@ function lang_field(array $row, string $base): string
     return $value !== '' ? $value : (string) ($row[$base . '_' . $other] ?? '');
 }
 
+/** Table code → number shown to people: 'T4' → '4'. */
+function table_number(string $code): string
+{
+    $number = ltrim(strtoupper($code), 'T');
+    return $number === '' ? $code : $number;
+}
+
+/** "टेबल 4" / "Table 4", plus "(बाहेर) / (Outside)" for outside tables. */
+function table_label(string $code, string $area = 'inside'): string
+{
+    $label = t('table.label', ['n' => table_number($code)]);
+    return $area === 'outside' ? $label . ' ' . t('table.outside') : $label;
+}
+
 /** Order status in words for customers and staff. */
 function order_status_label(string $status): string
 {
@@ -77,6 +91,7 @@ function order_status_label(string $status): string
         'received' => t('status.received'),
         'preparing' => t('status.preparing'),
         'ready' => t('status.ready'),
+        'served' => t('status.served'),
         'completed' => t('status.completed'),
         'cancelled' => t('status.cancelled'),
         'no_show' => t('status.no_show'),

@@ -21,16 +21,32 @@ $today = now();
 $orders = new OrderService();
 $data = $orders->newOnlineSummary($today) + ['time' => $today->format('H:i')];
 
+if (($_GET['view'] ?? '') === 'tables') {
+    $data['tables'] = array_map(static fn (array $table): array => [
+        'id' => $table['id'],
+        'number' => table_number($table['code']),
+        'outside' => $table['area'] === 'outside',
+        'status' => $table['status'],
+        'total_paise' => $table['total_paise'],
+        'minutes' => $table['minutes'],
+        'unsettled' => $table['status'] !== 'free' && $table['minutes'] >= App\Settings::int('table_unsettled_mins', 120),
+        'unserved' => $table['unserved'],
+        'alerts' => array_map(static fn (array $a): string => $a['type'], $table['alerts']),
+    ], (new App\Services\TableService())->overview($today));
+}
+
 if (!empty($_GET['full'])) {
     $slotMins = max(5, App\Settings::int('slot_mins', 15));
     $data['orders'] = array_map(static function (array $order) use ($today, $slotMins): array {
-        $pickup = new DateTimeImmutable($order['pickup_at']);
+        $pickup = $order['pickup_at'] === null ? null : new DateTimeImmutable($order['pickup_at']);
         return [
             'id' => (int) $order['id'],
+            'type' => $order['order_type'],
+            'table' => $order['table_code'] === null ? null : table_number($order['table_code']),
             'token' => (int) $order['token_no'],
             'status' => $order['status'],
             'status_label' => order_status_label($order['status']),
-            'slot' => format_time($pickup->format('H:i')) . ' – ' . format_time($pickup->modify("+{$slotMins} minutes")->format('H:i')),
+            'slot' => $pickup === null ? '' : format_time($pickup->format('H:i')) . ' – ' . format_time($pickup->modify("+{$slotMins} minutes")->format('H:i')),
             'customer' => (string) $order['customer_name'],
             'mobile' => (string) $order['customer_mobile'],
             'items' => array_map(static fn (array $line): array => [

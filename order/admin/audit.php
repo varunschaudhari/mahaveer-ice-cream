@@ -46,6 +46,11 @@ $actionLabel = static fn (string $action): string => match ($action) {
     'stock_reset' => t('audit.action.stock_reset'),
     'no_show' => t('audit.action.no_show'),
     'customer_unblock' => t('audit.action.customer_unblock'),
+    'table_move' => t('audit.action.table_move'),
+    'table_qr_regenerate' => t('audit.action.table_qr_regenerate'),
+    'table_activate' => t('audit.action.table_activate'),
+    'table_deactivate' => t('audit.action.table_deactivate'),
+    'cancel_table_bill' => t('audit.action.cancel_table_bill'),
     default => $action,
 };
 
