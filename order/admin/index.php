@@ -8,6 +8,8 @@ declare(strict_types=1);
 use App\Auth;
 use App\Csrf;
 use App\Services\BulkService;
+use App\Services\OrderService;
+use App\Services\ReportService;
 
 require __DIR__ . '/../boot.php';
 
@@ -68,6 +70,15 @@ if (!Auth::isAdmin($user)) {
 }
 
 $pendingBulk = count(array_filter((new BulkService())->open(), static fn (array $o): bool => $o['status'] === 'pending_approval'));
+$today = now();
+$summary = (new ReportService())->daySummary($today);
+// Today at a glance: [label, value, link, needs attention]
+$stats = [
+    [t('owner.today_sales'), money($summary['total']), '/admin/reports.php', false],
+    [t('report.col.bills'), (string) $summary['bill_count'], '/admin/reports.php', false],
+    [t('admin.today.open_orders'), (string) count((new OrderService())->activeOnline($today)), '/owner/', false],
+    [t('admin.today.pending_bulk'), (string) $pendingBulk, '/admin/bulk.php', $pendingBulk > 0],
+];
 // [link, label key, description key, icon]; the first two are the everyday screens.
 $tiles = [
     ['/owner/', 'admin.nav.owner', 'admin.tile.owner', 'phone'],
@@ -89,6 +100,14 @@ view('admin_header', ['title' => t('admin.dashboard'), 'active' => 'home', 'user
 <div class="admin-hello">
   <p class="eyebrow"><?= e(role_label($user['role'])) ?> · <?= e(now()->format('d/m/Y')) ?></p>
   <h1><?= e(t('admin.welcome', ['name' => $user['name']])) ?></h1>
+</div>
+<div class="dash-stats">
+  <?php foreach ($stats as $i => [$label, $value, $href, $attention]): ?>
+  <a class="dash-stat<?= $i === 0 ? ' dash-stat--main' : '' ?><?= $attention ? ' is-attention' : '' ?>" href="<?= e($href) ?>">
+    <span><?= e($label) ?></span>
+    <strong><?= e($value) ?></strong>
+  </a>
+  <?php endforeach; ?>
 </div>
 <nav class="dash" aria-label="<?= e(t('admin.dashboard')) ?>">
   <?php foreach ([array_slice($tiles, 0, 2), array_slice($tiles, 2)] as $group => $groupTiles): ?>

@@ -30,6 +30,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-26 | Spec, schema and build plan agreed (see docs/). Razorpay and WhatsApp messaging moved to phase 2. |
 | 2026-11-27 | **Client:** "modern gelato boutique" look for the website + customer ordering pages; new logo (concept C "scoop heart", docs/brand/); English name **Mahaveer** (seed `shop_name_en`, English page titles; staging: change it in admin → Settings). SPEC §16 updated. Founding year for the seal still to come. |
 | 2026-11-27 | **Client (later the same day):** use the shop's own logo (supplied as a JPG) instead of the scoop heart, which is retired (still in git history). English name back to **Mahavir** and tagline "Adding flavors to your life", both as on the logo. Accent colour = logo pink, pastels from the logo colours, black buttons kept. App icons and notification badge from the logo's swirl-and-M. SPEC §16 updated. Staging: set the English shop name back to "Mahavir Ice Cream" in admin → Settings. |
+| 2026-11-27 | **Developer (usability review):** takeaway checkout selects the earliest free pickup slot already (customer can change it); pickup time is asked before name/mobile. Customer menu as compact rows (no letter tiles). Counter: an open online order whose pickup window has ended is marked "Late"; on the Online / Tables tab the alert bar leaves out what is already on screen, the beep repeats until any tap there. SPEC §6, §9 updated. |
 | 2026-11-26 | `minishlink/web-push` pinned to `^10.1`. v11 needs a separately installed PSR-18 HTTP client (an extra package); v10 brings Guzzle itself. `chillerlan/php-qrcode` `^6.0`. |
 | 2026-11-26 | `composer.json` sets `config.platform.php = 8.2.0` so the lock file never pulls packages that need PHP > 8.2. |
 | 2026-11-26 | Money: decimal quantities round half-up to the paisa per line; a discount may not exceed subtotal + parcel; `money()` uses Indian grouping (₹1,25,000). |
@@ -107,6 +108,25 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-27 – Usability review: placement fixes
+
+- Customer ordering (phones first):
+  - menu items as compact rows (name left, one pill per size right; a photo only when uploaded), about 2× more items per screen; two columns from 768 px
+  - shorter intro on phones (intro sentence hidden, compact steps), so items show on the first screen
+  - cart: pickup time first, with the earliest free slot already selected (server render + after the slot refresh); "Place order · ₹total" stays at the bottom while scrolling (`.checkout-submit`, sticky)
+- Counter:
+  - the alert bar leaves out new orders on the Online tab and table alerts on the Tables tab; the beep still repeats until any tap on that page (`acknowledge(kind)`)
+  - table times over an hour read "25 h 31 min" (`tables.hours_minutes`)
+  - an open order past its pickup window shows "· Late" in red (`OrderCard` `late`, server clock; `OrderCardTest`)
+- Admin dashboard: today's sales, bills, open online orders and party orders to approve, above the tiles; the last turns amber when something waits.
+- New text keys (mr + en): `online.late`, `tables.hours_minutes`, `admin.today.open_orders`, `admin.today.pending_bulk`.
+- Checks: 355 PHPUnit tests pass. Headless Chrome:
+  - 390 px: takeaway menu, cart, Marathi
+  - 1366 px: takeaway
+  - 1024×768: counter billing / online / tables
+  - admin dashboard at 1366 (English) and 390 (Marathi)
+- Not changed (spec rule): table orders still ask name + mobile once per visit.
 
 ### 2026-11-27 – Links between ordering and the website
 

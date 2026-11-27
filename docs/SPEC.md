@@ -64,7 +64,7 @@ URL: `order.mahaveericecream.in/` (takeaway QR on door/counter poster, links fro
 
 1. Menu by category with Half/Full or weight variants. Sold-out items greyed and not addable. Inactive items hidden.
 2. Cart stored in the browser (`sessionStorage`) until checkout. Shows subtotal, ₹5 parcel charge, total.
-3. Checkout: name, mobile (10 digits, starts 6–9), pickup slot, optional note. Payment: "Pay at counter on pickup" (only option in V1).
+3. Checkout: pickup slot (the earliest free slot is selected already; the customer can tap another – client decision 2026-11-27), name, mobile (10 digits, starts 6–9), optional note. Payment: "Pay at counter on pickup" (only option in V1).
 4. Pickup slots: 15-minute slots for **today only**, earliest = now + 15 min rounded up to the next slot, last slot ends 30 min before closing (so last pickup slot 9:45–10:00 PM). A slot with 10 or more active takeaway orders is full.
 5. Ordering closed outside hours: banner "दुकान बंद आहे, सकाळी 10:00 वाजता उघडेल" / "Shop closed, opens at 10:00 AM".
 6. Blocked mobile numbers (2+ no-shows) see: "Please order at the counter or call the shop."
@@ -103,7 +103,7 @@ Opened as a Chrome app window: `chrome.exe --app=https://order.mahaveericecream.
 Layout (landscape, 1024×768 minimum, touch only, no hover-dependent UI):
 
 - **Billing tab:** category buttons → item grid → variant buttons (Half/Full). Cart on the right. Dine-in / Parcel toggle (every new bill starts on **Dine-in**). Payment: Cash / UPI / Mixed (split amounts), cash tendered → change shown. Save & Print → **one copy** of the bill with token prints. Big buttons (min 56 px tall).
-- **Online orders tab:** takeaway + table orders in arrival order, newest highlighted. Each card: token, type, table number (very large for table orders, e.g. "TABLE 4") or pickup slot, items, total, age. Buttons by status: Accept / Ready / Picked up (collect payment) / Served / Cancel.
+- **Online orders tab:** takeaway + table orders in arrival order, newest highlighted. Each card: token, type, table number (very large for table orders, e.g. "TABLE 4") or pickup slot, items, total, age; a slot whose window has ended while the order is still open is marked "Late". Buttons by status: Accept / Ready / Picked up (collect payment) / Served / Cancel.
 - **Tables tab:** 7 tiles (T7 labelled Outside). Each tile: Free / Occupied / Bill requested, running total, minutes since first order, open alerts. Tap → table detail: orders, Mark served, Move order to another table, Settle (combined bill → payment → print → table Free).
 - **Stock tab:** every item with an on/off switch for today's availability.
 - **Today tab:** today's bills, reprint, cancel (owner PIN), day close summary (totals by Cash / UPI counter, counts by order type), print day summary.

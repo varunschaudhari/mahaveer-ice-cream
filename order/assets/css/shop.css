@@ -158,30 +158,18 @@
 .menu-section__title::after { content: ''; flex: 1; height: 1px; margin-left: var(--space-2); background: var(--shop-line); }
 .menu-section__count { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding-inline: 8px; border-radius: var(--radius-pill); background: var(--color-primary-soft); color: var(--color-primary-dark); font-size: 0.75rem; }
 
-.item-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
-.item-card {
-  display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: var(--space-3) var(--space-4); align-items: start;
-  padding: var(--space-3); border: 1px solid var(--shop-line); border-radius: var(--shop-radius); background: #FFFFFF;
-  box-shadow: var(--shop-shadow); transition: box-shadow 0.2s, transform 0.2s;
-}
-.item-card__media {
-  display: flex; align-items: center; justify-content: center; overflow: hidden;
-  width: 72px; height: 72px; border-radius: 16px; font-size: 1.75rem; font-weight: 700;
-}
-.item-card__media img { width: 100%; height: 100%; object-fit: cover; }
-.tone-0 { background: linear-gradient(135deg, #FDE4EE, #F8BBD0); color: #AD1457; }
-.tone-1 { background: linear-gradient(135deg, #FFF3E0, #FFD9A8); color: #D35400; }
-.tone-2 { background: linear-gradient(135deg, #F1EAFB, #D9C8F2); color: #5E35B1; }
-.tone-3 { background: linear-gradient(135deg, #EAF6EA, #C8E6C9); color: #2E7D32; }
-.tone-4 { background: linear-gradient(135deg, #F3ECE8, #DCC7BC); color: #6D4C41; }
-.tone-5 { background: linear-gradient(135deg, #E3F6F7, #B9E6EA); color: #00838F; }
-.item-card__body { min-width: 0; }
-.item-card__name { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font-size: 1.0625rem; line-height: 1.3; }
-.item-card__variants { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-.item-card.is-sold-out .item-card__media, .item-card.is-sold-out .item-card__name { opacity: 0.55; }
+/* Items as compact rows: name on the left, one pill per size on the right (pills wrap under
+   the name when they do not fit). A photo shows only when the owner uploaded one. */
+.item-list { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: var(--space-6); margin: 0; padding: 0; list-style: none; }
+.item-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3); padding-block: var(--space-3); border-bottom: 1px solid var(--shop-line); }
+.item-row__main { display: flex; flex: 1 1 5.5rem; align-items: center; gap: var(--space-3); min-width: 0; }
+.item-row__photo { flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+.item-row__name { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); font-size: 1rem; line-height: 1.3; }
+.item-row__variants { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); margin-left: auto; }
+.item-row.is-sold-out .item-row__main { opacity: 0.55; }
 
 .add-btn {
-  display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 4px 5px 4px 14px;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 3px 4px 3px 12px;
   border: 1.5px solid var(--shop-pink-line); border-radius: var(--radius-pill); background: var(--shop-pink);
   color: var(--color-text); font-weight: 700; line-height: 1.2; touch-action: manipulation;
   transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
@@ -191,7 +179,7 @@
 .add-btn__price { color: var(--color-primary-dark); }
 .add-btn__plus, .add-btn__qty {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: 32px; height: 32px; border-radius: 50%; background: var(--shop-gradient); color: #FFFFFF;
+  width: 30px; height: 30px; border-radius: 50%; background: var(--shop-gradient); color: #FFFFFF;
   font-size: 1.25rem; line-height: 1;
 }
 .add-btn__qty { background: var(--color-primary-dark); font-size: var(--text-sm); }
@@ -252,6 +240,13 @@
 .slot small { font-size: 0.75rem; font-weight: 400; }
 
 .btn-place { min-height: 56px; border-radius: 16px !important; }
+.btn-place__total { white-space: nowrap; }
+/* "Place order · ₹total" stays at the bottom of the cart while the customer scrolls the form. */
+.checkout-submit {
+  position: -webkit-sticky; position: sticky; bottom: 0; z-index: 1; display: flex; flex-direction: column; gap: var(--space-3);
+  margin-inline: calc(-1 * var(--space-4)); padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(rgba(251, 248, 243, 0), var(--shop-bg) 22%);
+}
 
 /* ---------- floating cart bar (phones) ---------- */
 
@@ -285,11 +280,13 @@
   .shop-hero { padding: var(--space-6); }
   .shop-hero h1 { font-size: 2.125rem; }
   .shop-hero__art { width: 128px; }
-  .item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .recent-list { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 }
 @media (min-width: 560px) and (max-width: 1023.98px) {
   .checkout-form__pair { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 768px) {
+  .item-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ---------- wide screens: menu grid + sticky side panel ---------- */
@@ -307,13 +304,13 @@
   }
   .checkout__head { position: -webkit-sticky; position: sticky; top: 0; z-index: 1; padding: var(--space-4) var(--space-5); }
   .checkout__body { padding: var(--space-4) var(--space-5) var(--space-5); }
+  .checkout-submit { margin-inline: calc(-1 * var(--space-5)); padding-inline: var(--space-5); background: linear-gradient(rgba(255, 251, 246, 0), #FFFBF6 22%); }
   .checkout__close, .btn-more { display: none; }
   .cart-bar { display: none !important; }
   .has-cart-bar .shop-footer { padding-bottom: var(--space-5); }
 }
 
 @media (hover: hover) {
-  .item-card:hover { box-shadow: 0 2px 4px rgba(91, 45, 24, 0.06), 0 14px 30px rgba(91, 45, 24, 0.1); transform: translateY(-2px); }
   .add-btn:not(:disabled):hover { border-color: var(--color-primary); background: var(--color-primary-soft); }
   .cat-chip:not(.is-active):hover { border-color: var(--shop-pink-line); color: var(--color-primary-dark); }
   .slot:not(.is-full):hover { border-color: var(--color-primary); }
@@ -422,19 +419,19 @@
   .bulk-add .btn { grid-column: 1 / -1; }
 }
 
-/* ---------- small phones: compact hero and item cards (two size pills fit on one line) ---------- */
+/* ---------- small phones: short hero so the first items show on the first screen ---------- */
 
 @media (max-width: 559.98px) {
-  .shop-hero { display: block; padding: var(--space-5) var(--space-4) var(--space-4); }
-  .shop-hero__art { position: absolute; top: var(--space-4); right: var(--space-3); width: 84px; }
-  .shop-hero h1, .shop-hero__intro { padding-right: 64px; }
-  .hero-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
-  .hero-steps li { flex-direction: column; justify-content: flex-start; gap: 6px; padding: var(--space-2) 6px; border-radius: 14px; font-size: 0.8125rem; line-height: 1.3; text-align: center; }
-  .item-card { grid-template-columns: 60px minmax(0, 1fr); gap: var(--space-3); }
-  .item-card__media { width: 60px; height: 60px; border-radius: 14px; font-size: 1.5rem; }
-  .item-card__variants { margin-top: var(--space-2); }
-  .add-btn { gap: 6px; padding-left: 12px; }
-  .add-btn__plus, .add-btn__qty { width: 30px; height: 30px; }
+  .shop-hero { display: block; padding: var(--space-4) var(--space-4) var(--space-3); }
+  .shop-hero__art { position: absolute; top: var(--space-3); right: var(--space-3); width: 72px; }
+  .shop-hero h1 { padding-right: 64px; font-size: 1.5rem; }
+  .shop-hero__intro { display: none; } /* the three steps say the same */
+  .hero-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: var(--space-3); }
+  .hero-steps li { gap: 6px; padding: 6px 8px 6px 6px; border-radius: 12px; font-size: 0.75rem; line-height: 1.25; }
+  .hero-steps__n { flex-shrink: 0; width: 20px; height: 20px; font-size: 0.6875rem; }
+  .party-link { margin-top: var(--space-3); }
+  .add-btn { gap: 5px; padding-left: 10px; }
+  .add-btn__plus, .add-btn__qty { width: 28px; height: 28px; }
 }
 
 /* ---------- motion ---------- */

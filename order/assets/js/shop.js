@@ -160,6 +160,7 @@
       parcelEl.textContent = money(t.parcel);
     }
     root.querySelector('[data-total]').textContent = money(t.total);
+    form.querySelector('[data-place-total]').textContent = lines.length ? '· ' + money(t.total) : '';
     form.querySelector('[data-place]').disabled = !OPEN || placing || lines.length === 0;
     markButtons();
 
@@ -397,6 +398,12 @@
       });
       if (!data.slots.length) {
         grid.textContent = text('no_slots');
+      } else if (!grid.querySelector('input:checked')) {
+        // The earliest free time is selected already; the customer can tap another.
+        var earliest = grid.querySelector('input:not(:disabled)');
+        if (earliest) {
+          earliest.checked = true;
+        }
       }
       OPEN = data.open;
       render();

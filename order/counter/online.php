@@ -16,6 +16,7 @@ $texts = [
     'age' => t('online.age'),
     'just_now' => t('online.just_now'),
     'pickup' => t('online.pickup_slot'),
+    'late' => t('online.late'),
     'accept' => t('online.accept'),
     'ready' => t('online.ready'),
     'picked_up' => t('online.picked_up'),

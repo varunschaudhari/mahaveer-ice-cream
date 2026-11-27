@@ -32,6 +32,8 @@ final class OrderCard
             'total_paise' => paise_from_decimal((string) $order['total']),
             'note' => (string) ($order['note'] ?? ''),
             'age_mins' => max(0, intdiv($now->getTimestamp() - strtotime($order['created_at']), 60)),
+            // Still open after its pickup window ended: the counter marks it so it is not missed.
+            'late' => $pickup !== null && $pickup->modify("+{$slotMins} minutes") < $now,
         ];
     }
 

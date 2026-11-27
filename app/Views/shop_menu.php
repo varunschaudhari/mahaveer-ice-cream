@@ -1,6 +1,6 @@
 <?php
 /**
- * Customer menu (takeaway and table pages): sticky category bar, items as cards with one
+ * Customer menu (takeaway and table pages): sticky category bar, items as compact rows with one
  * "Add" pill per size. Var: $menu (MenuService::publicMenu). shop.js reads the .add-btn data-*.
  * @var list<array> $menu
  */
@@ -22,22 +22,19 @@
     <?= e(lang_field($category, 'name')) ?>
     <span class="menu-section__count"><?= count($category['items']) ?></span>
   </h2>
-  <ul class="item-grid">
+  <ul class="item-list">
     <?php foreach ($category['items'] as $item): $name = lang_field($item, 'name'); ?>
-    <li class="item-card<?= $item['is_available'] ? '' : ' is-sold-out' ?>">
-      <div class="item-card__media tone-<?= (int) $item['id'] % 6 ?>" aria-hidden="true">
+    <li class="item-row<?= $item['is_available'] ? '' : ' is-sold-out' ?>">
+      <div class="item-row__main">
         <?php if (!empty($item['photo'])): ?>
-        <img src="/media.php?f=<?= e(rawurlencode($item['photo'])) ?>" alt="" loading="lazy" width="72" height="72">
-        <?php else: ?>
-        <span><?= e(mb_substr($name, 0, 1)) ?></span>
+        <img class="item-row__photo" src="/media.php?f=<?= e(rawurlencode($item['photo'])) ?>" alt="" loading="lazy" width="48" height="48">
         <?php endif; ?>
-      </div>
-      <div class="item-card__body">
-        <h3 class="item-card__name">
+        <h3 class="item-row__name">
           <?= e($name) ?>
           <?php if (!$item['is_available']): ?><span class="badge badge-muted"><?= e(t('menu.sold_out')) ?></span><?php endif; ?>
         </h3>
-        <div class="item-card__variants">
+      </div>
+      <div class="item-row__variants">
           <?php foreach ($item['variants'] as $variant): $label = lang_field($variant, 'label'); ?>
           <button type="button" class="add-btn"
                   data-variant="<?= (int) $variant['id'] ?>" data-name="<?= e($name) ?>"
@@ -50,7 +47,6 @@
             <span class="add-btn__qty" data-qty hidden></span>
           </button>
           <?php endforeach; ?>
-        </div>
       </div>
     </li>
     <?php endforeach; ?>

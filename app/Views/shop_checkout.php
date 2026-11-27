@@ -38,6 +38,25 @@ $isTable = $mode === 'table';
     </dl>
 
     <form class="checkout-form" data-checkout-form novalidate>
+      <?php if (!$isTable): $picked = false; ?>
+      <fieldset class="field slot-field">
+        <legend>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <?= e(t('checkout.slot')) ?>
+        </legend>
+        <?php /* The earliest free time is selected already (client decision 2026-11-27); the customer can tap another. */ ?>
+        <div class="slot-grid" data-slots>
+          <?php foreach ($slots['slots'] ?? [] as $slot): $check = !$slot['full'] && !$picked; $picked = $picked || $check; ?>
+          <label class="slot<?= $slot['full'] ? ' is-full' : '' ?>">
+            <input type="radio" name="slot" value="<?= e($slot['start']) ?>"<?= $slot['full'] ? ' disabled' : '' ?><?= $check ? ' checked' : '' ?>>
+            <span><?= e(format_time($slot['start'])) ?></span>
+            <?php if ($slot['full']): ?><small><?= e(t('order.slot_full')) ?></small><?php endif; ?>
+          </label>
+          <?php endforeach; ?>
+        </div>
+        <p class="field-error" data-error-for="slot" hidden></p>
+      </fieldset>
+      <?php endif; ?>
       <?php if ($isTable): ?>
       <p class="checkout-known" data-identity-known hidden>
         <span data-identity-name></span> · <button type="button" class="link-btn" data-identity-change><?= e(t('table.change_name')) ?></button>
@@ -55,24 +74,6 @@ $isTable = $mode === 'table';
           <p class="field-error" data-error-for="mobile" hidden></p>
         </div>
       </div>
-      <?php if (!$isTable): ?>
-      <fieldset class="field slot-field">
-        <legend>
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <?= e(t('checkout.slot')) ?>
-        </legend>
-        <div class="slot-grid" data-slots>
-          <?php foreach ($slots['slots'] ?? [] as $slot): ?>
-          <label class="slot<?= $slot['full'] ? ' is-full' : '' ?>">
-            <input type="radio" name="slot" value="<?= e($slot['start']) ?>"<?= $slot['full'] ? ' disabled' : '' ?>>
-            <span><?= e(format_time($slot['start'])) ?></span>
-            <?php if ($slot['full']): ?><small><?= e(t('order.slot_full')) ?></small><?php endif; ?>
-          </label>
-          <?php endforeach; ?>
-        </div>
-        <p class="field-error" data-error-for="slot" hidden></p>
-      </fieldset>
-      <?php endif; ?>
       <div class="field">
         <label for="c-note"><?= e(t('checkout.note')) ?></label>
         <textarea class="textarea" id="c-note" name="note" maxlength="200" rows="2" placeholder="<?= e(t('checkout.note_hint')) ?>"></textarea>
@@ -82,8 +83,10 @@ $isTable = $mode === 'table';
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v5M12 7.5v.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <span><?= e($isTable ? t('table.pay_before_leaving') : t('checkout.pay_at_counter')) ?></span>
       </p>
-      <p class="flash flash-error" data-error-for="_" role="alert" hidden></p>
-      <button type="submit" class="btn btn-primary btn-block btn-lg btn-place" data-place<?= $open ? '' : ' disabled' ?>><?= e(t('checkout.place')) ?></button>
+      <div class="checkout-submit">
+        <p class="flash flash-error" data-error-for="_" role="alert" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block btn-lg btn-place" data-place<?= $open ? '' : ' disabled' ?>><span><?= e(t('checkout.place')) ?></span><span class="btn-place__total" data-place-total></span></button>
+      </div>
       <button type="button" class="btn btn-ghost btn-block btn-more" data-back><?= e(t('checkout.add_more')) ?></button>
     </form>
   </div>

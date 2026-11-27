@@ -17,6 +17,7 @@ $texts = [
     'bill_requested' => t('tables.bill_requested'),
     'outside' => t('table.outside'),
     'minutes' => t('tables.minutes'),
+    'hours_minutes' => t('tables.hours_minutes'),
     'unsettled' => t('tables.unsettled'),
     'unserved' => t('tables.unserved'),
     'call_staff' => t('tables.alert.call_staff'),

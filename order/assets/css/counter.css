@@ -301,6 +301,7 @@ body.counter .input:focus { border-color: var(--color-primary); outline: none; b
 .order-card.status-ready .order-card__status { background: #E8F5E9; color: var(--color-success); }
 .order-card__age { color: var(--c-muted); font-size: var(--text-sm); }
 .order-card__slot { display: inline-flex; align-self: flex-start; padding: 2px var(--space-3); border-radius: 10px; background: var(--c-pink); color: var(--color-primary-dark); font-weight: 700; }
+.order-card__slot.is-late { background: #FDECEA; color: #B71C1C; } /* pickup window passed, still open */
 .order-card__mobile { font-weight: 700; }
 .order-card__items { margin: 0; padding: var(--space-2) var(--space-3) var(--space-2) 1.6em; border-radius: 12px; background: #FBF7F3; list-style: disc; }
 .order-card__note { padding: var(--space-2) var(--space-3); border-radius: 12px; background: #FFF3CD; }

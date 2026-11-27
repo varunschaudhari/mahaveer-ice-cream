@@ -62,7 +62,8 @@
     article.appendChild(head);
 
     if (order.slot) {
-      article.appendChild(el('p', 'order-card__slot', text('pickup', { slot: order.slot })));
+      var slot = text('pickup', { slot: order.slot }) + (order.late ? ' · ' + text('late') : '');
+      article.appendChild(el('p', 'order-card__slot' + (order.late ? ' is-late' : ''), slot));
     }
 
     var who = el('p', 'order-card__customer', order.customer + ' ');

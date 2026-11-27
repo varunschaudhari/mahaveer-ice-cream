@@ -60,7 +60,10 @@
       tile.appendChild(el('span', 'table-tile__status', text(table.status)));
       if (table.status !== 'free') {
         tile.appendChild(el('span', 'table-tile__total', C.money(table.total_paise)));
-        tile.appendChild(el('span', 'table-tile__minutes', text('minutes', { n: table.minutes })));
+        var mins = table.minutes;
+        tile.appendChild(el('span', 'table-tile__minutes', mins >= 60
+          ? text('hours_minutes', { h: Math.floor(mins / 60), m: mins % 60 })
+          : text('minutes', { n: mins })));
       }
       if (table.unserved > 0) {
         tile.appendChild(el('span', 'table-tile__chip', text('unserved', { n: table.unserved })));
