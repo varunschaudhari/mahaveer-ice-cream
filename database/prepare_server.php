@@ -74,7 +74,7 @@ $siteUrl = $askUrl('  Website URL (e.g. https://mahaveer-site.foreverstory.in)')
 
 echo "\nThat server's database (cPanel → MySQL Databases)\n";
 $dbHost = $askRequired('  Host', 'localhost');
-$dbName = $askRequired('  Database name (e.g. xjalpdhg_mahavir_stg)');
+$dbName = $askRequired('  Database name (cPanel shows it as <cpaneluser>_<name>)');
 $dbUser = $askRequired('  User');
 $dbPass = askConfirmed('  Password');
 
