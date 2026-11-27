@@ -40,10 +40,11 @@ $shopName = lang_field(Settings::all(), 'shop_name');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#C2185B">
+<meta name="theme-color" content="#FBF8F3">
 <?= csrf_meta() ?>
 <title><?= e(t('owner.title')) ?> – <?= e($shopName) ?></title>
 <link rel="manifest" href="/owner/manifest.json">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/img/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <link rel="stylesheet" href="<?= e(asset('css/base.css')) ?>">
@@ -52,10 +53,13 @@ $shopName = lang_field(Settings::all(), 'shop_name');
 <body class="owner">
 <header class="owner-bar">
   <div class="container owner-bar__inner">
-    <span class="brand"><?= e($shopName) ?> · <?= e(t('owner.title')) ?></span>
-    <div class="cluster">
+    <span class="owner-brand">
+      <img src="/assets/img/logo-mark.svg" width="32" height="32" alt="">
+      <span class="owner-brand__text"><span class="owner-brand__name"><?= e($shopName) ?></span><span class="owner-brand__tag"><?= e(t('owner.title')) ?></span></span>
+    </span>
+    <div class="owner-bar__actions">
       <a class="lang-toggle" href="<?= e(lang_switch_url($otherLang)) ?>" hreflang="<?= e($otherLang) ?>"><?= e(t('lang.switch')) ?></a>
-      <a class="lang-toggle" href="/admin/"><?= e(t('owner.admin_link')) ?></a>
+      <a class="owner-admin-link" href="/admin/"><?= icon('settings', 18) ?><span><?= e(t('owner.admin_link')) ?></span></a>
     </div>
   </div>
 </header>
@@ -71,10 +75,10 @@ $shopName = lang_field(Settings::all(), 'shop_name');
   <p class="owner-hint" data-sound-hint hidden><?= e(t('owner.sound_hint')) ?></p>
   <p class="owner-toast" data-toast role="status" hidden></p>
 
-  <section class="card owner-sales">
+  <section class="owner-sales">
     <p class="owner-sales__label"><?= e(t('owner.today_sales')) ?></p>
     <p class="owner-sales__total" data-sales>–</p>
-    <p class="muted text-sm"><span data-bills></span> <span data-updated></span></p>
+    <p class="owner-sales__meta"><span data-bills></span> <span data-updated></span></p>
   </section>
 
   <section class="card stack-sm owner-push" data-push>

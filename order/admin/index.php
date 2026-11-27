@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 use App\Auth;
 use App\Csrf;
+use App\Services\BulkService;
 
 require __DIR__ . '/../boot.php';
 
@@ -36,52 +37,73 @@ if (Auth::isAdmin($user) && $next === '/owner/') {
 if (!Auth::isAdmin($user)) {
     view('admin_header', ['title' => t('admin.login_title')]);
     ?>
-    <h1><?= e(t('admin.login_title')) ?></h1>
-    <?php if ($user !== null): ?>
-    <p class="notice"><?= e(t('admin.password_needed', ['name' => $user['name']])) ?></p>
-    <?php endif; ?>
-    <form method="post" action="<?= e($next === '/owner/' ? '/admin/?next=%2Fowner%2F' : '/admin/') ?>" class="card stack login-form">
-      <?= csrf_field() ?>
-      <?php if ($error !== null): ?>
-      <p class="flash flash-error" role="alert"><?= e($error) ?></p>
+    <div class="login-wrap">
+      <div class="login-head">
+        <img src="/assets/img/logo-mark.svg" width="72" height="72" alt="">
+        <h1><?= e(t('admin.login_title')) ?></h1>
+      </div>
+      <?php if ($user !== null): ?>
+      <p class="notice"><?= e(t('admin.password_needed', ['name' => $user['name']])) ?></p>
       <?php endif; ?>
-      <div class="field">
-        <label for="username"><?= e(t('admin.username')) ?></label>
-        <input class="input" id="username" name="username" value="<?= e($username) ?>"
-               autocomplete="username" autocapitalize="none" spellcheck="false" required>
-      </div>
-      <div class="field">
-        <label for="password"><?= e(t('admin.password')) ?></label>
-        <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
-      </div>
-      <button type="submit" class="btn btn-primary btn-block"><?= e(t('admin.login')) ?></button>
-    </form>
+      <form method="post" action="<?= e($next === '/owner/' ? '/admin/?next=%2Fowner%2F' : '/admin/') ?>" class="card stack login-form">
+        <?= csrf_field() ?>
+        <?php if ($error !== null): ?>
+        <p class="flash flash-error" role="alert"><?= e($error) ?></p>
+        <?php endif; ?>
+        <div class="field">
+          <label for="username"><?= e(t('admin.username')) ?></label>
+          <input class="input" id="username" name="username" value="<?= e($username) ?>"
+                 autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </div>
+        <div class="field">
+          <label for="password"><?= e(t('admin.password')) ?></label>
+          <input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg"><?= e(t('admin.login')) ?></button>
+      </form>
+    </div>
     <?php
     view('admin_footer');
     exit;
 }
 
-view('admin_header', ['title' => t('admin.dashboard'), 'user' => $user]);
+$pendingBulk = count(array_filter((new BulkService())->open(), static fn (array $o): bool => $o['status'] === 'pending_approval'));
+// [link, label key, description key, icon]; the first two are the everyday screens.
+$tiles = [
+    ['/owner/', 'admin.nav.owner', 'admin.tile.owner', 'phone'],
+    ['/counter/', 'admin.nav.counter', 'admin.tile.counter', 'receipt'],
+    ['/admin/reports.php', 'admin.nav.reports', 'admin.tile.reports', 'chart'],
+    ['/admin/bulk.php', 'admin.nav.bulk', 'admin.tile.bulk', 'gift'],
+    ['/admin/menu.php', 'admin.nav.menu', 'admin.tile.menu', 'cone'],
+    ['/admin/tables.php', 'admin.nav.tables', 'admin.tile.tables', 'table'],
+    ['/admin/customers.php', 'admin.nav.customers', 'admin.tile.customers', 'user'],
+    ['/admin/website.php', 'admin.nav.website', 'admin.tile.website', 'globe'],
+    ['/admin/qr.php', 'admin.nav.qr', 'admin.tile.qr', 'qr'],
+    ['/admin/staff.php', 'admin.nav.staff', 'admin.tile.staff', 'users'],
+    ['/admin/settings.php', 'admin.nav.settings', 'admin.tile.settings', 'settings'],
+    ['/admin/audit.php', 'admin.nav.audit', 'admin.tile.audit', 'log'],
+];
+
+view('admin_header', ['title' => t('admin.dashboard'), 'active' => 'home', 'user' => $user]);
 ?>
-<h1><?= e(t('admin.welcome', ['name' => $user['name']])) ?></h1>
-<p class="muted"><?= e(role_label($user['role'])) ?></p>
-<nav class="tiles">
-  <a class="tile" href="/owner/"><?= e(t('admin.nav.owner')) ?></a>
-  <a class="tile" href="/admin/reports.php"><?= e(t('admin.nav.reports')) ?></a>
-  <a class="tile" href="/admin/menu.php"><?= e(t('admin.nav.menu')) ?></a>
-  <a class="tile" href="/admin/settings.php"><?= e(t('admin.nav.settings')) ?></a>
-  <a class="tile" href="/admin/staff.php"><?= e(t('admin.nav.staff')) ?></a>
-  <a class="tile" href="/admin/audit.php"><?= e(t('admin.nav.audit')) ?></a>
-  <a class="tile" href="/admin/bulk.php">
-    <?= e(t('admin.nav.bulk')) ?>
-    <?php $pendingBulk = count(array_filter((new App\Services\BulkService())->open(), static fn ($o) => $o['status'] === 'pending_approval')); ?>
-    <?php if ($pendingBulk > 0): ?>&nbsp;<span class="badge badge-danger"><?= $pendingBulk ?></span><?php endif; ?>
-  </a>
-  <a class="tile" href="/admin/tables.php"><?= e(t('admin.nav.tables')) ?></a>
-  <a class="tile" href="/admin/customers.php"><?= e(t('admin.nav.customers')) ?></a>
-  <a class="tile" href="/admin/website.php"><?= e(t('admin.nav.website')) ?></a>
-  <a class="tile" href="/admin/qr.php"><?= e(t('admin.nav.qr')) ?></a>
-  <a class="tile" href="/counter/"><?= e(t('admin.nav.counter')) ?></a>
+<div class="admin-hello">
+  <p class="eyebrow"><?= e(role_label($user['role'])) ?> · <?= e(now()->format('d/m/Y')) ?></p>
+  <h1><?= e(t('admin.welcome', ['name' => $user['name']])) ?></h1>
+</div>
+<nav class="dash" aria-label="<?= e(t('admin.dashboard')) ?>">
+  <?php foreach ([array_slice($tiles, 0, 2), array_slice($tiles, 2)] as $group => $groupTiles): ?>
+  <div class="tiles<?= $group === 0 ? ' tiles--feature' : '' ?>">
+    <?php foreach ($groupTiles as $i => [$href, $labelKey, $descKey, $iconName]): ?>
+    <a class="tile tone-<?= $i % 6 ?>" href="<?= e($href) ?>">
+      <span class="tile__icon"><?= icon($iconName, 24) ?></span>
+      <span class="tile__text">
+        <strong><?= e(t($labelKey)) ?><?php if ($href === '/admin/bulk.php' && $pendingBulk > 0): ?> <span class="badge badge-danger"><?= $pendingBulk ?></span><?php endif; ?></strong>
+        <span><?= e(t($descKey)) ?></span>
+      </span>
+    </a>
+    <?php endforeach; ?>
+  </div>
+  <?php endforeach; ?>
 </nav>
 <?php
 view('admin_footer');

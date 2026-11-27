@@ -19,7 +19,7 @@ $en = Lang::strings('en');
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#C2185B">
+<meta name="theme-color" content="#FBF8F3">
 <title><?= e($mr['owner.offline_title']) ?> · <?= e($en['owner.offline_title']) ?></title>
 <link rel="stylesheet" href="/assets/css/base.css">
 <link rel="stylesheet" href="/assets/css/owner.css">

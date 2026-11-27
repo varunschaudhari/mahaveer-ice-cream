@@ -107,6 +107,30 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
 
+### 2026-11-27 – UI redesign, phase 4: admin + owner phone
+
+- Admin shell (`admin_header.php`, `admin.css` rewritten, boutique tokens on `body.admin`):
+  - laptop / counter PC (≥1024 px): fixed white side menu with logo, icons, the logged-in name, language switch and log out
+  - phones: top bar plus a sideways-scrolling row of menu chips; `admin.js` starts the row at the current page
+  - new "Dashboard" menu item; menu order now follows daily use (reports, bulk orders and menu first)
+- Login: centred card with the logo mark.
+- Dashboard (`admin/index.php`):
+  - two large tiles for the everyday screens (owner phone page, counter)
+  - icon tiles with a one-line description (new `admin.tile.*` keys, Marathi + English)
+- Admin pages unchanged in markup:
+  - restyled cards, fields, buttons, chips, badges and tables
+  - report numbers in Martel; the main report total sits on an ink card
+  - grouped settings fields have their title inside the card (floated legend)
+  - hidden form fields no longer leave a gap at the top of a form
+  - the A4 report print layout is kept (side menu hidden, ink card printed white)
+- Owner phone (`owner/index.php`, `owner.css` rewritten): light header with logo mark, dark "today's sales" card with a serif total, white order cards with a coloured edge and status pill (new = raspberry, preparing = mango, ready = green), rounded dialog. `manifest.json` / offline page colours → paper `#FBF8F3`; service worker cache renamed `mahavir-owner-v2` so installed phones refresh the cached offline page and styles.
+- New icons in `icon()`: cone, home, log, logout, pulse, qr, user, users.
+- Checks: 353 PHPUnit tests pass. Headless Chrome screenshots, Marathi + English:
+  - 1024×768 / 1366: login, dashboard, reports, menu, item edit, settings, bulk orders, customers, website content, tables, change log
+  - 390 px: login, dashboard, settings, staff, owner page with the cancel dialog
+  - not re-checked: health (developer only), QR poster and table stickers (their own print styles, unchanged)
+- Local only: an extra owner account `designcheck` was added to the local DB for the screenshots (to be deactivated after review; not in seed or migrations).
+
 ### 2026-11-27 – Gelato boutique look + new logo
 
 - Mockups kept in `docs/mockups/` (gelato home page, the four logo concepts).

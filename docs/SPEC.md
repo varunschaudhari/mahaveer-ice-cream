@@ -188,7 +188,7 @@ Content still to come from the owner: logo file, photos, founding year and famil
 
 ## 16. Branding
 
-**Updated 2026-11-27 (client decision):** new logo and a "modern gelato boutique" look for the website and the customer ordering pages.
+**Updated 2026-11-27 (client decision):** new logo and a "modern gelato boutique" look for the website, the customer ordering pages, admin and the owner's phone page.
 
 - Name in English: **Mahaveer Ice Cream** (Marathi महावीर आईस्क्रीम unchanged).
 - Logo: "scoop heart" – two scoops on one cone forming a heart, with the wordmark "Mahaveer · ICE CREAM · AMALNER". Files and the build script are in `docs/brand/`, and the PWA / push icons are made from it. A round seal version with "Since <year>" waits for the founding year.

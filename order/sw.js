@@ -4,11 +4,11 @@
  *  - push: show the notification (title/body come in Marathi and English; the language is the
  *    one the owner page last used on this phone, kept in Cache Storage by owner.js)
  *  - offline: when there is no internet, show the "No internet" page instead of Chrome's error
- * Order data is never cached: it must always be live. Change CACHE when offline.php changes.
+ * Order data is never cached: it must always be live. Change CACHE when offline.php, base.css or owner.css changes.
  */
 'use strict';
 
-var CACHE = 'mahavir-owner-v1';
+var CACHE = 'mahavir-owner-v2';
 var PREFS_CACHE = 'mahavir-prefs';
 var PREFS_URL = '/__prefs/owner';
 var OFFLINE_URL = '/owner/offline.php';
