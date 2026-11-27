@@ -42,6 +42,18 @@ set_error_handler(static function (int $severity, string $message, string $file,
     if (!(error_reporting() & $severity)) {
         return false; // silenced with @
     }
+    // The server may run a newer PHP than the one the code was tested on, and a newer PHP may
+    // deprecate something we (or a library in vendor/) use. On the server that is logged once per
+    // request and the page keeps working; locally it still stops with an error, so it gets fixed.
+    if (($severity & (E_DEPRECATED | E_USER_DEPRECATED)) !== 0 && !is_local()) {
+        static $seen = [];
+        $key = $file . ':' . $line;
+        if (!isset($seen[$key])) {
+            $seen[$key] = true;
+            app_log('warning', 'Deprecated: ' . $message, ['at' => $key]);
+        }
+        return true;
+    }
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 

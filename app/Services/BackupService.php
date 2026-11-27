@@ -130,7 +130,7 @@ final class BackupService
             }
             $write("SET FOREIGN_KEY_CHECKS = 1;\n");
         } finally {
-            $this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+            $this->db->setAttribute(self::bufferedQueryAttribute(), true);
             if ($ownTransaction) {
                 $this->db->exec('COMMIT');
             }
@@ -147,7 +147,7 @@ final class BackupService
     {
         $quoted = '`' . str_replace('`', '``', $table) . '`';
         // Unbuffered: rows stream from the server, so a big table never sits in memory at once.
-        $this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        $this->db->setAttribute(self::bufferedQueryAttribute(), false);
         try {
             $stmt = $this->db->query('SELECT * FROM ' . $quoted);
             $columns = null;
@@ -162,11 +162,22 @@ final class BackupService
             }
             $stmt->closeCursor();
         } finally {
-            $this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+            $this->db->setAttribute(self::bufferedQueryAttribute(), true);
         }
         if ($batch !== []) {
             $write("INSERT INTO {$quoted} ({$columns}) VALUES\n" . implode(",\n", $batch) . ";\n");
         }
+    }
+
+    /**
+     * PDO's "buffered query" switch for MySQL. PHP 8.4 added the name Pdo\Mysql::ATTR_USE_BUFFERED_QUERY
+     * and PHP 8.5 deprecates the old PDO::MYSQL_ATTR_USE_BUFFERED_QUERY; both hold the same number.
+     */
+    private static function bufferedQueryAttribute(): int
+    {
+        return defined('Pdo\Mysql::ATTR_USE_BUFFERED_QUERY')
+            ? (int) constant('Pdo\Mysql::ATTR_USE_BUFFERED_QUERY')
+            : (int) constant('PDO::MYSQL_ATTR_USE_BUFFERED_QUERY');
     }
 
     /** Path of mysqldump if this host lets PHP run it, else null (then the PHP dump is used). */
