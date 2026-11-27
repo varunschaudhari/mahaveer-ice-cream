@@ -258,6 +258,7 @@ return [
     'counter.owner_pin' => 'Owner PIN',
 
     'billing.empty' => 'Tap items to add them',
+    'billing.current_bill' => 'Current bill',
     'billing.dine_in' => 'Dine-in',
     'billing.parcel' => 'Parcel',
     'billing.subtotal' => 'Subtotal',

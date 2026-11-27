@@ -75,8 +75,9 @@ view('counter_frame_start', ['user' => $user, 'active' => 'billing', 'withCart' 
 </section>
 
 <aside class="counter-cart" data-cart>
+  <h2 class="counter-cart__head"><?= icon('receipt', 22) ?><?= e(t('billing.current_bill')) ?></h2>
   <div class="counter-cart__lines" data-cart-lines></div>
-  <p class="counter-cart__empty muted" data-cart-empty><?= e(t('billing.empty')) ?></p>
+  <p class="counter-cart__empty muted" data-cart-empty><?= icon('receipt', 40) ?><span><?= e(t('billing.empty')) ?></span></p>
   <div class="counter-cart__footer">
     <div class="segmented" data-service>
       <button type="button" class="counter-btn is-selected" data-value="dine_in"><?= e(t('billing.dine_in')) ?></button>

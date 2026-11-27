@@ -260,6 +260,7 @@ return [
     'counter.owner_pin' => 'मालकांचा PIN',
 
     'billing.empty' => 'पदार्थ निवडा',
+    'billing.current_bill' => 'चालू बिल',
     'billing.dine_in' => 'दुकानात',
     'billing.parcel' => 'पार्सल',
     'billing.subtotal' => 'बेरीज',

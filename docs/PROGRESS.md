@@ -106,6 +106,21 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
 
+### 2026-11-27 – UI redesign, phase 3: counter screens
+
+- `counter.css` rewritten in the same look, tuned for the till, keeping every class and data hook the scripts use (no JS changes):
+  - chocolate header with brand mark, staff chip (initial avatar) and Lock pill
+  - white tab bar with icon pills and the red count badge inline
+  - billing: pink size buttons, cart with "Current bill" heading and empty state, segmented Dine-in / Parcel, green Cash and purple UPI buttons
+  - online / bulk order cards, table tiles with a status stripe, stock toggles, Today summary (total card in magenta) and rounded bills table
+  - dialogs and number pads
+- The new-order alert bar now sits in the frame under the tabs. It used to be fixed over the header and hid the staff name and the Lock button.
+- Login: brand header, name tiles with initials, PIN pad in a card, a placeholder card until a name is tapped.
+- New: icons `box`, `chart`, `globe`, `lock`, `receipt`, `settings`, `table`; lang key `billing.current_bill`. Print pages unchanged.
+- Chrome 109: only allowed features (ARCHITECTURE §10). No `inset`, nesting or `color-mix()` added. Buttons stay ≥ 56 px. Checked in the installed (newer) Chrome at 1024×768 and 1366×768, Marathi + English: login, billing with cart + cash dialog, online, tables + bill dialog, bulk, stock, today. Still to check on the real counter PC: Chrome 109 itself.
+- Checks: 352 PHPUnit tests pass.
+- Next: phase 4 – admin + owner phone, after the developer reviews.
+
 ### 2026-11-27 – UI redesign, phase 2: public website
 
 - Same "Warm parlour" look as the ordering pages, on all 7 website pages.

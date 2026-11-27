@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 use App\Auth;
 use App\Csrf;
+use App\Settings;
 
 require __DIR__ . '/../boot.php';
 
@@ -35,7 +36,16 @@ $staff = Auth::counterStaff();
 view('counter_head', ['title' => t('counter.login_title')]);
 ?>
 <main class="login-screen">
-  <section>
+  <section class="login-staff">
+    <div class="login-brand">
+      <span class="login-brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 40 48" width="34" height="41"><path d="M9 21h22L20 46z" fill="#FFB300"/><path d="M14 21l6 19M20 21v21M26 21l-6 19" stroke="#E09400" stroke-width="1.6" fill="none"/><ellipse cx="20" cy="17" rx="13" ry="10" fill="#F8BBD0"/><ellipse cx="20" cy="9" rx="8.5" ry="7" fill="#FFF8F0"/></svg>
+      </span>
+      <span>
+        <span class="login-brand__name"><?= e(lang_field(Settings::all(), 'shop_name')) ?></span>
+        <span class="login-brand__sub"><?= e(t('counter.title')) ?></span>
+      </span>
+    </div>
     <h1><?= e(t('counter.who')) ?></h1>
     <?php if ($staff === []): ?>
     <p class="notice"><?= e(t('counter.no_staff')) ?></p>
@@ -44,7 +54,8 @@ view('counter_head', ['title' => t('counter.login_title')]);
       <?php foreach ($staff as $person): ?>
       <button type="button" class="counter-btn staff-tile<?= (int) $person['id'] === $selectedId ? ' is-selected' : '' ?>"
               data-staff-id="<?= (int) $person['id'] ?>" data-staff-name="<?= e($person['name']) ?>">
-        <?= e($person['name']) ?>
+        <span class="counter-avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($person['name'], 0, 1))) ?></span>
+        <span class="staff-tile__name"><?= e($person['name']) ?></span>
       </button>
       <?php endforeach; ?>
     </div>
@@ -70,6 +81,10 @@ view('counter_head', ['title' => t('counter.login_title')]);
         <button type="button" class="counter-btn" data-key="back" aria-label="<?= e(t('counter.backspace')) ?>">⌫</button>
       </div>
     </form>
+  </section>
+  <section class="login-placeholder" aria-hidden="true">
+    <span class="login-placeholder__icon"><?= icon('lock', 40) ?></span>
+    <p><?= e(t('counter.who')) ?></p>
   </section>
 </main>
 <?php
