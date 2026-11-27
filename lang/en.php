@@ -421,6 +421,8 @@ return [
     'status.not_found' => 'Order not found. Please check the link.',
     'status.questions' => 'Questions? Call:',
     'status.order_more' => 'New order',
+    'status.back_to_website' => 'Back to the website',
+    'order.website_links' => 'Our website',
 
     // ---------- M3: counter Online tab ----------
     'counter.tab.online' => 'Online',

@@ -66,7 +66,7 @@ $description = t('site.desc.' . $page);
     <a class="brand" href="/">
       <img class="brand__logo" src="/assets/img/logo-compact.png" width="120" height="84" alt="<?= e(lang_field($shop, 'shop_name')) ?>">
     </a>
-    <a class="btn btn-ink site-header__order" href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_online')) ?></a>
+    <a class="btn btn-ink site-header__order" href="<?= e(cross_link($orderUrl, '/')) ?>"><?= e(t('site.order_online')) ?></a>
   </div>
   <nav class="container site-nav" aria-label="<?= e(t('site.nav_label')) ?>">
     <?php foreach (SiteService::PAGES as $key => $href): ?>

@@ -43,7 +43,7 @@ view('site_header', [
     <h1 class="home-hero__title"><?= e($titleBefore) ?><em><?= e(t('site.hero.accent')) ?></em><?= e($titleAfter) ?></h1>
     <p class="home-hero__lead"><?= e(t('order.intro')) ?></p>
     <div class="home-hero__actions">
-      <a class="btn btn-ink btn-lg" href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_takeaway')) ?> <?= icon('arrow', 18) ?></a>
+      <a class="btn btn-ink btn-lg" href="<?= e(cross_link($orderUrl, '/')) ?>"><?= e(t('site.order_takeaway')) ?> <?= icon('arrow', 18) ?></a>
       <a class="text-link" href="/menu.php"><?= e(t('site.full_menu')) ?></a>
     </div>
     <dl class="facts">
@@ -113,7 +113,7 @@ view('site_header', [
             <?php endforeach; ?>
           </ul>
         </div>
-        <a class="round-btn" href="<?= e($orderUrl . '/') ?>" aria-label="<?= e(t('site.order_takeaway') . ': ' . lang_field($item, 'name')) ?>">+</a>
+        <a class="round-btn" href="<?= e(cross_link($orderUrl, '/')) ?>" aria-label="<?= e(t('site.order_takeaway') . ': ' . lang_field($item, 'name')) ?>">+</a>
       </div>
     </li>
     <?php endforeach; ?>

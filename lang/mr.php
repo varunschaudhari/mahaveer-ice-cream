@@ -423,6 +423,8 @@ return [
     'status.not_found' => 'ही ऑर्डर सापडली नाही. लिंक पुन्हा तपासा.',
     'status.questions' => 'काही प्रश्न? फोन करा:',
     'status.order_more' => 'नवीन ऑर्डर',
+    'status.back_to_website' => 'वेबसाइटवर परत जा',
+    'order.website_links' => 'आमची वेबसाइट',
 
     // ---------- M3: counter Online tab ----------
     'counter.tab.online' => 'ऑनलाइन',

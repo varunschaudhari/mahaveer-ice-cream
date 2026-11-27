@@ -21,7 +21,7 @@ view('site_header', ['page' => 'menu', 'path' => '/menu.php']);
     <h1><?= e(t('site.nav.menu')) ?></h1>
     <p class="lead"><?= e(t('site.menu_note')) ?></p>
   </div>
-  <a class="btn btn-primary btn-lg" href="<?= e($orderUrl . '/') ?>"><?= icon('bag') ?><?= e(t('site.order_takeaway')) ?></a>
+  <a class="btn btn-primary btn-lg" href="<?= e(cross_link($orderUrl, '/')) ?>"><?= icon('bag') ?><?= e(t('site.order_takeaway')) ?></a>
 </section>
 <?php
 view('menu_list', ['menu' => $menu]);

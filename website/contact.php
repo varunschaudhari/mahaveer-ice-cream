@@ -43,7 +43,7 @@ view('site_header', [
     <?= icon('arrow', 18) ?>
   </a></li>
   <?php endif; ?>
-  <li><a class="contact-card" href="<?= e($orderUrl . '/') ?>">
+  <li><a class="contact-card" href="<?= e(cross_link($orderUrl, '/')) ?>">
     <span class="contact-card__icon"><?= icon('bag', 24) ?></span>
     <span class="contact-card__text"><strong><?= e(t('site.order_takeaway')) ?></strong><span><?= e(t('site.contact.order_hint')) ?></span></span>
     <?= icon('arrow', 18) ?>

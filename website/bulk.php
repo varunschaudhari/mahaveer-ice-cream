@@ -39,7 +39,7 @@ view('site_header', ['page' => 'bulk', 'path' => '/bulk.php']);
     <p><?= e(t('site.bulk.short', ['days' => $days])) ?></p>
   </div>
   <div class="cta-band__actions">
-    <a class="btn btn-white btn-lg" href="<?= e($orderUrl . '/bulk.php') ?>"><?= icon('gift') ?><?= e(t('site.bulk.button')) ?></a>
+    <a class="btn btn-white btn-lg" href="<?= e(cross_link($orderUrl, '/bulk.php')) ?>"><?= icon('gift') ?><?= e(t('site.bulk.button')) ?></a>
     <?php if ($phone !== ''): ?>
     <a class="btn btn-outline-white btn-lg" href="<?= e('tel:' . preg_replace('/[^\d+]/', '', $phone)) ?>"><?= icon('phone') ?><?= e(t('site.contact.call')) ?></a>
     <?php endif; ?>

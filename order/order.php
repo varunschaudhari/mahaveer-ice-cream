@@ -87,6 +87,9 @@ view('header', ['title' => t('status.title', ['token' => $token]), 'css' => ['cs
 
   <div class="status-actions">
     <a class="btn btn-primary btn-block btn-lg" href="/"><?= e(t('status.order_more')) ?></a>
+    <?php if (config('APP_URL_WEBSITE', '') !== ''): ?>
+    <a class="status-website" href="<?= e(cross_link((string) config('APP_URL_WEBSITE'), '/')) ?>"><?= e(t('status.back_to_website')) ?></a>
+    <?php endif; ?>
     <p class="text-center muted">
       <?= e(t('status.questions')) ?>
       <a class="status-phone" href="tel:<?= e(preg_replace('/[^\d+]/', '', $shop['shop_phone'] ?? '')) ?>"><?= e($shop['shop_phone'] ?? '') ?></a>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use App\Lang;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -138,5 +139,19 @@ final class HelpersTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         icon('"><script>');
+    }
+
+    public function testCrossLinkKeepsTheVisitorsLanguage(): void
+    {
+        $previous = lang();
+        try {
+            Lang::set('en');
+            self::assertSame('https://order.example/?lang=en', cross_link('https://order.example/'));
+            self::assertSame('https://order.example/bulk.php?lang=en', cross_link('https://order.example', '/bulk.php'));
+            Lang::set('mr');
+            self::assertSame('https://site.example/menu.php?x=1&lang=mr', cross_link('https://site.example', '/menu.php?x=1'));
+        } finally {
+            Lang::set($previous);
+        }
     }
 }

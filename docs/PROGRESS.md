@@ -108,6 +108,17 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
 
+### 2026-11-27 – Links between ordering and the website
+
+- Ordering pages had no way back to the website. Now:
+  - every customer ordering page footer has "Our website: Home · Menu · About us · Location · Contact"
+  - the order-status page has "Back to the website" under "New order"
+  - both appear only when `APP_URL_WEBSITE` is set
+- New helper `cross_link($baseUrl, $path)` adds `?lang=` so the other side opens in the visitor's language (tested). The website's 8 order buttons use it too, so an English reader no longer lands on the Marathi ordering page.
+- New text keys: `order.website_links`, `status.back_to_website` (mr + en).
+- Staff screens (admin, owner page, counter) stay unlinked from the public site on purpose.
+- Checks: 354 PHPUnit tests pass. Headless Chrome at 390 px (English): ordering footer and status page. Checked that the links carry `lang=en` in both directions.
+
 ### 2026-11-27 – The shop's own logo
 
 - `docs/brand/mahavir-logo-original.jpg` (from the client) + `docs/brand/build_logo.ps1` (Windows PowerShell, System.Drawing; no new dependency):

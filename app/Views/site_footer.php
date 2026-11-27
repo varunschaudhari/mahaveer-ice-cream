@@ -40,7 +40,7 @@ $hours = t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 
         <?php if ($whatsapp !== null): ?>
         <li><?= icon('chat', 18) ?><a href="<?= e($whatsapp) ?>" rel="noopener"><?= e(t('site.contact.whatsapp')) ?></a></li>
         <?php endif; ?>
-        <li><?= icon('bag', 18) ?><a href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_takeaway')) ?></a></li>
+        <li><?= icon('bag', 18) ?><a href="<?= e(cross_link($orderUrl, '/')) ?>"><?= e(t('site.order_takeaway')) ?></a></li>
         <li><?= icon('gift', 18) ?><a href="/bulk.php"><?= e(t('site.nav.bulk')) ?></a></li>
       </ul>
     </div>
@@ -59,7 +59,7 @@ $hours = t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 
   <?php if ($phone !== ''): ?>
   <a class="action-bar__call" href="<?= e($tel) ?>"><?= icon('phone', 20) ?><?= e(t('site.contact.call')) ?></a>
   <?php endif; ?>
-  <a class="action-bar__order" href="<?= e($orderUrl . '/') ?>"><?= icon('bag', 20) ?><?= e(t('site.order_online')) ?></a>
+  <a class="action-bar__order" href="<?= e(cross_link($orderUrl, '/')) ?>"><?= icon('bag', 20) ?><?= e(t('site.order_online')) ?></a>
 </div>
 <?php foreach ($scripts as $script): ?>
 <script src="<?= e(asset($script)) ?>" defer></script>

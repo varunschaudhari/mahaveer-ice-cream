@@ -183,6 +183,16 @@ function lang_switch_url(string $lang): string
 }
 
 /**
+ * Link into the other web root (website ↔ ordering) that keeps the visitor's language: the
+ * other side reads ?lang=, remembers it and redirects to the clean URL.
+ * cross_link('https://order.example', '/bulk.php') → 'https://order.example/bulk.php?lang=mr'
+ */
+function cross_link(string $baseUrl, string $path = '/'): string
+{
+    return rtrim($baseUrl, '/') . $path . (str_contains($path, '?') ? '&' : '?') . 'lang=' . lang();
+}
+
+/**
  * '22:30' → '10:30 PM' (en) or 'रात्री 10:30' (mr). Marathi names the part of the day instead
  * of AM/PM; both come from the lang files (time.format + time.morning/afternoon/evening/night).
  */
