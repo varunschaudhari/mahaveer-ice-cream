@@ -10,7 +10,7 @@ deployment:
   tasks:
     - export APPDIR="$(/bin/sed -n 's/^APPDIR=//p' $HOME/mahavir_deploy.env | /usr/bin/tr -d '[:space:]')"
     - export WEBDIR="$(/bin/sed -n 's/^WEBDIR=//p' $HOME/mahavir_deploy.env | /usr/bin/tr -d '[:space:]')"
-    - /usr/bin/test -d "$APPDIR" -a -d "$WEBDIR" || { echo "mahavir_deploy.env: APPDIR / WEBDIR folder missing" >&2; exit 1; }
+    - /usr/bin/test -d "$APPDIR" -a -d "$WEBDIR" || { echo "mahavir_deploy.env - APPDIR or WEBDIR folder missing" >&2; exit 1; }
     - /bin/mkdir -p $APPDIR/storage/uploads $APPDIR/storage/logs $APPDIR/storage/backups $APPDIR/storage/sessions $APPDIR/storage/cron
     - /usr/bin/rsync -a --delete --exclude 'config.php' app/ $APPDIR/app/
     - /usr/bin/rsync -a --delete lang/ $APPDIR/lang/

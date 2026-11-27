@@ -43,6 +43,19 @@ final class DeployConfigTest extends TestCase
         self::assertStringContainsString('approot.php', $tasks);
     }
 
+    /**
+     * Each task must stay one plain YAML string: ": " or " #" inside an unquoted line turns it
+     * into a key/value pair or cuts it at a comment, and cPanel then does not deploy at all.
+     */
+    public function testEveryTaskIsAPlainYamlCommand(): void
+    {
+        foreach (self::tasks() as $task) {
+            self::assertStringNotContainsString(': ', $task, "YAML would read this as key: value – {$task}");
+            self::assertStringNotContainsString(' #', $task, "YAML would cut this at a comment – {$task}");
+            self::assertDoesNotMatchRegularExpression('/^[\'"{\[&*!|>%@`]/', $task, "starts with a YAML special character – {$task}");
+        }
+    }
+
     public function testSettingsFileIsReadSafely(): void
     {
         $tasks = self::tasks();
