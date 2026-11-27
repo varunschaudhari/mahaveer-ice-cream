@@ -3,9 +3,14 @@
 # order/ is a folder of its own: --delete removes pages deleted from the code. public_html also
 # holds cPanel and Google files, so the website copy only adds and updates.
 # Never deployed: tests/, docs/, tools/, app/config.php (each server keeps its own).
+# The settings file is read line by line with spaces and Windows line ends removed (an editor on
+# Windows easily adds an invisible \r, which would otherwise become part of the folder name).
+# The deploy stops unless both folders already exist, so a typo never copies files to a new place.
 deployment:
   tasks:
-    - . $HOME/mahavir_deploy.env
+    - export APPDIR="$(/bin/sed -n 's/^APPDIR=//p' $HOME/mahavir_deploy.env | /usr/bin/tr -d '[:space:]')"
+    - export WEBDIR="$(/bin/sed -n 's/^WEBDIR=//p' $HOME/mahavir_deploy.env | /usr/bin/tr -d '[:space:]')"
+    - /usr/bin/test -d "$APPDIR" -a -d "$WEBDIR" || { echo "mahavir_deploy.env: APPDIR / WEBDIR folder missing" >&2; exit 1; }
     - /bin/mkdir -p $APPDIR/storage/uploads $APPDIR/storage/logs $APPDIR/storage/backups $APPDIR/storage/sessions $APPDIR/storage/cron
     - /usr/bin/rsync -a --delete --exclude 'config.php' app/ $APPDIR/app/
     - /usr/bin/rsync -a --delete lang/ $APPDIR/lang/

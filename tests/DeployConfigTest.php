@@ -42,4 +42,15 @@ final class DeployConfigTest extends TestCase
         }
         self::assertStringContainsString('approot.php', $tasks);
     }
+
+    public function testSettingsFileIsReadSafely(): void
+    {
+        $tasks = self::tasks();
+        // Windows line ends / spaces in mahavir_deploy.env must not become part of a folder name …
+        self::assertStringContainsString("tr -d '[:space:]'", $tasks[0]);
+        self::assertStringContainsString("tr -d '[:space:]'", $tasks[1]);
+        // … and nothing is copied before both folders are known to exist.
+        self::assertMatchesRegularExpression('#test -d "\$APPDIR" -a -d "\$WEBDIR" \|\| .*exit 1#', $tasks[2]);
+        self::assertStringNotContainsString('rsync', implode("\n", array_slice($tasks, 0, 3)));
+    }
 }

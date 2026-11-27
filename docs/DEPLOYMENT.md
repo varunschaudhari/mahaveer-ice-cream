@@ -93,7 +93,7 @@ Everything that needs the command line is prepared on your PC instead:
 
 The file in the repo is the source of truth (`DeployConfigTest` checks it). What it does on each deploy:
 
-- loads `$APPDIR` / `$WEBDIR` from `~/mahavir_deploy.env`
+- reads `$APPDIR` / `$WEBDIR` from `~/mahavir_deploy.env` (spaces and Windows line ends ignored) and **stops** unless both folders already exist, so a typo never copies files somewhere new
 - creates `storage/uploads`, `logs`, `backups`, `sessions`, `cron` under `$APPDIR`
 - copies `app/` (never `config.php`), `lang/`, `vendor/`, `cron/`, `database/` to `$APPDIR` with `--delete`
 - copies `order/` to `$APPDIR/order/` with `--delete`, protecting cPanel's `.well-known`, `.htaccess`, `cgi-bin`, `.user.ini`, `php.ini`, `error_log`
