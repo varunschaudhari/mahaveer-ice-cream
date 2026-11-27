@@ -99,9 +99,10 @@ final class CronAndCleanupTest extends DatabaseTestCase
 
     public function testCleanupDeletesOnlyWhatIsOld(): void
     {
-        $now = new DateTimeImmutable('2026-11-26 04:00');
-        $oldLog = $this->file('logs/app-2026-08-20.log');
-        $keptLog = $this->file('logs/app-2026-08-28.log');
+        // File ages come from the real clock (touch), so "now" must be the real time too.
+        $now = new DateTimeImmutable();
+        $oldLog = $this->file('logs/app-' . $now->modify('-91 days')->format('Y-m-d') . '.log');
+        $keptLog = $this->file('logs/app-' . $now->modify('-89 days')->format('Y-m-d') . '.log');
         $oldSession = $this->file('sessions/sess_old', 32 * 86400);
         $liveSession = $this->file('sessions/sess_live', 3 * 86400);
 
@@ -112,7 +113,10 @@ final class CronAndCleanupTest extends DatabaseTestCase
         $stranger = $this->file('uploads/readme.webp', 30 * 86400);
         $this->db()->exec("UPDATE items SET photo = '{$used}' WHERE id = 1");
 
-        $this->db()->exec("INSERT INTO rate_limits (rl_key, hit_at) VALUES ('a', '2026-11-24 10:00:00'), ('b', '2026-11-26 03:30:00')");
+        $this->db()->prepare("INSERT INTO rate_limits (rl_key, hit_at) VALUES ('a', ?), ('b', ?)")->execute([
+            $now->modify('-2 days')->format('Y-m-d H:i:s'),
+            $now->modify('-30 minutes')->format('Y-m-d H:i:s'),
+        ]);
 
         $deleted = (new CleanupService($this->db(), $this->storage))->run($now);
 

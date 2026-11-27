@@ -73,28 +73,36 @@ Desktop Chrome treats `http://localhost:8000` as secure, so `/owner/` → "Turn 
    0 4 * * 0    /usr/local/bin/php /home/<user>/mahavir/cron/cleanup.php     >/dev/null 2>&1
    ```
 
+### 3b. Servers without shell access (no Terminal, SSH refused)
+
+Everything that needs the command line is prepared on your PC instead:
+
+1. **On your PC** (XAMPP MySQL running), in Git Bash from the repo root:
+   ```bash
+   OPENSSL_CONF='C:\xampp\php\extras\ssl\openssl.cnf' /c/xampp/php/php.exe database/prepare_server.php
+   ```
+   It asks for the server's URLs and database login, makes that server's own push keys, and asks for the owner / super-admin / staff accounts (same checks as `create_owner.php`). Result in `storage/deploy/<name>/` (gitignored): `config.php` and `database.sql`.
+2. **Database:** cPanel → phpMyAdmin → select the server's **empty** database → Import → `database.sql`. It holds the migration files, `seed.sql`, the applied-migrations rows and the accounts (hashes only).
+3. **Code:** cPanel → Git Version Control as in §3.7. Without SSH a private repo cannot use a deploy key: clone with `https://<token>@github.com/<you>/mahaveer-ice-cream.git`, where `<token>` is a GitHub **fine-grained token** with read-only *Contents* access to this repository only. Then Deploy HEAD Commit.
+4. **Config:** File Manager → `$APPDIR/app/` → Upload `config.php`.
+5. **Delete** both files from your PC (database password, push private key).
+6. **Cron jobs:** cPanel → Cron Jobs. To find the right PHP binary, add a one-off job `php -v > $HOME/php-version.txt 2>&1; ls /opt/alt /opt/cpanel >> $HOME/php-version.txt 2>&1` every minute, read the file in File Manager, delete the job, then use a PHP 8.2+ path (e.g. `/opt/alt/php82/usr/bin/php`) in the three cron lines from §3.9.
+7. **Later migrations:** phpMyAdmin → Import the new `database/migrations/00X_….sql`, then run `INSERT INTO schema_migrations (filename) VALUES ('00X_….sql');`. admin → System health shows any migration still pending.
+
 ## 4. `.cpanel.yml` (repo root)
 
-```yaml
----
-deployment:
-  tasks:
-    - . $HOME/mahavir_deploy.env
-    - /bin/mkdir -p $APPDIR/storage/uploads $APPDIR/storage/logs $APPDIR/storage/backups
-    - /usr/bin/rsync -a --delete --exclude 'config.php' app/ $APPDIR/app/
-    - /usr/bin/rsync -a --delete lang/ $APPDIR/lang/
-    - /usr/bin/rsync -a --delete vendor/ $APPDIR/vendor/
-    - /usr/bin/rsync -a --delete cron/ $APPDIR/cron/
-    - /usr/bin/rsync -a --delete database/ $APPDIR/database/
-    - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' order/ $APPDIR/order/
-    - /usr/bin/rsync -a --exclude '.well-known' --exclude '.htaccess' --exclude 'cgi-bin' website/ $WEBDIR/
-    - echo "<?php return '$APPDIR';" > $WEBDIR/approot.php
-```
+The file in the repo is the source of truth (`DeployConfigTest` checks it). What it does on each deploy:
+
+- loads `$APPDIR` / `$WEBDIR` from `~/mahavir_deploy.env`
+- creates `storage/uploads`, `logs`, `backups`, `sessions`, `cron` under `$APPDIR`
+- copies `app/` (never `config.php`), `lang/`, `vendor/`, `cron/`, `database/` to `$APPDIR` with `--delete`
+- copies `order/` to `$APPDIR/order/` with `--delete`, protecting cPanel's `.well-known`, `.htaccess`, `cgi-bin`, `.user.ini`, `php.ini`, `error_log`
+- copies `website/` to `$WEBDIR` **without** `--delete` (public_html also holds cPanel and Google files; delete a removed website page by hand)
+- writes `$WEBDIR/approot.php` so the website finds `app/`
 
 Notes:
-- Web roots are copied **without** `--delete` so cPanel's `.well-known` (SSL) and `.htaccess` (PHP version handler) are never removed. If a page is deleted from the repo, delete it on the server by hand.
 - `tests/`, `tools/`, `docs/` are never deployed.
-- If `rsync` is missing on the host, replace each line with `/bin/cp -R`.
+- If `rsync` is missing on the host (`which rsync` in cPanel Terminal), replace each line with `/bin/cp -R`.
 
 **Deploying:** push to GitHub → cPanel → Git Version Control → Manage → Pull or Deploy → "Update from Remote" → "Deploy HEAD Commit". Then run new migrations: `php $HOME/mahavir/database/migrate.php` over SSH (or import the new `.sql` in phpMyAdmin).
 

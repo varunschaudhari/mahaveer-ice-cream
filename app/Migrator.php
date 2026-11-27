@@ -44,10 +44,15 @@ final class Migrator
     {
         $this->ensureMigrationsTable();
         $done = $this->pdo->query('SELECT filename FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN);
+        return array_values(array_diff($this->files(), $done));
+    }
 
+    /** @return list<string> every migration file name, in the order they are applied */
+    public function files(): array
+    {
         $files = array_map('basename', glob($this->databaseDir . '/migrations/*.sql') ?: []);
         sort($files, SORT_STRING);
-        return array_values(array_diff($files, $done));
+        return $files;
     }
 
     /** Loads seed.sql in one transaction. Refuses if the menu already has data. */
@@ -94,14 +99,15 @@ final class Migrator
         return count($tables);
     }
 
-    private function ensureMigrationsTable(): void
-    {
-        $this->pdo->exec(
-            'CREATE TABLE IF NOT EXISTS schema_migrations (
+    /** The table that records applied migrations (also written into ServerPackage's SQL file). */
+    public const MIGRATIONS_TABLE_SQL = 'CREATE TABLE IF NOT EXISTS schema_migrations (
                filename   VARCHAR(190) NOT NULL PRIMARY KEY,
                applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
-        );
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci';
+
+    private function ensureMigrationsTable(): void
+    {
+        $this->pdo->exec(self::MIGRATIONS_TABLE_SQL);
     }
 
     private function runFile(string $path): void

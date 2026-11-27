@@ -125,25 +125,7 @@ final class BackupService
                 $quoted = '`' . str_replace('`', '``', $table) . '`';
                 $create = $this->db->query('SHOW CREATE TABLE ' . $quoted)->fetch(PDO::FETCH_NUM)[1];
                 $write("DROP TABLE IF EXISTS {$quoted};\n{$create};\n");
-
-                // Unbuffered: rows stream from the server, so a big table never sits in memory at once.
-                $this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
-                $stmt = $this->db->query('SELECT * FROM ' . $quoted);
-                $columns = null;
-                $batch = [];
-                while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
-                    $columns ??= implode(', ', array_map(static fn (string $c): string => '`' . str_replace('`', '``', $c) . '`', array_keys($row)));
-                    $batch[] = '(' . implode(', ', array_map(fn (mixed $v): string => $v === null ? 'NULL' : $this->db->quote((string) $v), $row)) . ')';
-                    if (count($batch) === self::ROWS_PER_INSERT) {
-                        $write("INSERT INTO {$quoted} ({$columns}) VALUES\n" . implode(",\n", $batch) . ";\n");
-                        $batch = [];
-                    }
-                }
-                $stmt->closeCursor();
-                $this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
-                if ($batch !== []) {
-                    $write("INSERT INTO {$quoted} ({$columns}) VALUES\n" . implode(",\n", $batch) . ";\n");
-                }
+                $this->dumpRows($table, $write);
                 $write("\n");
             }
             $write("SET FOREIGN_KEY_CHECKS = 1;\n");
@@ -152,6 +134,38 @@ final class BackupService
             if ($ownTransaction) {
                 $this->db->exec('COMMIT');
             }
+        }
+    }
+
+    /**
+     * The rows of one table as INSERT statements (200 rows each), all columns, in stored order.
+     * Also used by ServerPackage to carry the setup accounts to a new server.
+     *
+     * @param callable(string): void $write
+     */
+    public function dumpRows(string $table, callable $write): void
+    {
+        $quoted = '`' . str_replace('`', '``', $table) . '`';
+        // Unbuffered: rows stream from the server, so a big table never sits in memory at once.
+        $this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+        try {
+            $stmt = $this->db->query('SELECT * FROM ' . $quoted);
+            $columns = null;
+            $batch = [];
+            while (($row = $stmt->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $columns ??= implode(', ', array_map(static fn (string $c): string => '`' . str_replace('`', '``', $c) . '`', array_keys($row)));
+                $batch[] = '(' . implode(', ', array_map(fn (mixed $v): string => $v === null ? 'NULL' : $this->db->quote((string) $v), $row)) . ')';
+                if (count($batch) === self::ROWS_PER_INSERT) {
+                    $write("INSERT INTO {$quoted} ({$columns}) VALUES\n" . implode(",\n", $batch) . ";\n");
+                    $batch = [];
+                }
+            }
+            $stmt->closeCursor();
+        } finally {
+            $this->db->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, true);
+        }
+        if ($batch !== []) {
+            $write("INSERT INTO {$quoted} ({$columns}) VALUES\n" . implode(",\n", $batch) . ";\n");
         }
     }
 

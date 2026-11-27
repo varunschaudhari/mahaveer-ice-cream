@@ -13,7 +13,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 - [x] M6 – Owner's phone (PWA + Web Push) (2026-11-26, commit d764b3e; "Done when" needs an Android phone on staging, see DEPLOYMENT §7)
 - [x] M7 – Reports & customers (2026-11-26, commit c7f3e90; opening a CSV in Excel is left to the developer)
 - [x] M8 – Public website (2026-11-26, commit adc8784; the Lighthouse run itself is left to the developer, see DEPLOYMENT §8)
-- [ ] M9 – Hardening & go-live (code done 2026-11-26: security review, backup / cleanup crons, System health, deploy config; the go-live itself – staging, production, printing, the first real evening – follows docs/GO_LIVE.md)
+- [ ] M9 – Hardening & go-live (code done 2026-11-26, commit 18597e5: security review, backup / cleanup crons, System health, deploy config; the go-live itself – staging, production, printing, the first real evening – follows docs/GO_LIVE.md)
 
 ## Waiting on the owner
 
@@ -105,6 +105,13 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-27 – Staging setup without shell access
+
+- Staging account (cPanel user `xjalpdhg`, CloudLinux): subdomain `mahaveer.foreverstory.in` → `/home/xjalpdhg/mahavir/order`, DNS → 148.113.50.49, Let's Encrypt certificate (valid to 2027-02-24), database `xjalpdhg_mahavir_stg` created. The account hosts other sites, so the website copy goes to `/home/xjalpdhg/mahavir_site`, never `public_html`. The host has shell access disabled (no Terminal, SSH refused).
+- New: `database/prepare_server.php` (run on the PC) + `App\ServerPackage`: builds the accounts in a temporary local database with the usual checks and writes `storage/deploy/<name>/config.php` (own push keys) and `database.sql` (migration files + seed + applied-migrations rows + accounts as hashes) for phpMyAdmin. Prompts moved to `database/cli_prompts.php`, shared with `create_owner.php`. `Migrator::files()` / `MIGRATIONS_TABLE_SQL`, `BackupService::dumpRows()`. DEPLOYMENT §3b.
+- Checks: `ServerPackageTest` (SQL file into an empty database → full menu, migrations recorded, logins work incl. a password with quotes / backslash; config.php values exact); a scripted run of the script, its SQL imported into a scratch database with the mysql client (20 tables, 3 accounts, no plain password in the file). Fixed `CronAndCleanupTest`, which mixed a fixed date with real file times and failed once the date changed. 348 tests pass.
+- Next: run `prepare_server.php` for staging, import, deploy via cPanel Git, upload config, cron jobs, then GO_LIVE.md §2.
 
 ### 2026-11-26 – M9 Hardening & go-live (code part)
 
