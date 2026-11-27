@@ -63,7 +63,7 @@ view('header', ['title' => t('order.page_title'), 'css' => ['css/base.css', 'css
       </ol>
       <a class="party-link" href="/bulk.php"><?= e(t('bulk.link')) ?></a>
     </div>
-    <div class="shop-hero__art" aria-hidden="true"><img src="/assets/img/logo-mark.svg" width="120" height="120" alt=""></div>
+    <div class="shop-hero__art" aria-hidden="true"><img src="/assets/img/logo-compact.png" width="275" height="192" alt=""></div>
   </section>
 
   <?php if ($recent !== []): ?>

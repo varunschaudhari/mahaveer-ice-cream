@@ -16,7 +16,7 @@ return [
     'common.yes' => 'हो',
     'common.no' => 'नाही',
 
-    'shop.tagline' => 'Adding flavours to your life',
+    'shop.tagline' => 'Adding flavors to your life',
     'shop.years' => 'अमळनेरमध्ये 45+ वर्षे',
     'shop.hours' => 'रोज {open} – {close}',
     'shop.closed' => 'दुकान बंद आहे, {time} वाजता उघडेल',
@@ -778,7 +778,7 @@ return [
     'site.nav.location' => 'पत्ता',
     'site.nav.contact' => 'संपर्क',
     'site.order_online' => 'ऑनलाइन ऑर्डर',
-    'site.title.home' => 'महावीर आईस्क्रीम, अमळनेर | Mahaveer Ice Cream Amalner',
+    'site.title.home' => 'महावीर आईस्क्रीम, अमळनेर | Mahavir Ice Cream Amalner',
     'site.title.menu' => 'मेनू व दर | महावीर आईस्क्रीम अमळनेर – Ice Cream Amalner',
     'site.title.about' => 'आमच्याबद्दल | महावीर आईस्क्रीम अमळनेर – Ice Cream Amalner',
     'site.title.bulk' => 'पार्टी व मोठ्या ऑर्डर | महावीर आईस्क्रीम – Ice Cream Amalner',

@@ -38,14 +38,14 @@ $shopName = lang_field(Settings::all(), 'shop_name');
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#FBF8F3">
 <title><?= e($title) ?> – <?= e(t('admin.title')) ?></title>
-<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/img/favicon.png" type="image/png">
 <link rel="stylesheet" href="<?= e(asset('css/base.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
 </head>
 <body class="admin<?= $user !== null ? ' has-nav' : '' ?>">
 <header class="admin-bar">
   <a class="admin-brand" href="/admin/">
-    <img src="/assets/img/logo-mark.svg" width="36" height="36" alt="">
+    <img src="/assets/img/logo-mark.png" width="32" height="36" alt="">
     <span class="admin-brand__text"><span class="admin-brand__name"><?= e($shopName) ?></span><span class="admin-brand__tag"><?= e(t('admin.title')) ?></span></span>
   </a>
   <?php if ($user !== null): ?>

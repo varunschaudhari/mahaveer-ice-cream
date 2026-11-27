@@ -39,7 +39,7 @@ if (!Auth::isAdmin($user)) {
     ?>
     <div class="login-wrap">
       <div class="login-head">
-        <img src="/assets/img/logo-mark.svg" width="72" height="72" alt="">
+        <img src="/assets/img/logo.png" width="195" height="150" alt="">
         <h1><?= e(t('admin.login_title')) ?></h1>
       </div>
       <?php if ($user !== null): ?>

@@ -10,7 +10,7 @@ final class SettingsTest extends DatabaseTestCase
 {
     public function testReadsSeededValues(): void
     {
-        self::assertSame('Mahaveer Ice Cream', Settings::get('shop_name_en'));
+        self::assertSame('Mahavir Ice Cream', Settings::get('shop_name_en'));
         self::assertSame('महावीर आईस्क्रीम', Settings::get('shop_name_mr'));
         self::assertSame('22:30', Settings::get('close_time'));
     }

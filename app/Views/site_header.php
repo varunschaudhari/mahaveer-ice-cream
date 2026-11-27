@@ -35,7 +35,7 @@ $description = t('site.desc.' . $page);
 <?php endif; ?>
 <link rel="canonical" href="<?= e($siteUrl . $path) ?>">
 <meta name="theme-color" content="#FBF8F3">
-<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/img/favicon.png" type="image/png">
 <link rel="icon" href="/assets/img/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <meta property="og:type" content="website">
@@ -64,11 +64,7 @@ $description = t('site.desc.' . $page);
   <div class="container site-header__top">
     <a class="lang-toggle" href="<?= e(lang_switch_url($otherLang)) ?>" hreflang="<?= e($otherLang) ?>" lang="<?= e($otherLang) ?>"><?= e(t('lang.switch')) ?></a>
     <a class="brand" href="/">
-      <img class="brand__mark" src="/assets/img/logo-mark.svg" width="44" height="44" alt="">
-      <span class="brand__text">
-        <span class="brand__name"><?= e(lang_field($shop, 'shop_name')) ?></span>
-        <span class="brand__tag"><?= e(t('shop.years')) ?></span>
-      </span>
+      <img class="brand__logo" src="/assets/img/logo-compact.png" width="120" height="84" alt="<?= e(lang_field($shop, 'shop_name')) ?>">
     </a>
     <a class="btn btn-ink site-header__order" href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_online')) ?></a>
   </div>

@@ -89,6 +89,17 @@ Everything that needs the command line is prepared on your PC instead:
 6. **Cron jobs:** cPanel → Cron Jobs. To find the right PHP binary, add a one-off job `php -v > $HOME/php-version.txt 2>&1; ls /opt/alt /opt/cpanel >> $HOME/php-version.txt 2>&1` every minute, read the file in File Manager, delete the job, then use a PHP 8.2+ path (e.g. `/opt/alt/php82/usr/bin/php`) in the three cron lines from §3.9.
 7. **Later migrations:** phpMyAdmin → Import the new `database/migrations/00X_….sql`, then run `INSERT INTO schema_migrations (filename) VALUES ('00X_….sql');`. admin → System health shows any migration still pending.
 
+### 3c. Website on staging (`mahaveer-site.foreverstory.in`)
+
+Every deploy already copies `website/` into the staging `WEBDIR`; the site only needs a domain pointing at that folder.
+
+1. **Find the folder:** File Manager → `/home/<user>/mahavir_deploy.env` → note the `WEBDIR` path. It must be a folder used only for this site (not the `public_html` of `foreverstory.in`); if it is, create a new folder, change `WEBDIR` to it and deploy once.
+2. **Subdomain:** cPanel → Domains → Create a new domain `mahaveer-site.foreverstory.in`, untick "Share document root", document root = the `WEBDIR` folder. If the DNS of `foreverstory.in` is managed outside this cPanel, add the same record there as for `mahaveer.foreverstory.in`.
+3. **SSL + PHP:** SSL/TLS Status → Run AutoSSL; Domains → Force HTTPS on. MultiPHP Manager → give the new domain the same PHP version (8.2+) as `mahaveer.foreverstory.in`.
+4. **Config:** File Manager → `$APPDIR/app/config.php` → `'APP_URL_WEBSITE' => 'https://mahaveer-site.foreverstory.in'`. `APP_URL_ORDER` stays `https://mahaveer.foreverstory.in`.
+5. **Deploy:** Git Version Control → Update from Remote → Deploy HEAD Commit (this also writes `approot.php` into the folder).
+6. **Check:** the home page shows the logo and the menu circles; the menu shows prices; "Order online" opens `mahaveer.foreverstory.in`; English / मराठी switch works; the page source has `noindex` (every non-production server does). `robots.txt` and `sitemap.xml` keep the production domain; that is fine on staging.
+
 ## 4. `.cpanel.yml` (repo root)
 
 The file in the repo is the source of truth (`DeployConfigTest` checks it). What it does on each deploy:

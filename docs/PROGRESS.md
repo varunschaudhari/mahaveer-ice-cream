@@ -18,7 +18,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Waiting on the owner
 
 - Prices for Kulfi, Cone, Chocobar, Mango Dolly, Rajberry Dolly, Frosty (seeded inactive at ₹0)
-- Logo file, shop/owner/ice cream photos, founding year and family story, Google Maps link
+- The designer's original logo file (vector or a large PNG; we only have a 1048×771 JPG, so the app icons are a little soft), shop/owner/ice cream photos, founding year and family story, Google Maps link
 - WhatsApp number (website button stays hidden until set; WhatsApp messaging itself is phase 2)
 - For bulk orders by weight (M5): which flavours are sold per kg and at what price – the owner adds a "1 किलो / 1 kg" variant to each in admin
 - Menu text check: some seeded Marathi size labels use Devanagari digits (e.g. Shrikhand "५०० ग्रॅम"), while SPEC §15 says Western digits everywhere. Fix in admin → Menu if the owner agrees (seed data, not code).
@@ -29,6 +29,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 |---|---|
 | 2026-11-26 | Spec, schema and build plan agreed (see docs/). Razorpay and WhatsApp messaging moved to phase 2. |
 | 2026-11-27 | **Client:** "modern gelato boutique" look for the website + customer ordering pages; new logo (concept C "scoop heart", docs/brand/); English name **Mahaveer** (seed `shop_name_en`, English page titles; staging: change it in admin → Settings). SPEC §16 updated. Founding year for the seal still to come. |
+| 2026-11-27 | **Client (later the same day):** use the shop's own logo (supplied as a JPG) instead of the scoop heart, which is retired (still in git history). English name back to **Mahavir** and tagline "Adding flavors to your life", both as on the logo. Accent colour = logo pink, pastels from the logo colours, black buttons kept. App icons and notification badge from the logo's swirl-and-M. SPEC §16 updated. Staging: set the English shop name back to "Mahavir Ice Cream" in admin → Settings. |
 | 2026-11-26 | `minishlink/web-push` pinned to `^10.1`. v11 needs a separately installed PSR-18 HTTP client (an extra package); v10 brings Guzzle itself. `chillerlan/php-qrcode` `^6.0`. |
 | 2026-11-26 | `composer.json` sets `config.platform.php = 8.2.0` so the lock file never pulls packages that need PHP > 8.2. |
 | 2026-11-26 | Money: decimal quantities round half-up to the paisa per line; a discount may not exceed subtotal + parcel; `money()` uses Indian grouping (₹1,25,000). |
@@ -106,6 +107,26 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-27 – The shop's own logo
+
+- `docs/brand/mahavir-logo-original.jpg` (from the client) + `docs/brand/build_logo.ps1` (Windows PowerShell, System.Drawing; no new dependency):
+  - removes only the white around the logo; the white "Mahavir" lettering inside the bubble stays
+  - writes `logo.png` (full), `logo-compact.png` (without the tagline line), `logo-mark.png` (swirl-and-M), `favicon.png`, `icon-192/512`, `icon-512-maskable`, `badge-72` (white mark) and `og-image.png`
+  - copies are in `order/assets/img` and `website/assets/img` (same names for the PWA / push icons)
+- Removed: the scoop-heart SVGs and `build_logo.py` (docs/brand and both web roots).
+- Website:
+  - header and footer show the compact logo instead of mark + name text
+  - the hero without a photo shows the full logo on white, with the best-seller card below it (not on top)
+  - placeholders use the mark
+- Ordering hero: compact logo. App bars (ordering, admin, owner, counter): the mark. Admin login: full logo. Favicons are PNG now.
+- Colours: accent `#B4325A` → logo pink `#D81B7F` in site / shop / admin / owner CSS; pastels and category circles from the logo colours.
+- Name: `shop_name_en` = Mahavir Ice Cream (seed, English titles, tests, local DB); tagline "Adding flavors to your life".
+- Checks: 353 PHPUnit tests pass. Headless Chrome screenshots:
+  - website home at 1366 and 390 px (Marathi + English), plus the footer
+  - takeaway page at 1366 and 390 px
+  - counter login, admin login and dashboard, owner page
+- Open: the designer's original logo file (the 512 px app icon is upscaled from the JPG and a little soft).
 
 ### 2026-11-27 – UI redesign, phase 4: admin + owner phone
 

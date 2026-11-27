@@ -44,7 +44,7 @@ $shopName = lang_field(Settings::all(), 'shop_name');
 <?= csrf_meta() ?>
 <title><?= e(t('owner.title')) ?> – <?= e($shopName) ?></title>
 <link rel="manifest" href="/owner/manifest.json">
-<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/img/favicon.png" type="image/png">
 <link rel="icon" href="/assets/img/icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <link rel="stylesheet" href="<?= e(asset('css/base.css')) ?>">
@@ -54,7 +54,7 @@ $shopName = lang_field(Settings::all(), 'shop_name');
 <header class="owner-bar">
   <div class="container owner-bar__inner">
     <span class="owner-brand">
-      <img src="/assets/img/logo-mark.svg" width="32" height="32" alt="">
+      <img src="/assets/img/logo-mark.png" width="28" height="32" alt="">
       <span class="owner-brand__text"><span class="owner-brand__name"><?= e($shopName) ?></span><span class="owner-brand__tag"><?= e(t('owner.title')) ?></span></span>
     </span>
     <div class="owner-bar__actions">

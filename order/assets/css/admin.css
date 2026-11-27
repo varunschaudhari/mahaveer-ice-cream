@@ -16,8 +16,8 @@
 body.admin {
   --a-ink: #1F1A17;
   --a-ink-soft: #3A322D;
-  --a-accent: #B4325A;
-  --a-pink: #F2B8C6;
+  --a-accent: #D81B7F;   /* logo pink, a shade deeper for text contrast */
+  --a-pink: #FBC4DE;
   --a-paper: #FBF8F3;
   --a-soft: #F6F1EA;
   --a-line: #E8E1D8;
@@ -51,7 +51,7 @@ body.admin {
 }
 body.admin:not(.has-nav) .admin-bar { padding-bottom: var(--space-3); }
 .admin-brand { grid-area: brand; display: flex; align-items: center; gap: var(--space-3); min-width: 0; color: var(--a-ink); text-decoration: none; }
-.admin-brand img { flex-shrink: 0; width: 36px; height: 36px; }
+.admin-brand img { flex-shrink: 0; width: auto; height: 36px; }
 .admin-brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .admin-brand__name { overflow: hidden; font-family: var(--a-serif); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .admin-brand__tag { color: var(--a-muted); font-size: 0.75rem; }
@@ -97,7 +97,7 @@ body.admin:not(.has-nav) .admin-bar { padding-bottom: var(--space-3); }
     border-bottom: 0; border-right: 1px solid var(--a-line);
   }
   .has-nav .admin-brand { padding: 0 var(--space-2) var(--space-5); }
-  .has-nav .admin-brand__name { white-space: normal; } /* "Mahaveer Ice Cream" wraps instead of being cut */
+  .has-nav .admin-brand__name { white-space: normal; } /* "Mahavir Ice Cream" wraps instead of being cut */
   .has-nav .admin-nav { flex: 1 0 auto; flex-direction: column; gap: 2px; margin: 0; padding: 0; overflow: visible; }
   .has-nav .admin-nav a { min-height: 42px; padding: 0 var(--space-3); border: 0; border-radius: 12px; background: transparent; }
   .has-nav .admin-nav a:hover { background: var(--a-soft); }
@@ -171,11 +171,11 @@ body.admin:not(.has-nav) .admin-bar { padding-bottom: var(--space-3); }
 .tile:hover { border-color: var(--a-ink); transform: translateY(-1px); }
 .tile:active { transform: none; }
 .tile__icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 14px; color: var(--a-ink); }
-.tile.tone-0 .tile__icon { background: #F6DAD8; }
-.tile.tone-1 .tile__icon { background: #F7E3BF; }
-.tile.tone-2 .tile__icon { background: #DDE5CF; }
-.tile.tone-3 .tile__icon { background: #DEDDF0; }
-.tile.tone-4 .tile__icon { background: #EADDD3; }
+.tile.tone-0 .tile__icon { background: #FCDCEB; }
+.tile.tone-1 .tile__icon { background: #FFF5C4; }
+.tile.tone-2 .tile__icon { background: #E6F1CB; }
+.tile.tone-3 .tile__icon { background: #D6EFFB; }
+.tile.tone-4 .tile__icon { background: #EFDDEC; }
 .tile.tone-5 .tile__icon { background: #F3EBDD; }
 .tile__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tile__text strong { line-height: 1.35; }

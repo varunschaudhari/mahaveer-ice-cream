@@ -38,7 +38,7 @@ view('counter_head', ['title' => t('counter.login_title')]);
 <main class="login-screen">
   <section class="login-staff">
     <div class="login-brand">
-      <span class="login-brand__mark" aria-hidden="true"><img src="/assets/img/logo-mark.svg" width="44" height="44" alt=""></span>
+      <span class="login-brand__mark" aria-hidden="true"><img src="/assets/img/logo-mark.png" width="39" height="44" alt=""></span>
       <span>
         <span class="login-brand__name"><?= e(lang_field(Settings::all(), 'shop_name')) ?></span>
         <span class="login-brand__sub"><?= e(t('counter.title')) ?></span>

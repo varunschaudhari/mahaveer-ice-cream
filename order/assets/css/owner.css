@@ -17,8 +17,8 @@
 body.owner {
   --o-ink: #1F1A17;
   --o-ink-soft: #3A322D;
-  --o-accent: #B4325A;
-  --o-pink: #F2B8C6;
+  --o-accent: #D81B7F;   /* logo pink, a shade deeper for text contrast */
+  --o-pink: #FBC4DE;
   --o-paper: #FBF8F3;
   --o-soft: #F6F1EA;
   --o-line: #E8E1D8;
@@ -56,7 +56,7 @@ body.owner {
 }
 .owner-bar__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 60px; padding-block: var(--space-2); }
 .owner-brand { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.owner-brand img { flex-shrink: 0; width: 32px; height: 32px; }
+.owner-brand img { flex-shrink: 0; width: auto; height: 32px; }
 .owner-brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .owner-brand__name { overflow: hidden; font-family: var(--o-serif); font-size: 0.9375rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .owner-brand__tag { color: var(--o-muted); font-size: 0.75rem; }
@@ -133,7 +133,7 @@ body.owner {
   margin-left: auto; padding: 2px var(--space-3); border-radius: var(--radius-pill);
   background: var(--o-soft); color: var(--o-ink); font-size: 0.8125rem; font-weight: 700; white-space: nowrap;
 }
-.owner-card.status-received .owner-card__status, .owner-card.status-pending_approval .owner-card__status { background: #FBE3EA; color: var(--o-accent); }
+.owner-card.status-received .owner-card__status, .owner-card.status-pending_approval .owner-card__status { background: #FDE0EE; color: var(--o-accent); }
 .owner-card.status-preparing .owner-card__status { background: #FBF0DA; color: #8A5A00; }
 .owner-card.status-ready .owner-card__status { background: #E3F1E4; color: var(--color-success); }
 .owner-card__meta { margin: var(--space-1) 0 0; color: var(--o-muted); font-size: var(--text-sm); }

@@ -2,7 +2,7 @@
 
 ## 1. The shop
 
-- Name: Mahavir Ice Cream (महावीर आईस्क्रीम), tagline on menu: "Adding flavours to your life"
+- Name: Mahavir Ice Cream (महावीर आईस्क्रीम), tagline on menu: "Adding flavors to your life" (as on the logo)
 - Address: Dhule Road, near Pach Pauli Mandir, Hanuman Nagar, Amalner, Maharashtra 425401
 - Phone: +91 99222 20000
 - Hours: daily 10:00 AM – 10:30 PM. Busiest Saturday and Sunday evenings.
@@ -188,10 +188,14 @@ Content still to come from the owner: logo file, photos, founding year and famil
 
 ## 16. Branding
 
-**Updated 2026-11-27 (client decision):** new logo and a "modern gelato boutique" look for the website, the customer ordering pages, admin and the owner's phone page.
+**Updated 2026-11-27 (client decision):** the shop's own logo, and a "modern gelato boutique" look for the website, the customer ordering pages, admin and the owner's phone page.
 
-- Name in English: **Mahaveer Ice Cream** (Marathi महावीर आईस्क्रीम unchanged).
-- Logo: "scoop heart" – two scoops on one cone forming a heart, with the wordmark "Mahaveer · ICE CREAM · AMALNER". Files and the build script are in `docs/brand/`, and the PWA / push icons are made from it. A round seal version with "Since <year>" waits for the founding year.
-- Palette: paper `#FBF8F3`, ink `#1F1A17` (main buttons), muted `#7D746D`, hairlines `#E8E1D8`, one accent raspberry `#B4325A`, flavour pastels behind photos (strawberry, mango, pistachio, blueberry, chocolate, vanilla). Headings in Martel (serif, self-hosted), body in Noto Sans Devanagari.
-- The counter keeps its own high-contrast till colours (magenta / green Cash / purple UPI) and only uses the new logo.
+- Name in English: **Mahavir Ice Cream**, as on the logo (Marathi महावीर आईस्क्रीम). Tagline as on the logo: "Adding flavors to your life".
+- Logo: the client's logo (`docs/brand/mahavir-logo-original.jpg`, 1048×771 JPG on white). `docs/brand/build_logo.ps1` only removes the white around it and cuts it into parts, never redraws or recolours it:
+  - full logo: hero without a photo, admin login, link preview
+  - without the tagline line: website header and footer, ordering hero
+  - the swirl-and-M on top: small app bars, placeholders, app / browser icons, the white notification badge
+  - When the designer's original file arrives, export it large on white and run the script again.
+- Palette: paper `#FBF8F3`, ink `#1F1A17` (main buttons), muted `#7D746D`, hairlines `#E8E1D8`, one accent in logo pink: `#D81B7F` (a shade deeper than the logo's `#F8208F`, so text passes contrast). Pastels from the logo colours behind photos (pink, yellow, lime, sky blue, purple, vanilla). Headings in Martel (serif, self-hosted), body in Noto Sans Devanagari.
+- The counter keeps its own high-contrast till colours (magenta / green Cash / purple UPI) and only uses the logo mark.
 - Keep colours as CSS custom properties so they can change in one place.

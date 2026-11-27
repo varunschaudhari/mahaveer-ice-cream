@@ -58,7 +58,7 @@ view('site_header', [
          alt="<?= e(lang_field($hero, 'caption') ?: lang_field($shop, 'shop_name')) ?>" fetchpriority="high">
     <?php else: ?>
     <?php /* TODO: owner content – a shop or ice cream photo (admin → Website content → Gallery). */ ?>
-    <div class="home-hero__art"><img src="/assets/img/logo-mark.svg" width="240" height="240" alt=""></div>
+    <div class="home-hero__art"><img src="/assets/img/logo.png" width="468" height="360" alt=""></div>
     <?php endif; ?>
     <?php if ($bestSellers !== []): $top = $bestSellers[0]; ?>
     <a class="float-card" href="/menu.php">
@@ -101,7 +101,7 @@ view('site_header', [
       <?php if ($item['photo']): ?>
       <img class="product-card__img" src="/media.php?f=<?= e(rawurlencode($item['photo'])) ?>" alt="" loading="lazy" width="400" height="400">
       <?php else: ?>
-      <div class="product-card__img product-card__img--placeholder tone-<?= (int) $item['id'] % 6 ?>"><img src="/assets/img/logo-mark.svg" width="96" height="96" alt=""></div>
+      <div class="product-card__img product-card__img--placeholder tone-<?= (int) $item['id'] % 6 ?>"><img src="/assets/img/logo-mark.png" width="85" height="96" alt=""></div>
       <?php endif; ?>
       <div class="product-card__body">
         <div>
@@ -128,7 +128,7 @@ view('site_header', [
          alt="<?= e(lang_field($storyPhoto, 'caption') ?: lang_field($shop, 'shop_name')) ?>" loading="lazy">
     <?php else: ?>
     <?php /* TODO: owner content – a photo of the shop or the family (admin → Website content → Gallery). */ ?>
-    <div class="story__art tone-5"><img src="/assets/img/logo-mark.svg" width="120" height="120" alt=""></div>
+    <div class="story__art tone-5"><img src="/assets/img/logo-mark.png" width="106" height="120" alt=""></div>
     <?php endif; ?>
   </div>
   <div>
