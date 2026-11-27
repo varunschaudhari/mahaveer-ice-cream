@@ -95,14 +95,14 @@ The file in the repo is the source of truth (`DeployConfigTest` checks it). What
 
 - reads `$APPDIR` / `$WEBDIR` from `~/mahavir_deploy.env` (spaces and Windows line ends ignored) and **stops** unless both folders already exist, so a typo never copies files somewhere new
 - creates `storage/uploads`, `logs`, `backups`, `sessions`, `cron` under `$APPDIR`
-- copies `app/` (never `config.php`), `lang/`, `vendor/`, `cron/`, `database/` to `$APPDIR` with `--delete`
-- copies `order/` to `$APPDIR/order/` with `--delete`, protecting cPanel's `.well-known`, `.htaccess`, `cgi-bin`, `.user.ini`, `php.ini`, `error_log`
-- copies `website/` to `$WEBDIR` **without** `--delete` (public_html also holds cPanel and Google files; delete a removed website page by hand)
+- empties and re-copies `app/` (keeping the server's `config.php`), `lang/`, `vendor/`, `cron/`, `database/` and `order/` (keeping cPanel's `.well-known`, `.htaccess`, `cgi-bin`, `.user.ini`, `php.ini`, `error_log`), so pages deleted from the code disappear
+- copies `website/` to `$WEBDIR` **without** deleting anything (public_html also holds cPanel and Google files; delete a removed website page by hand)
 - writes `$WEBDIR/approot.php` so the website finds `app/`
+
+Only `sed`, `tr`, `test`, `mkdir`, `find`, `rm`, `cp` are used: `rsync` is not installed in every host's sandbox (CloudLinux CageFS). The deploy log is in `~/.cpanel/logs/vc_*_git_deploy.log` (File Manager → show hidden files).
 
 Notes:
 - `tests/`, `tools/`, `docs/` are never deployed.
-- If `rsync` is missing on the host (`which rsync` in cPanel Terminal), replace each line with `/bin/cp -R`.
 
 **Deploying:** push to GitHub → cPanel → Git Version Control → Manage → Pull or Deploy → "Update from Remote" → "Deploy HEAD Commit". Then run new migrations: `php $HOME/mahavir/database/migrate.php` over SSH (or import the new `.sql` in phpMyAdmin).
 
