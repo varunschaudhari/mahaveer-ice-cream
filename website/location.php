@@ -26,25 +26,39 @@ view('site_header', [
     'jsonLd' => SiteService::structuredData($shop, $siteUrl, null),
 ]);
 ?>
-<h1><?= e(t('site.nav.location')) ?></h1>
+<section class="page-hero">
+  <div>
+    <h1><?= e(t('site.nav.location')) ?></h1>
+    <p class="lead"><?= e(lang_field($shop, 'shop_address')) ?></p>
+  </div>
+  <a class="btn btn-primary btn-lg" href="<?= e($directions) ?>" rel="noopener"><?= icon('directions') ?><?= e(t('site.location.directions')) ?></a>
+</section>
 
-<section class="card stack-sm">
-  <h2><?= e(t('site.location.address')) ?></h2>
-  <address><?= e(lang_field($shop, 'shop_address')) ?></address>
-  <p><?= e(t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 'close' => format_time($shop['close_time'] ?? '22:30')])) ?></p>
-  <?php if ($phone !== ''): ?>
-  <p><a href="tel:<?= e(preg_replace('/[^\d+]/', '', $phone)) ?>"><?= e($phone) ?></a></p>
+<div class="location-grid">
+  <section class="content-card">
+    <h2><?= e(t('site.location.address')) ?></h2>
+    <ul class="icon-list">
+      <li><?= icon('pin', 18) ?><address><?= e(lang_field($shop, 'shop_address')) ?></address></li>
+      <li><?= icon('clock', 18) ?><span><?= e(t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 'close' => format_time($shop['close_time'] ?? '22:30')])) ?></span></li>
+      <?php if ($phone !== ''): ?>
+      <li><?= icon('phone', 18) ?><a href="<?= e('tel:' . preg_replace('/[^\d+]/', '', $phone)) ?>"><?= e($phone) ?></a></li>
+      <?php endif; ?>
+    </ul>
+  </section>
+
+  <?php if ($embed !== ''): ?>
+  <section class="map" data-map data-map-src="<?= e($embed) ?>" data-map-title="<?= e(t('site.location.map_title')) ?>">
+    <span class="map__icon"><?= icon('pin', 32) ?></span>
+    <a class="map__load btn btn-primary" href="<?= e($directions) ?>" data-map-load rel="noopener"><?= e(t('site.location.show_map')) ?></a>
+    <p class="map__note text-sm muted"><?= e(t('site.location.map_note')) ?></p>
+  </section>
+  <?php else: ?>
+  <?php /* TODO: owner content – Google Maps "Embed a map" code (admin → Settings). */ ?>
+  <a class="map map--link" href="<?= e($directions) ?>" rel="noopener">
+    <span class="map__icon"><?= icon('pin', 32) ?></span>
+    <span class="btn btn-primary"><?= e(t('site.location.directions')) ?></span>
+  </a>
   <?php endif; ?>
-  <p><a class="btn btn-primary" href="<?= e($directions) ?>" rel="noopener"><?= e(t('site.location.directions')) ?></a></p>
-</section>
-
-<?php if ($embed !== ''): ?>
-<section class="map" data-map data-map-src="<?= e($embed) ?>" data-map-title="<?= e(t('site.location.map_title')) ?>">
-  <a class="map__load btn btn-secondary" href="<?= e($directions) ?>" data-map-load rel="noopener"><?= e(t('site.location.show_map')) ?></a>
-  <p class="map__note text-sm muted"><?= e(t('site.location.map_note')) ?></p>
-</section>
-<?php else: ?>
-<?php /* TODO: owner content – Google Maps "Embed a map" code (admin → Settings). */ ?>
-<?php endif; ?>
+</div>
 <?php
 view('site_footer', ['scripts' => $embed !== '' ? ['js/site.js'] : []]);

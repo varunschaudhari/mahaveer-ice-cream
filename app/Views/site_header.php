@@ -27,7 +27,7 @@ $description = t('site.desc.' . $page);
 <html lang="<?= e(lang()) ?>">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><?= e($title) ?></title>
 <meta name="description" content="<?= e($description) ?>">
 <?php if (app_env() !== 'production'): ?>
@@ -54,18 +54,28 @@ $description = t('site.desc.' . $page);
 <a class="skip-link" href="#main"><?= e(t('site.skip')) ?></a>
 <header class="site-header">
   <div class="container site-header__inner">
-    <?php /* TODO: owner content – logo file; the shop name stands in until then. */ ?>
-    <a class="brand" href="/"><?= e(lang_field($shop, 'shop_name')) ?></a>
-    <a class="lang-toggle" href="<?= e(lang_switch_url($otherLang)) ?>" hreflang="<?= e($otherLang) ?>" lang="<?= e($otherLang) ?>"><?= e(t('lang.switch')) ?></a>
+    <?php /* TODO: owner content – logo file; the cone mark + shop name stand in until then. */ ?>
+    <a class="brand" href="/">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 40 48" width="24" height="29"><path d="M9 21h22L20 46z" fill="#FFB300"/><path d="M14 21l6 19M20 21v21M26 21l-6 19" stroke="#E09400" stroke-width="1.6" fill="none"/><ellipse cx="20" cy="17" rx="13" ry="10" fill="#F8BBD0"/><ellipse cx="20" cy="9" rx="8.5" ry="7" fill="#FFF8F0"/></svg>
+      </span>
+      <span class="brand__text">
+        <span class="brand__name"><?= e(lang_field($shop, 'shop_name')) ?></span>
+        <span class="brand__tag"><?= e(t('shop.years')) ?></span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="<?= e(t('site.nav_label')) ?>">
+      <?php foreach (SiteService::PAGES as $key => $href): ?>
+      <a href="<?= e($href) ?>"<?= $key === $page ? ' aria-current="page"' : '' ?>><?= e(t('site.nav.' . $key)) ?></a>
+      <?php endforeach; ?>
+    </nav>
+    <div class="site-header__actions">
+      <a class="lang-toggle" href="<?= e(lang_switch_url($otherLang)) ?>" hreflang="<?= e($otherLang) ?>" lang="<?= e($otherLang) ?>"><?= e(t('lang.switch')) ?></a>
+      <a class="btn btn-primary site-header__order" href="<?= e($orderUrl . '/') ?>"><?= icon('bag', 18) ?><?= e(t('site.order_online')) ?></a>
+    </div>
   </div>
-  <nav class="container site-nav" aria-label="<?= e(t('site.nav_label')) ?>">
-    <?php foreach (SiteService::PAGES as $key => $href): ?>
-    <a href="<?= e($href) ?>"<?= $key === $page ? ' aria-current="page"' : '' ?>><?= e(t('site.nav.' . $key)) ?></a>
-    <?php endforeach; ?>
-    <a class="site-nav__order" href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_online')) ?></a>
-  </nav>
 </header>
 <?php if ($banner !== null): ?>
 <p class="site-banner" role="status"><span class="container"><?= e(lang_field($banner, 'value')) ?></span></p>
 <?php endif; ?>
-<main id="main" class="container page stack">
+<main id="main" class="container page">

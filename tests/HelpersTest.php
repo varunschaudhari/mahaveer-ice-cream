@@ -128,4 +128,15 @@ final class HelpersTest extends TestCase
         self::assertSame('42', e(42));
         self::assertSame('बदाम शेक', e('बदाम शेक'));
     }
+
+    public function testIconIsFixedDecorativeSvg(): void
+    {
+        $svg = icon('clock', 18);
+        self::assertStringStartsWith('<svg class="icon" viewBox="0 0 24 24" width="18" height="18"', $svg);
+        self::assertStringContainsString('aria-hidden="true"', $svg);
+        self::assertStringEndsWith('</svg>', $svg);
+
+        $this->expectException(\InvalidArgumentException::class);
+        icon('"><script>');
+    }
 }

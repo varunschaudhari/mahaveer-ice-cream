@@ -28,12 +28,19 @@ $texts = [
 
 view('header', ['title' => t('bulk.heading'), 'css' => ['css/base.css', 'css/shop.css']]);
 ?>
-<div class="bulk-page stack" data-bulk data-texts="<?= e(json_encode($texts, JSON_UNESCAPED_UNICODE)) ?>">
-  <h1><?= e(t('bulk.heading')) ?></h1>
-  <p class="muted"><?= e(t('bulk.intro', ['days' => $notice])) ?></p>
+<div class="bulk-page" data-bulk data-texts="<?= e(json_encode($texts, JSON_UNESCAPED_UNICODE)) ?>">
+  <section class="page-hero">
+    <span class="page-hero__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 6a2 2 0 0 0 2-2c0-.4-.1-.7-.3-1L12 0l-1.7 3c-.2.3-.3.6-.3 1a2 2 0 0 0 2 2zm6 3h-5V7h-2v2H6a3 3 0 0 0-3 3v1.5c0 1.1.9 2 2 2 .5 0 1-.2 1.4-.6l2.1-2.1 2.2 2.1c.7.7 2 .7 2.7 0l2.2-2.1 2.1 2.1c.4.4.9.6 1.4.6 1.1 0 2-.9 2-2V12a3 3 0 0 0-3-3zm-1 7.7-1.1-1.1-2.2 2.2a3.6 3.6 0 0 1-5.4 0l-2.2-2.2L5 16.7V21c0 .6.4 1 1 1h12c.6 0 1-.4 1-1v-4.3z" fill="currentColor"/></svg>
+    </span>
+    <div>
+      <h1><?= e(t('bulk.heading')) ?></h1>
+      <p class="muted"><?= e(t('bulk.intro', ['days' => $notice])) ?></p>
+    </div>
+  </section>
 
-  <form class="card stack" data-bulk-form novalidate>
-    <h2><?= e(t('bulk.items')) ?></h2>
+  <form class="card bulk-form" data-bulk-form novalidate>
+    <h2 class="section-label"><?= e(t('bulk.items')) ?></h2>
     <div class="bulk-add">
       <select class="select" data-bulk-variant aria-label="<?= e(t('bulk.choose_item')) ?>">
         <option value=""><?= e(t('bulk.choose_item')) ?></option>
@@ -57,6 +64,7 @@ view('header', ['title' => t('bulk.heading'), 'css' => ['css/base.css', 'css/sho
     <p class="spread bulk-estimate"><span><?= e(t('bulk.estimate')) ?></span><strong data-bulk-total>₹0</strong></p>
     <p class="field-error" data-error-for="lines" hidden></p>
 
+    <h2 class="section-label"><?= e(t('bulk.when_who')) ?></h2>
     <div class="form-grid">
       <div class="field">
         <label for="b-date"><?= e(t('bulk.event_date')) ?></label>
@@ -87,7 +95,7 @@ view('header', ['title' => t('bulk.heading'), 'css' => ['css/base.css', 'css/sho
       <textarea class="textarea" id="b-note" name="note" maxlength="<?= BulkService::MAX_NOTE ?>" placeholder="<?= e(t('bulk.note_hint')) ?>"></textarea>
       <p class="field-error" data-error-for="note" hidden></p>
     </div>
-    <p class="notice"><?= e(t('bulk.how_it_works')) ?></p>
+    <p class="info-note"><?= e(t('bulk.how_it_works')) ?></p>
     <p class="flash flash-error" data-error-for="_" role="alert" hidden></p>
     <button type="submit" class="btn btn-primary btn-block btn-lg" data-bulk-send><?= e(t('bulk.send')) ?></button>
   </form>

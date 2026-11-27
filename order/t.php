@@ -49,34 +49,45 @@ view('header', ['title' => table_label($table['code'], $table['area']), 'css' =>
      data-parcel="0" data-open="1"
      data-texts="<?= e(json_encode($texts, JSON_UNESCAPED_UNICODE)) ?>">
 
-  <p class="table-banner">
-    <?= e(str_replace('{n}', $number, $mr['table.label'])) ?>
-    <span>/ <?= e(str_replace('{n}', $number, $en['table.label'])) ?></span>
-    <?php if ($table['area'] === 'outside'): ?><small><?= e(t('table.outside')) ?></small><?php endif; ?>
-  </p>
+  <section class="table-hero">
+    <span class="table-hero__badge" aria-hidden="true"><?= e($number) ?></span>
+    <p class="table-banner">
+      <?= e(str_replace('{n}', $number, $mr['table.label'])) ?>
+      <span>/ <?= e(str_replace('{n}', $number, $en['table.label'])) ?></span>
+      <?php if ($table['area'] === 'outside'): ?><small><?= e(t('table.outside')) ?></small><?php endif; ?>
+    </p>
+    <div class="table-buttons">
+      <button type="button" class="btn table-btn" data-table-alert="call_staff">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22zm7-6V11a7 7 0 0 0-5.5-6.8V3.5a1.5 1.5 0 0 0-3 0v.7A7 7 0 0 0 5 11v5l-2 2v1h18v-1z" fill="currentColor"/></svg>
+        <?= e(t('table.call_staff')) ?>
+      </button>
+      <button type="button" class="btn table-btn" data-table-alert="request_bill"<?= $session === null ? ' hidden' : '' ?>>
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 2v20l2.5-1.5L10 22l2-1.5 2 1.5 2.5-1.5L19 22V2l-2.5 1.5L14 2l-2 1.5L10 2 7.5 3.5zm3 6h8v2H8zm0 4h8v2H8z" fill="currentColor"/></svg>
+        <?= e(t('table.request_bill')) ?>
+      </button>
+    </div>
+  </section>
+  <p class="flash" data-table-message role="status" hidden></p>
 
-  <section class="card stack-sm table-orders" data-table-orders data-token="<?= e($table['qr_token']) ?>"<?= $session === null ? ' hidden' : '' ?>>
-    <h2><?= e(t('table.your_orders')) ?></h2>
+  <section class="card table-orders" data-table-orders data-token="<?= e($table['qr_token']) ?>"<?= $session === null ? ' hidden' : '' ?>>
+    <h2 class="section-label"><?= e(t('table.your_orders')) ?></h2>
     <ul class="table-order-list" data-table-order-list></ul>
     <p class="spread table-total"><span><?= e(t('table.running_total')) ?></span><strong data-table-total></strong></p>
     <p class="notice" data-bill-requested hidden><?= e(t('table.bill_requested')) ?></p>
   </section>
 
-  <div class="table-buttons">
-    <button type="button" class="btn btn-secondary btn-lg" data-table-alert="call_staff"><?= e(t('table.call_staff')) ?></button>
-    <button type="button" class="btn btn-secondary btn-lg" data-table-alert="request_bill"<?= $session === null ? ' hidden' : '' ?>><?= e(t('table.request_bill')) ?></button>
-  </div>
-  <p class="flash" data-table-message role="status" hidden></p>
-
   <h1 class="sr-only"><?= e(t('menu.title')) ?></h1>
-  <?php view('shop_menu', ['menu' => $menu]); ?>
-  <?php view('shop_checkout', ['mode' => 'table', 'open' => true]); ?>
+  <div class="shop-layout">
+    <div class="shop-main">
+      <?php view('shop_menu', ['menu' => $menu]); ?>
+    </div>
+    <aside class="shop-aside">
+      <?php view('shop_checkout', ['mode' => 'table', 'open' => true]); ?>
+    </aside>
+  </div>
 </div>
 
-<div class="cart-bar" data-cart-bar hidden>
-  <span><span data-cart-count></span> · <strong data-cart-total></strong></span>
-  <button type="button" class="btn btn-primary" data-open-cart><?= e(t('order.view_cart')) ?></button>
-</div>
+<?php view('shop_cart_bar'); ?>
 <script src="<?= e(asset('js/shop.js')) ?>"></script>
 <script src="<?= e(asset('js/table.js')) ?>"></script>
 <?php

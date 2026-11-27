@@ -106,6 +106,32 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
 
+### 2026-11-27 – UI redesign, phase 2: public website
+
+- Same "Warm parlour" look as the ordering pages, on all 7 website pages.
+  - `site_header`: brand mark, page pills (single row with an "Order online" button on wide screens, a scrolling row on phones).
+  - `site_footer`: chocolate footer with visit / contact / pages columns, plus a phone-only bottom bar with Call + Order online.
+  - Home: hero with years pill, CTAs and hours, highlights strip, best-seller cards with tone placeholders, visit / party cards, CTA band.
+  - Menu: `menu_list` rewritten as one card per category with letter tiles and price pills, sticky chips.
+  - About, party orders (numbered step cards), photos (empty state), location (icon list, map card that links to directions until the embed code is set), contact (action cards).
+- New `icon()` helper (fixed outline SVGs, decorative, tested in `HelpersTest`). New lang keys: `site.feature.*`, `site.cta.title`, `site.footer.pages`, `site.contact.whatsapp_hint` / `order_hint`. Party-order step titles lost their "1." prefixes (the number is now a badge).
+- `site.css` rewritten; base.css unchanged (copies still in sync). Also fixed: the category chip rows (website and ordering pages) were cut 16 px before the screen edge.
+- Checks: 352 PHPUnit tests pass. Headless Chrome at 390 px and 1366 px, in Marathi and English: no sideways scroll, no script errors.
+- Owner content still missing and visible: the About text is the seed's "TODO: shop history…" line (admin → Website content), no photos, no map embed.
+- Next: phase 3 – counter screens (Chrome 109), after the developer reviews; then admin + owner phone.
+
+### 2026-11-27 – UI redesign, phase 1: customer ordering
+
+- The developer asked for a modern redesign of all four areas, one at a time with screenshots. Chosen look: "Warm parlour" (cream background, white rounded cards, soft shadows, magenta accents). Desktop ordering: menu grid + side cart; phones stay one column.
+- Done: takeaway (`index.php`), table (`t.php`), status (`order.php`), bulk (`bulk.php`).
+  - Views: `header` / `footer` (brand mark, footer with icons); `shop_menu` (sticky category chips, item cards with letter tiles or photos, Add pills showing the qty in the cart); `shop_checkout` (phone sheet / desktop side panel, empty state); new `shop_cart_bar`.
+  - `shop.css` rewritten (tokens scoped to `.shop-body`; base.css unchanged).
+  - `shop.js`: wide-screen layout via `matchMedia`, sheet with ×/Escape, qty badges, category chips highlight the section in view.
+  - New lang keys: `order.open_until`, `order.step_*`, `order.cart_empty_*`, `order.close`, `bulk.when_who`.
+  - No business logic, API or schema changes; every `data-*` hook kept.
+- Checks: 351 PHPUnit tests pass. Headless Chrome at 390 px and 1366 px, in Marathi and English: no sideways scroll, no script errors. A takeaway order was placed through the new sheet (local order 39) and its status page checked.
+- Next: phase 2 – public website, after the developer reviews phase 1 screenshots; then counter screens (Chrome 109), then admin + owner phone.
+
 ### 2026-11-27 – Staging setup without shell access
 
 - Staging account (CloudLinux cPanel; account details kept out of this public repo): subdomain `mahaveer.foreverstory.in` → `~/mahavir/order`, DNS and Let's Encrypt certificate in place (valid to 2027-02-24), staging database created. The account hosts other sites, so the website copy goes to `~/mahavir_site`, never `public_html`. The host has shell access disabled (no Terminal, SSH refused).

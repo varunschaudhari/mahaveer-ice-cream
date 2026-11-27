@@ -21,24 +21,42 @@ view('site_header', [
     'jsonLd' => SiteService::structuredData($shop, $siteUrl, null),
 ]);
 ?>
-<h1><?= e(t('site.nav.contact')) ?></h1>
-<p class="lead"><?= e(t('site.contact.intro')) ?></p>
+<section class="page-hero">
+  <div>
+    <h1><?= e(t('site.nav.contact')) ?></h1>
+    <p class="lead"><?= e(t('site.contact.intro')) ?></p>
+  </div>
+</section>
 
-<div class="contact-buttons">
+<ul class="contact-cards">
   <?php if ($phone !== ''): ?>
-  <a class="btn btn-primary btn-lg" href="tel:<?= e(preg_replace('/[^\d+]/', '', $phone)) ?>"><?= e(t('site.contact.call')) ?> · <?= e($phone) ?></a>
+  <li><a class="contact-card" href="<?= e('tel:' . preg_replace('/[^\d+]/', '', $phone)) ?>">
+    <span class="contact-card__icon"><?= icon('phone', 24) ?></span>
+    <span class="contact-card__text"><strong><?= e(t('site.contact.call')) ?></strong><span><?= e($phone) ?></span></span>
+    <?= icon('arrow', 18) ?>
+  </a></li>
   <?php endif; ?>
   <?php if ($whatsapp !== null): ?>
-  <a class="btn btn-success btn-lg" href="<?= e($whatsapp) ?>" rel="noopener"><?= e(t('site.contact.whatsapp')) ?></a>
+  <li><a class="contact-card contact-card--whatsapp" href="<?= e($whatsapp) ?>" rel="noopener">
+    <span class="contact-card__icon"><?= icon('chat', 24) ?></span>
+    <span class="contact-card__text"><strong><?= e(t('site.contact.whatsapp')) ?></strong><span><?= e(t('site.contact.whatsapp_hint')) ?></span></span>
+    <?= icon('arrow', 18) ?>
+  </a></li>
   <?php endif; ?>
-  <a class="btn btn-secondary btn-lg" href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_takeaway')) ?></a>
-</div>
+  <li><a class="contact-card" href="<?= e($orderUrl . '/') ?>">
+    <span class="contact-card__icon"><?= icon('bag', 24) ?></span>
+    <span class="contact-card__text"><strong><?= e(t('site.order_takeaway')) ?></strong><span><?= e(t('site.contact.order_hint')) ?></span></span>
+    <?= icon('arrow', 18) ?>
+  </a></li>
+</ul>
 
-<section class="card stack-sm">
+<section class="content-card">
   <h2><?= e(t('site.location.address')) ?></h2>
-  <address><?= e(lang_field($shop, 'shop_address')) ?></address>
-  <p><?= e(t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 'close' => format_time($shop['close_time'] ?? '22:30')])) ?></p>
-  <p><a href="/location.php"><?= e(t('site.location.directions')) ?></a></p>
+  <ul class="icon-list">
+    <li><?= icon('pin', 18) ?><address><?= e(lang_field($shop, 'shop_address')) ?></address></li>
+    <li><?= icon('clock', 18) ?><span><?= e(t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 'close' => format_time($shop['close_time'] ?? '22:30')])) ?></span></li>
+    <li><?= icon('directions', 18) ?><a href="/location.php"><?= e(t('site.location.directions')) ?></a></li>
+  </ul>
 </section>
 <?php
 view('site_footer');

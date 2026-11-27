@@ -13,10 +13,19 @@ $photos = array_values(array_filter((new SiteService())->photos(), static fn (ar
 
 view('site_header', ['page' => 'gallery', 'path' => '/gallery.php']);
 ?>
-<h1><?= e(t('site.nav.gallery')) ?></h1>
+<section class="page-hero">
+  <div>
+    <h1><?= e(t('site.nav.gallery')) ?></h1>
+    <p class="lead"><?= e(t('shop.years')) ?></p>
+  </div>
+  <span class="page-hero__icon"><?= icon('camera', 32) ?></span>
+</section>
 <?php if ($photos === []): ?>
 <?php /* TODO: owner content – shop, family and ice cream photos. */ ?>
-<p class="muted"><?= e(t('site.gallery_empty')) ?></p>
+<div class="empty-card">
+  <span class="empty-card__icon"><?= icon('camera', 32) ?></span>
+  <p><?= e(t('site.gallery_empty')) ?></p>
+</div>
 <?php else: ?>
 <ul class="gallery">
   <?php foreach ($photos as $i => $photo): $caption = lang_field($photo, 'caption'); ?>

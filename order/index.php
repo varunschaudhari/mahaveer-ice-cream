@@ -47,43 +47,60 @@ view('header', ['title' => t('order.page_title'), 'css' => ['css/base.css', 'css
      data-open="<?= $slots['open'] ? '1' : '0' ?>"
      data-texts="<?= e(json_encode($texts, JSON_UNESCAPED_UNICODE)) ?>">
 
-  <?php if (!$slots['open']): ?>
-  <p class="notice notice-danger"><?= e(t('shop.closed', ['time' => format_time($slots['opens_at'])])) ?></p>
-  <?php endif; ?>
-
-  <h1><?= e(t('order.heading')) ?></h1>
-  <p class="muted"><?= e(t('order.intro')) ?></p>
-  <a class="party-link" href="/bulk.php"><?= e(t('bulk.link')) ?></a>
+  <section class="shop-hero">
+    <div class="shop-hero__text">
+      <?php if ($slots['open']): ?>
+      <p class="open-pill"><span class="open-pill__dot" aria-hidden="true"></span><?= e(t('order.open_until', ['time' => format_time(Settings::get('close_time', '22:30'))])) ?></p>
+      <?php else: ?>
+      <p class="open-pill is-closed"><span class="open-pill__dot" aria-hidden="true"></span><?= e(t('shop.closed', ['time' => format_time($slots['opens_at'])])) ?></p>
+      <?php endif; ?>
+      <h1><?= e(t('order.heading')) ?></h1>
+      <p class="shop-hero__intro"><?= e(t('order.intro')) ?></p>
+      <ol class="hero-steps">
+        <li><span class="hero-steps__n">1</span><?= e(t('order.step_choose')) ?></li>
+        <li><span class="hero-steps__n">2</span><?= e(t('order.step_time')) ?></li>
+        <li><span class="hero-steps__n">3</span><?= e(t('order.step_pay')) ?></li>
+      </ol>
+      <a class="party-link" href="/bulk.php"><?= e(t('bulk.link')) ?></a>
+    </div>
+    <div class="shop-hero__art" aria-hidden="true">
+      <svg viewBox="0 0 120 150" width="120" height="150"><path d="M30 66h60L60 146z" fill="#FFB300"/><path d="M42 66l18 64M60 66v72M78 66l-18 64M36 86l42 0M44 106l26 0" stroke="#E09400" stroke-width="3" fill="none"/><circle cx="60" cy="54" r="32" fill="#F48FB1"/><circle cx="42" cy="40" r="22" fill="#FFF3E0"/><circle cx="78" cy="38" r="22" fill="#CE93D8"/><circle cx="60" cy="22" r="18" fill="#F8BBD0"/><circle cx="62" cy="6" r="6" fill="#C2185B"/></svg>
+    </div>
+  </section>
 
   <?php if ($recent !== []): ?>
-  <section class="card stack-sm recent-orders">
-    <h2><?= e(t('order.recent')) ?></h2>
+  <section class="recent-orders">
+    <h2 class="section-label"><?= e(t('order.recent')) ?></h2>
     <ul class="recent-list">
       <?php foreach ($recent as $order):
           $lines = array_map(static fn (array $l): array => ['v' => (int) $l['variant_id'], 'q' => (int) $l['qty']], $order['items']);
       ?>
       <li class="recent-order">
-        <a href="/order.php?id=<?= (int) $order['id'] ?>&amp;k=<?= e($order['order_key']) ?>">
-          <strong><?= e(t('online.token', ['n' => $order['token_no']])) ?></strong>
-          · <?= e(date('d/m', strtotime($order['created_at']))) ?>
-          · <?= e(money(paise_from_decimal((string) $order['total']))) ?>
-          · <span class="muted"><?= e(order_status_label($order['status'])) ?></span>
+        <a class="recent-order__link" href="/order.php?id=<?= (int) $order['id'] ?>&amp;k=<?= e($order['order_key']) ?>">
+          <span class="recent-order__token"><?= (int) $order['token_no'] ?></span>
+          <span class="recent-order__info">
+            <strong><?= e(t('online.token', ['n' => $order['token_no']])) ?></strong>
+            <span class="muted text-sm"><?= e(date('d/m', strtotime($order['created_at']))) ?> · <?= e(money(paise_from_decimal((string) $order['total']))) ?> · <?= e(order_status_label($order['status'])) ?></span>
+          </span>
         </a>
-        <button type="button" class="btn btn-secondary" data-reorder="<?= e(json_encode($lines)) ?>"><?= e(t('order.reorder')) ?></button>
+        <button type="button" class="btn btn-soft" data-reorder="<?= e(json_encode($lines)) ?>"><?= e(t('order.reorder')) ?></button>
       </li>
       <?php endforeach; ?>
     </ul>
   </section>
   <?php endif; ?>
 
-  <?php view('shop_menu', ['menu' => $menu]); ?>
-  <?php view('shop_checkout', ['mode' => 'takeaway', 'slots' => $slots, 'open' => $slots['open']]); ?>
+  <div class="shop-layout">
+    <div class="shop-main">
+      <?php view('shop_menu', ['menu' => $menu]); ?>
+    </div>
+    <aside class="shop-aside">
+      <?php view('shop_checkout', ['mode' => 'takeaway', 'slots' => $slots, 'open' => $slots['open']]); ?>
+    </aside>
+  </div>
 </div>
 
-<div class="cart-bar" data-cart-bar hidden>
-  <span><span data-cart-count></span> · <strong data-cart-total></strong></span>
-  <button type="button" class="btn btn-primary" data-open-cart><?= e(t('order.view_cart')) ?></button>
-</div>
+<?php view('shop_cart_bar'); ?>
 <script src="<?= e(asset('js/shop.js')) ?>"></script>
 <?php
 view('footer');

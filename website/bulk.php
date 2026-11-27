@@ -15,21 +15,35 @@ $phone = (string) ($shop['shop_phone'] ?? '');
 
 view('site_header', ['page' => 'bulk', 'path' => '/bulk.php']);
 ?>
-<h1><?= e(t('site.nav.bulk')) ?></h1>
-<p class="lead"><?= e(t('bulk.intro', ['days' => $days])) ?></p>
+<section class="page-hero">
+  <div>
+    <h1><?= e(t('site.nav.bulk')) ?></h1>
+    <p class="lead"><?= e(t('bulk.intro', ['days' => $days])) ?></p>
+  </div>
+  <span class="page-hero__icon"><?= icon('gift', 32) ?></span>
+</section>
 
-<ol class="steps">
-  <li><strong><?= e(t('site.bulk.step1_title')) ?></strong><br><?= e(t('site.bulk.step1')) ?></li>
-  <li><strong><?= e(t('site.bulk.step2_title')) ?></strong><br><?= e(t('site.bulk.step2')) ?></li>
-  <li><strong><?= e(t('site.bulk.step3_title')) ?></strong><br><?= e(t('site.bulk.step3')) ?></li>
-  <li><strong><?= e(t('site.bulk.step4_title')) ?></strong><br><?= e(t('site.bulk.step4')) ?></li>
+<ol class="step-cards">
+  <?php for ($n = 1; $n <= 4; $n++): ?>
+  <li class="step-card">
+    <span class="step-card__n"><?= $n ?></span>
+    <h2 class="step-card__title"><?= e(t("site.bulk.step{$n}_title")) ?></h2>
+    <p><?= e(t("site.bulk.step{$n}")) ?></p>
+  </li>
+  <?php endfor; ?>
 </ol>
 
-<div class="cluster">
-  <a class="btn btn-primary btn-lg" href="<?= e($orderUrl . '/bulk.php') ?>"><?= e(t('site.bulk.button')) ?></a>
-  <?php if ($phone !== ''): ?>
-  <a class="btn btn-secondary btn-lg" href="tel:<?= e(preg_replace('/[^\d+]/', '', $phone)) ?>"><?= e(t('site.contact.call')) ?></a>
-  <?php endif; ?>
-</div>
+<section class="cta-band">
+  <div>
+    <h2><?= e(t('site.bulk.button')) ?></h2>
+    <p><?= e(t('site.bulk.short', ['days' => $days])) ?></p>
+  </div>
+  <div class="cta-band__actions">
+    <a class="btn btn-white btn-lg" href="<?= e($orderUrl . '/bulk.php') ?>"><?= icon('gift') ?><?= e(t('site.bulk.button')) ?></a>
+    <?php if ($phone !== ''): ?>
+    <a class="btn btn-outline-white btn-lg" href="<?= e('tel:' . preg_replace('/[^\d+]/', '', $phone)) ?>"><?= icon('phone') ?><?= e(t('site.contact.call')) ?></a>
+    <?php endif; ?>
+  </div>
+</section>
 <?php
 view('site_footer');

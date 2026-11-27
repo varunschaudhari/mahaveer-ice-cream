@@ -16,11 +16,13 @@ $orderUrl = rtrim((string) config('APP_URL_ORDER', ''), '/');
 
 view('site_header', ['page' => 'menu', 'path' => '/menu.php']);
 ?>
-<div class="section-head">
-  <h1><?= e(t('site.nav.menu')) ?></h1>
-  <a class="btn btn-primary" href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_takeaway')) ?></a>
-</div>
-<p class="muted"><?= e(t('site.menu_note')) ?></p>
+<section class="page-hero">
+  <div>
+    <h1><?= e(t('site.nav.menu')) ?></h1>
+    <p class="lead"><?= e(t('site.menu_note')) ?></p>
+  </div>
+  <a class="btn btn-primary btn-lg" href="<?= e($orderUrl . '/') ?>"><?= icon('bag') ?><?= e(t('site.order_takeaway')) ?></a>
+</section>
 <?php
 view('menu_list', ['menu' => $menu]);
 view('site_footer');

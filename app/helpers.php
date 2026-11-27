@@ -222,6 +222,33 @@ function view(string $name, array $vars = []): void
     require APP_ROOT . '/app/Views/' . $name . '.php';
 }
 
+/**
+ * Inline outline icon (24 × 24 grid, drawn in currentColor), safe to print as is: the markup
+ * is fixed here, never built from input. Decorative only (aria-hidden); the text next to it
+ * says what it means.
+ */
+function icon(string $name, int $size = 20): string
+{
+    static $shapes = [
+        'arrow' => '<path d="M5 12h14M13 6l6 6-6 6"/>',
+        'bag' => '<path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/>',
+        'camera' => '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+        'chat' => '<path d="M20.5 12a8.5 8.5 0 0 1-12.4 7.6L3.5 21l1.4-4.4A8.5 8.5 0 1 1 20.5 12z"/>',
+        'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        'directions' => '<path d="M3 6.5l6-3 6 3 6-3v14l-6 3-6-3-6 3z"/><path d="M9 3.5v14M15 6.5v14"/>',
+        'gift' => '<path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13"/><path d="M12 7C10.5 4 7 4 7 5.8S10 7 12 7zM12 7c1.5-3 5-3 5-1.2S14 7 12 7z"/>',
+        'phone' => '<path d="M5 4h3.5l1.8 4.5-2.3 1.4a11 11 0 0 0 6.1 6.1l1.4-2.3L20 15.5V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+        'pin' => '<path d="M12 21s-7-6.1-7-11.4a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.6" r="2.5"/>',
+        'star' => '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/>',
+    ];
+    if (!isset($shapes[$name])) {
+        throw new InvalidArgumentException("Unknown icon: {$name}");
+    }
+    return '<svg class="icon" viewBox="0 0 24 24" width="' . $size . '" height="' . $size . '" fill="none" stroke="currentColor"'
+        . ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
+        . $shapes[$name] . '</svg>';
+}
+
 // ---------------------------------------------------------------
 // Money (integer paise; never floats)
 // ---------------------------------------------------------------

@@ -5,6 +5,8 @@
  *    page reloads to show the order in the table's list
  * Cart in sessionStorage (SPEC §6.2); the server re-checks every line, price, slot and number.
  * Name and mobile are remembered in this phone's localStorage to pre-fill the next order.
+ * Phones: floating cart bar + checkout sheet. Wide screens (≥ 1024 px): checkout always shown as
+ * the side panel (same markup; shop.css lays it out).
  */
 (function () {
   'use strict';
@@ -37,6 +39,12 @@
   var mobileInput = form.querySelector('#c-mobile');
   var noteInput = form.querySelector('#c-note');
   var placing = false;
+  // Wide screens show the checkout as a side panel next to the menu; phones open it as a sheet.
+  var wide = window.matchMedia('(min-width: 1024px)');
+  var sheetOpen = false;
+  var emptyEl = checkout.querySelector('[data-cart-empty]');
+  var filledEl = checkout.querySelector('[data-cart-filled]');
+  var addButtons = root.querySelectorAll('.add-btn');
 
   function text(key, params) {
     var value = TEXT[key] || key;
@@ -120,23 +128,27 @@
   function render() {
     var count = lines.reduce(function (sum, l) { return sum + l.qty; }, 0);
     var t = totals();
-    bar.hidden = count === 0 || !checkout.hidden;
+    bar.hidden = count === 0 || sheetOpen || wide.matches;
+    document.body.classList.toggle('has-cart-bar', !bar.hidden);
     bar.querySelector('[data-cart-count]').textContent = text('items', { n: count });
     bar.querySelector('[data-cart-total]').textContent = money(t.total);
+    emptyEl.hidden = lines.length > 0;
+    filledEl.hidden = lines.length === 0;
 
     linesEl.textContent = '';
     lines.forEach(function (line, index) {
       var row = document.createElement('div');
       row.className = 'checkout-line';
       row.innerHTML =
-        '<span class="checkout-line__name"></span>' +
+        '<span class="checkout-line__name"><span></span><small></small></span>' +
         '<span class="checkout-line__qty">' +
-        '<button type="button" class="btn btn-secondary" data-dec aria-label="−">−</button>' +
+        '<button type="button" class="qty-btn" data-dec aria-label="−">−</button>' +
         '<strong></strong>' +
-        '<button type="button" class="btn btn-secondary" data-inc aria-label="+">+</button>' +
+        '<button type="button" class="qty-btn" data-inc aria-label="+">+</button>' +
         '</span>' +
         '<span class="checkout-line__amount"></span>';
-      row.querySelector('.checkout-line__name').textContent = line.name + ' (' + line.label + ')';
+      row.querySelector('.checkout-line__name span').textContent = line.name;
+      row.querySelector('.checkout-line__name small').textContent = line.label;
       row.querySelector('strong').textContent = line.qty;
       row.querySelector('.checkout-line__amount').textContent = money(line.price * line.qty);
       row.setAttribute('data-index', index);
@@ -149,11 +161,27 @@
     }
     root.querySelector('[data-total]').textContent = money(t.total);
     form.querySelector('[data-place]').disabled = !OPEN || placing || lines.length === 0;
+    markButtons();
 
-    if (lines.length === 0 && !checkout.hidden) {
+    if (lines.length === 0 && sheetOpen) {
       closeCheckout();
     }
     store(window.sessionStorage, CART_KEY, lines);
+  }
+
+  // Each "Add" pill shows how many of that size are already in the cart.
+  function markButtons() {
+    var qty = {};
+    lines.forEach(function (l) { qty[l.variant] = l.qty; });
+    addButtons.forEach(function (b) {
+      var n = qty[parseInt(b.getAttribute('data-variant'), 10)] || 0;
+      var badge = b.querySelector('[data-qty]');
+      b.classList.toggle('in-cart', n > 0);
+      if (badge) {
+        badge.hidden = n === 0;
+        badge.textContent = n;
+      }
+    });
   }
 
   root.addEventListener('click', function (event) {
@@ -205,8 +233,26 @@
   // ---------- checkout ----------
 
   function openCheckout() {
+    prepareCheckout();
+    if (!IS_TABLE) {
+      refreshSlots();
+    }
+    if (wide.matches) {
+      return; // the side panel is always shown
+    }
+    sheetOpen = true;
     checkout.hidden = false;
-    bar.hidden = true;
+    checkout.scrollTop = 0;
+    document.body.classList.add('sheet-open');
+    render();
+    var close = checkout.querySelector('.checkout__close');
+    if (close) {
+      close.focus({ preventScroll: true });
+    }
+  }
+
+  // Pre-fills name + mobile this phone remembers; at a table, skips them after the first order.
+  function prepareCheckout() {
     var saved = null;
     try {
       saved = JSON.parse(read(window.localStorage, CUSTOMER_KEY));
@@ -223,10 +269,7 @@
       if (known) {
         form.querySelector('[data-identity-name]').textContent = text('ordered_as', { name: saved.name });
       }
-    } else {
-      refreshSlots();
     }
-    checkout.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   if (IS_TABLE) {
@@ -237,15 +280,93 @@
   }
 
   function closeCheckout() {
+    if (!sheetOpen) {
+      return;
+    }
+    sheetOpen = false;
     checkout.hidden = true;
+    document.body.classList.remove('sheet-open');
+    render();
+    if (!bar.hidden) {
+      bar.querySelector('[data-open-cart]').focus({ preventScroll: true });
+    }
+  }
+
+  function syncLayout() {
+    if (wide.matches) {
+      sheetOpen = false;
+      document.body.classList.remove('sheet-open');
+      checkout.hidden = false;
+      prepareCheckout();
+    } else if (!sheetOpen) {
+      checkout.hidden = true;
+    }
     render();
   }
 
   bar.querySelector('[data-open-cart]').addEventListener('click', openCheckout);
-  form.querySelector('[data-back]').addEventListener('click', function () {
-    closeCheckout();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  checkout.querySelectorAll('[data-back]').forEach(function (b) {
+    b.addEventListener('click', closeCheckout);
   });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && sheetOpen) {
+      closeCheckout();
+    }
+  });
+  if (wide.addEventListener) {
+    wide.addEventListener('change', syncLayout);
+  } else {
+    wide.addListener(syncLayout); // older Safari
+  }
+
+  // ---------- category bar: tap to jump, highlight the section in view ----------
+
+  var nav = root.querySelector('[data-cat-nav]');
+  if (nav) {
+    var navInner = nav.querySelector('.cat-nav__inner');
+    var chips = Array.prototype.slice.call(nav.querySelectorAll('.cat-chip'));
+    var activeChip = null;
+    var setActive = function (chip) {
+      if (!chip || chip === activeChip) {
+        return;
+      }
+      if (activeChip) {
+        activeChip.classList.remove('is-active');
+      }
+      chip.classList.add('is-active');
+      activeChip = chip;
+      var left = chip.offsetLeft - navInner.offsetLeft - (navInner.clientWidth - chip.offsetWidth) / 2;
+      navInner.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+    };
+    nav.addEventListener('click', function (event) {
+      var chip = event.target.closest('.cat-chip');
+      var section = chip && document.getElementById(chip.getAttribute('href').slice(1));
+      if (section) {
+        event.preventDefault();
+        setActive(chip);
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+    if ('IntersectionObserver' in window) {
+      var visible = {};
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) { visible[entry.target.id] = entry.isIntersecting; });
+        for (var i = 0; i < chips.length; i++) {
+          if (visible[chips[i].getAttribute('href').slice(1)]) {
+            setActive(chips[i]);
+            break;
+          }
+        }
+      }, { rootMargin: '-80px 0px -55% 0px' });
+      chips.forEach(function (chip) {
+        var section = document.getElementById(chip.getAttribute('href').slice(1));
+        if (section) {
+          observer.observe(section);
+        }
+      });
+    }
+    setActive(chips[0]);
+  }
 
   async function refreshSlots() {
     var grid = form.querySelector('[data-slots]');
@@ -377,5 +498,5 @@
     }
   });
 
-  render();
+  syncLayout();
 })();
