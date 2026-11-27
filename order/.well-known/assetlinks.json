@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mahaveericecream.owner",
+      "sha256_cert_fingerprints": [
+        "80:CE:FE:F6:28:39:73:26:3E:F2:B2:30:04:E2:9D:79:9E:2F:09:56:51:3A:D9:B1:2B:9A:22:1F:7D:FE:A2:81"
+      ]
+    }
+  }
+]

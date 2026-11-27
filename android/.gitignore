@@ -1,0 +1,14 @@
+# build output and machine-specific files
+.gradle/
+build/
+app/build/
+dist/
+local.properties
+*.iml
+.idea/
+.kotlin/
+
+# the signing key and its passwords never go in git (they live in ~/.mahavir-android/)
+*.jks
+*.keystore
+keystore.properties

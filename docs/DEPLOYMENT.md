@@ -154,6 +154,37 @@ First go-live: follow `docs/GO_LIVE.md` step by step.
 - [ ] Mute switch: muted → no notification for the next test order; unmuted → notifications again.
 - [ ] If notifications were blocked by mistake: Chrome ⋮ → Settings → Site settings → Notifications → allow `order.mahaveericecream.in`. Without notifications the page still checks every 10 s and beeps while it is open.
 
+### 7b. Owner app (APK) – instead of "Add to Home screen"
+
+`android/` builds **Mahavir Owner** (Marathi phones: "महावीर मालक"), an app that opens the owner page full screen (a Trusted Web Activity: Chrome shows the live page).
+- Website deploys update it. Rebuild only for a new address, a new icon or a library update.
+- Notifications from the owner page appear under the app's name and icon.
+- It is installed from the file, not from the Play Store (Play Store stays phase 2).
+
+**Install on the owner's phone** (Android 7+, Chrome installed and up to date):
+1. Send `mahavir-owner-….apk` to the phone (WhatsApp, Drive or USB) and tap it. Android asks once to allow "Install unknown apps" for WhatsApp / Files: allow it, then **Install**. Play Protect may warn about an unknown app: "Install anyway".
+2. Open **Mahavir Owner** → log in → "सूचना चालू करा / Turn on notifications" → allow (Android 13+ asks for the app as well) → "Send a test".
+3. Then the same checks as above (battery Unrestricted for **Chrome**, locked-screen test, mute).
+4. An address bar at the top means the phone could not verify the app against the site. Check that `https://<order domain>/.well-known/assetlinks.json` opens and is deployed; the app still works meanwhile.
+
+**Build** (on the developer PC; needs the Android SDK in `%LOCALAPPDATA%\Android\Sdk` and a JDK 17+, e.g. `%USERPROFILE%\.jdks\temurin-21`):
+```bash
+cd android
+echo sdk.dir=C:/Users/<you>/AppData/Local/Android/Sdk > local.properties   # once, not in git
+export JAVA_HOME="$USERPROFILE/.jdks/temurin-21"                            # Git Bash
+./gradlew.bat assembleRelease                                     # staging: mahaveer.foreverstory.in
+./gradlew.bat assembleRelease -PtwaHost=order.mahaveericecream.in # production
+```
+- The APK is written to `android/app/build/outputs/apk/release/app-release.apk`; rename it, e.g. `mahavir-owner-production-1.0.1.apk`.
+- Before every new APK, raise `versionCode` (and `versionName`) in `android/app/build.gradle`. Android installs an update only over a lower version.
+- Installing the production APK over the staging one keeps the app and switches it to the production address. Notifications must then be turned on again, because they belong to each web address.
+- Icons come from the client's logo: `docs/brand/build_logo.ps1` writes them into `android/app/src/main/res`.
+
+**Signing key – back it up.** The key that signs the app is `%USERPROFILE%\.mahavir-android\owner-release.jks`, and its passwords are in `keystore.properties` next to it.
+- Neither file is in git.
+- Keep a copy of both somewhere safe (password manager, pen drive). Without them no update can be installed over the existing app: it would have to be uninstalled and set up again.
+- `order/.well-known/assetlinks.json` holds the key's SHA-256 fingerprint (`keytool -list -v -keystore … -alias mahavir-owner`). The same file serves staging and production, because both use the `order/` folder. A new key means a new fingerprint in that file.
+
 ## 8. Website go-live checks (M8)
 
 - [ ] Owner content in admin → Website content: About text (mr/en), gallery photos (the first visible photo is the home page photo). Until then the pages show "coming soon" placeholders (`TODO: owner content` in the code marks each one).

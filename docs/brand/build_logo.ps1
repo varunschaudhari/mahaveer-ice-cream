@@ -9,9 +9,12 @@
 #   logo-mark.png     the swirl-and-M on top        (small app bars, placeholders)
 #   favicon.png, icon-192.png, icon-512.png, icon-512-maskable.png (mark on white), badge-72.png (white mark for Android notifications)
 #   og-image.png      1200x630 link preview         (website only)
+# and the owner app's Android icons into android/app/src/main/res (launcher, adaptive foreground,
+# notification icon, splash image), one file per screen density.
 param(
     [string]$Source = 'docs/brand/mahavir-logo-original.jpg',
-    [string]$Out = 'docs/brand'
+    [string]$Out = 'docs/brand',
+    [string]$AndroidRes = 'android/app/src/main/res'
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -250,3 +253,31 @@ Save-Png ([LogoTools]::Place($mark, 512, 512, 400, 400, $white)) 'icon-512.png'
 Save-Png ([LogoTools]::Place($mark, 512, 512, 300, 300, $white)) 'icon-512-maskable.png' # inside the 80 % safe circle
 Save-Png ([LogoTools]::Place([LogoTools]::Silhouette($mark), 72, 72, 60, 60, [System.Drawing.Color]::Transparent)) 'badge-72.png'
 Save-Png ([LogoTools]::Place($full, 1200, 630, 900, 470, $white)) 'og-image.png'
+
+# ---------- Android owner app (android/): sizes in dp, one PNG per density ----------
+if ($AndroidRes -ne '' -and (Test-Path $AndroidRes)) {
+    $clear = [System.Drawing.Color]::Transparent
+    $silhouette = [LogoTools]::Silhouette($mark)
+    $densities = [ordered]@{ 'mdpi' = 1.0; 'hdpi' = 1.5; 'xhdpi' = 2.0; 'xxhdpi' = 3.0; 'xxxhdpi' = 4.0 }
+    foreach ($density in $densities.Keys) {
+        $f = $densities[$density]
+        $dp = { param([double]$v) [int][Math]::Round($v * $f) }
+        $outputs = @(
+            # Android 7 and older: the whole icon, mark on white.
+            @("mipmap-$density", 'ic_launcher.png', [LogoTools]::Place($mark, (& $dp 48), (& $dp 48), (& $dp 38), (& $dp 38), $white)),
+            # Android 8+: adaptive icon foreground, 108 dp with the mark inside the 66 dp safe zone.
+            @("drawable-$density", 'ic_launcher_foreground.png', [LogoTools]::Place($mark, (& $dp 108), (& $dp 108), (& $dp 60), (& $dp 60), $clear)),
+            # Notification icon: Android shows it as one colour, so only the shape counts.
+            @("drawable-$density", 'ic_notification_icon.png', [LogoTools]::Place($silhouette, (& $dp 24), (& $dp 24), (& $dp 22), (& $dp 22), $clear)),
+            # Splash while the page loads: the logo without the tagline line.
+            @("drawable-$density", 'splash.png', [LogoTools]::Resize($compact, (& $dp 150)))
+        )
+        foreach ($o in $outputs) {
+            $dir = Join-Path $AndroidRes $o[0]
+            New-Item -ItemType Directory -Force $dir | Out-Null
+            $path = Join-Path (Resolve-Path $dir) $o[1]
+            $o[2].Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+        }
+    }
+    'Android icons written to ' + $AndroidRes
+}

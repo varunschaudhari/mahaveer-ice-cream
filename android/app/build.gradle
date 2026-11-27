@@ -1,0 +1,72 @@
+// Mahavir owner app: a Trusted Web Activity that opens the owner's page full screen.
+// It shows the live web pages, so website deploys update the app without a rebuild.
+// Build: see docs/DEPLOYMENT.md §7b. The web address is a build option:
+//   gradlew assembleRelease                                  -> staging (mahaveer.foreverstory.in)
+//   gradlew assembleRelease -PtwaHost=order.mahaveericecream.in -> production
+plugins {
+    id 'com.android.application'
+}
+
+def twa = [
+    applicationId: 'com.mahaveericecream.owner',
+    hostName     : (project.findProperty('twaHost') ?: 'mahaveer.foreverstory.in').toString(),
+    launchPath   : '/owner/',
+    themeColor   : '#FBF8F3',   // paper (SPEC §16), same as the owner page's theme-color
+]
+
+// Signing key + passwords live outside the repo: ~/.mahavir-android/keystore.properties
+// (storeFile, storePassword, keyAlias, keyPassword). Another file: -PkeystoreProperties=path
+def keystorePropsFile = file(project.findProperty('keystoreProperties') ?: "${System.getProperty('user.home')}/.mahavir-android/keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+android {
+    namespace twa.applicationId
+    compileSdk 36
+
+    defaultConfig {
+        applicationId twa.applicationId
+        minSdk 24          // Android 7.0+, required by androidbrowserhelper 2.7
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
+
+        manifestPlaceholders = [hostName: twa.hostName, launchPath: twa.launchPath]
+        resValue 'string', 'launchUrl', "https://${twa.hostName}${twa.launchPath}"
+        resValue 'string', 'providerAuthority', "${twa.applicationId}.fileprovider"
+        resValue 'color', 'themeColor', twa.themeColor
+        // Lets Android check https://<host>/.well-known/assetlinks.json (order/.well-known/ in the repo).
+        resValue 'string', 'assetStatements',
+            '[{ \\"relation\\": [\\"delegate_permission/common.handle_all_urls\\"],' +
+            ' \\"target\\": {\\"namespace\\": \\"web\\", \\"site\\": \\"https://' + twa.hostName + '\\"}}]'
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig keystorePropsFile.exists() ? signingConfigs.release : null
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.7.4'
+}

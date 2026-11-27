@@ -63,6 +63,7 @@ Use real devices: the counter PC (Chrome 109, TM-T82 printer), an Android phone 
 - [ ] Cron jobs; run each once by hand; System health all **OK**.
 - [ ] Test order on production (counter bill + cancel it on the Today tab), so the bill number sequence starts clean the first evening if you prefer: note the first real bill number.
 - [ ] Google Search Console: add `mahaveericecream.in`, submit `https://mahaveericecream.in/sitemap.xml`.
+- [ ] Owner app: rebuild the APK for production (`./gradlew.bat assembleRelease -PtwaHost=order.mahaveericecream.in`, `versionCode` raised – DEPLOYMENT §7b), install it over the staging app on the owner's phone, check `https://order.mahaveericecream.in/.well-known/assetlinks.json` opens, turn notifications on again and send a test.
 
 ## 4. Print the QR stickers and poster (production only)
 

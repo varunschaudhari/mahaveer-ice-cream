@@ -31,6 +31,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-27 | **Client:** "modern gelato boutique" look for the website + customer ordering pages; new logo (concept C "scoop heart", docs/brand/); English name **Mahaveer** (seed `shop_name_en`, English page titles; staging: change it in admin → Settings). SPEC §16 updated. Founding year for the seal still to come. |
 | 2026-11-27 | **Client (later the same day):** use the shop's own logo (supplied as a JPG) instead of the scoop heart, which is retired (still in git history). English name back to **Mahavir** and tagline "Adding flavors to your life", both as on the logo. Accent colour = logo pink, pastels from the logo colours, black buttons kept. App icons and notification badge from the logo's swirl-and-M. SPEC §16 updated. Staging: set the English shop name back to "Mahavir Ice Cream" in admin → Settings. |
 | 2026-11-27 | **Developer (usability review):** takeaway checkout selects the earliest free pickup slot already (customer can change it); pickup time is asked before name/mobile. Customer menu as compact rows (no letter tiles). Counter: an open online order whose pickup window has ended is marked "Late"; on the Online / Tables tab the alert bar leaves out what is already on screen, the beep repeats until any tap there. SPEC §6, §9 updated. |
+| 2026-11-27 | **Developer:** an Android **owner app** (APK, installed from the file – the Play Store app stays phase 2). It is a Trusted Web Activity around `/owner/` (androidbrowserhelper 2.7.4), so it needs no own code and follows every website deploy. Package `com.mahaveericecream.owner` (`in.` is not allowed: Java keyword). Built for staging now, rebuilt for production at go-live (GO_LIVE §3). Source in `android/`; signing key outside the repo. DEPLOYMENT §7b. |
 | 2026-11-26 | `minishlink/web-push` pinned to `^10.1`. v11 needs a separately installed PSR-18 HTTP client (an extra package); v10 brings Guzzle itself. `chillerlan/php-qrcode` `^6.0`. |
 | 2026-11-26 | `composer.json` sets `config.platform.php = 8.2.0` so the lock file never pulls packages that need PHP > 8.2. |
 | 2026-11-26 | Money: decimal quantities round half-up to the paisa per line; a discount may not exceed subtotal + parcel; `money()` uses Indian grouping (₹1,25,000). |
@@ -108,6 +109,16 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-27 – Owner app (APK)
+
+- `android/`: Gradle project (Gradle 8.14.3 wrapper, AGP 8.13.2, compileSdk/targetSdk 36, minSdk 24) for **Mahavir Owner** / "महावीर मालक":
+  - a Trusted Web Activity opening `https://<twaHost>/owner/` (default `mahaveer.foreverstory.in`; `-PtwaHost=` for production)
+  - cream status/navigation bars, a splash with the logo, notifications delegated to the app (small icon = white logo mark), POST_NOTIFICATIONS for Android 13+, Custom Tab fallback without Chrome
+- Icons from the client's logo via `docs/brand/build_logo.ps1` (new Android output: launcher, adaptive foreground, notification icon, splash per density).
+- Signing key `%USERPROFILE%\.mahavir-android\owner-release.jks` + `keystore.properties` (outside the repo, back them up). Its SHA-256 is in `order/.well-known/assetlinks.json`, deployed with `order/`.
+- Built `android/dist/mahavir-owner-staging-1.0.0.apk` (4.6 MB, git-ignored). Checked with apksigner (v2 signature, fingerprint matches the link file) and aapt2 (package, labels en/mr, launch URL, colours). The local server returns the link file as `application/json`. 355 PHPUnit tests pass.
+- Not tested yet on a real phone: install, verification without the address bar (needs the link file deployed on staging), notifications through the app.
 
 ### 2026-11-27 – Usability review: placement fixes
 
