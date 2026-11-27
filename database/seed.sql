@@ -8,7 +8,7 @@ SET NAMES utf8mb4;
 
 INSERT INTO settings (setting_key, setting_value) VALUES
 ('shop_name_mr','महावीर आईस्क्रीम'),
-('shop_name_en','Mahavir Ice Cream'),
+('shop_name_en','Mahaveer Ice Cream'),
 ('shop_address_mr','धुळे रोड, पाच पाऊली मंदिराजवळ, हनुमान नगर, अमळनेर 425401'),
 ('shop_address_en','Dhule Road, near Pach Pauli Mandir, Hanuman Nagar, Amalner 425401'),
 ('shop_phone','+91 99222 20000'),

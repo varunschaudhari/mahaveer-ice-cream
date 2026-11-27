@@ -237,6 +237,37 @@ final class SiteService
         return array_values($picked);
     }
 
+    /**
+     * One line per menu category for the home page: name, number of items and the lowest price
+     * (paise) of anything in it. Sold-out items still count: they are on the menu today.
+     *
+     * @param list<array> $menu MenuService::publicMenu()
+     * @return list<array{id: int, name_mr: string, name_en: string, count: int, from_paise: int}>
+     */
+    public static function categorySummary(array $menu): array
+    {
+        $out = [];
+        foreach ($menu as $category) {
+            $prices = [];
+            foreach ($category['items'] as $item) {
+                foreach ($item['variants'] as $variant) {
+                    $prices[] = (int) $variant['price_paise'];
+                }
+            }
+            if ($prices === []) {
+                continue;
+            }
+            $out[] = [
+                'id' => (int) $category['id'],
+                'name_mr' => (string) $category['name_mr'],
+                'name_en' => (string) $category['name_en'],
+                'count' => count($category['items']),
+                'from_paise' => min($prices),
+            ];
+        }
+        return $out;
+    }
+
     // ---------------------------------------------------------------
     // Search engines
     // ---------------------------------------------------------------

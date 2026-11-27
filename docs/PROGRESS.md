@@ -28,6 +28,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | Date | Decision |
 |---|---|
 | 2026-11-26 | Spec, schema and build plan agreed (see docs/). Razorpay and WhatsApp messaging moved to phase 2. |
+| 2026-11-27 | **Client:** "modern gelato boutique" look for the website + customer ordering pages; new logo (concept C "scoop heart", docs/brand/); English name **Mahaveer** (seed `shop_name_en`, English page titles; staging: change it in admin → Settings). SPEC §16 updated. Founding year for the seal still to come. |
 | 2026-11-26 | `minishlink/web-push` pinned to `^10.1`. v11 needs a separately installed PSR-18 HTTP client (an extra package); v10 brings Guzzle itself. `chillerlan/php-qrcode` `^6.0`. |
 | 2026-11-26 | `composer.json` sets `config.platform.php = 8.2.0` so the lock file never pulls packages that need PHP > 8.2. |
 | 2026-11-26 | Money: decimal quantities round half-up to the paisa per line; a discount may not exceed subtotal + parcel; `money()` uses Indian grouping (₹1,25,000). |
@@ -105,6 +106,27 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-27 – Gelato boutique look + new logo
+
+- Mockups kept in `docs/mockups/` (gelato home page, the four logo concepts).
+- Logo:
+  - `docs/brand/build_logo.py` (fontTools; wordmark outlined from Cormorant Garamond) makes `logo.svg`, `logo-reverse.svg`, `logo-mark.svg`, `favicon.svg`, `icon*.svg`, `badge.svg`.
+  - PNGs rendered with headless Chrome: `icon-192/512`, `icon-512-maskable`, `badge-72` (same names, so the PWA manifest and push need no change) and `og-image.png` (link previews).
+- Website (`site.css` rewritten, `site_header`, `site_footer`, `index.php`):
+  - info strip; header with language switch, centred logo and Order button; page links underneath
+  - home: hero with facts, "menu at a glance" category circles (new `SiteService::categorySummary`, tested), best sellers, story, dark party band, visit
+  - hairline menu list; light footer
+- Fonts: Martel 300/700 (Marathi + Latin, self-hosted, OFL) in both web roots; the removed `cone.svg` was only used by the website.
+- Ordering pages: same palette through `shop.css` tokens (ink buttons / cart bar / table and status heroes, paper background, serif headings, raspberry prices). Header and hero use the logo mark. Counter: logo mark only.
+- Name: `shop_name_en` = Mahaveer Ice Cream in the seed; English titles / descriptions updated; local DB updated. The menu item "Mahavir Special" was left as is (owner can rename it in admin → Menu).
+- Sample copy for the client to approve: hero "प्रत्येक स्कूपमध्ये आनंद / Joy in every scoop", "आमचे पदार्थ", "लोकांची आवडती", story line.
+- Checks: 353 PHPUnit tests pass. Headless Chrome, 390 px + 1366 px, Marathi + English: website pages, takeaway with cart, status, table.
+- Open:
+  - founding year (seal)
+  - real photos (hero, story, products)
+  - About text
+  - Marathi lines as shapes for print files (needs the `uharfbuzz` Python package or a designer)
 
 ### 2026-11-27 – UI redesign, phase 3: counter screens
 

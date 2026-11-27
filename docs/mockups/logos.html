@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logo Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* Logo concept sheet (design exploration, not production files). */
+  :root {
+    --paper: #FBF8F3; --ink: #1F1A17; --muted: #7D746D; --line: #E8E1D8;
+    --rasp: #B4325A; --pist: #DDE5CF; --mango: #E9B45A; --cream: #F4EEE6;
+    --latin: 'Cormorant Garamond', Georgia, serif;
+    --deva: 'Tiro Devanagari Marathi', 'Noto Sans Devanagari', serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 40px; background: #EFE9E1; color: var(--ink); font-family: 'Noto Sans Devanagari', sans-serif; }
+  h1 { margin: 0 0 6px; font-family: var(--latin); font-size: 40px; font-weight: 600; }
+  .intro { margin: 0 0 32px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .concept { overflow: hidden; border-radius: 24px; background: #fff; box-shadow: 0 10px 30px rgba(31, 26, 23, 0.08); }
+  .concept header { display: flex; align-items: baseline; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--line); }
+  .concept header b { font-family: var(--latin); font-size: 26px; font-weight: 700; }
+  .concept header span { color: var(--muted); font-size: 14px; }
+  .stage { display: flex; align-items: center; justify-content: center; min-height: 260px; padding: 32px; background: var(--paper); }
+  .row { display: grid; grid-template-columns: 1.2fr 1fr; }
+  .row .stage + .stage { border-left: 1px solid var(--line); }
+  .dark { background: var(--ink); color: var(--cream); }
+  .rasp { background: var(--rasp); color: #fff; }
+  .uses { display: flex; align-items: center; gap: 24px; padding: 18px 24px; border-top: 1px solid var(--line); background: #fff; }
+  .uses small { color: var(--muted); font-size: 12px; }
+  .tile { display: inline-flex; align-items: center; justify-content: center; border-radius: 22%; }
+  .mini-header { display: flex; align-items: center; justify-content: space-between; flex: 1; padding: 10px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); font-size: 12px; color: var(--muted); }
+  .note { margin: 0; padding: 14px 24px 20px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+  /* A – classic wordmark */
+  .wm { text-align: center; line-height: 1; }
+  .wm .en { font-family: var(--latin); font-size: 54px; font-weight: 600; letter-spacing: 0.16em; padding-left: 0.16em; }
+  .wm .rule { display: flex; align-items: center; gap: 12px; margin: 12px 0 10px; }
+  .wm .rule::before, .wm .rule::after { content: ''; flex: 1; height: 1px; background: currentColor; opacity: 0.4; }
+  .wm .rule span { font-family: var(--latin); font-size: 14px; font-weight: 600; letter-spacing: 0.35em; padding-left: 0.35em; }
+  .wm .mr { font-family: var(--deva); font-size: 26px; }
+  .wm.small .en { font-size: 25px; }
+  .wm.small .rule { margin: 8px 0 6px; } .wm.small .rule span { font-size: 9px; letter-spacing: 0.25em; }
+  .wm.small .mr { font-size: 16px; }
+
+  /* B – seal */
+  .seal text { font-family: var(--latin); font-weight: 700; letter-spacing: 0.22em; }
+
+  /* C – scoop M lockup */
+  .lockup { display: flex; align-items: center; gap: 18px; }
+  .lockup .txt { line-height: 1.05; }
+  .lockup .en { font-family: var(--latin); font-size: 44px; font-weight: 600; letter-spacing: 0.04em; }
+  .lockup .sub { white-space: nowrap; margin-top: 6px; font-family: var(--latin); font-size: 13px; font-weight: 700; letter-spacing: 0.32em; opacity: 0.75; }
+  .lockup.small .en { font-size: 26px; } .lockup.small .sub { font-size: 9px; }
+
+  /* D – Marathi first */
+  .deva { text-align: center; line-height: 1; }
+  .deva .mr { position: relative; display: inline-block; font-family: var(--deva); font-size: 84px; }
+  .deva .mr svg { position: absolute; right: -14px; top: -2px; width: 30px; }
+  .deva .en { margin-top: 10px; font-family: var(--latin); font-size: 15px; font-weight: 700; letter-spacing: 0.4em; padding-left: 0.4em; }
+  .deva.small .mr { font-size: 46px; } .deva.small .mr svg { width: 18px; right: -9px; } .deva.small .en { font-size: 9px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- minimal line cone: scoop + cone with two waffle lines -->
+  <symbol id="cone-line" viewBox="0 0 48 64">
+    <path d="M10 27 A15 15 0 1 1 38 27 q-3.5 4 -7 0 q-3.5 4 -7 0 q-3.5 4 -7 0 q-3.5 4 -7 0 Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M11.5 30 L24 61 L36.5 30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M17 38 L29 35 M20 47 L30.5 44.5" stroke="currentColor" stroke-width="2" opacity="0.6"/>
+  </symbol>
+  <!-- scoop "M": two scoops on a cone read as the letter M -->
+  <symbol id="scoop-m" viewBox="0 0 48 48">
+    <path d="M6 21 A9 9 0 0 1 24 21 A9 9 0 0 1 42 21 Z" style="fill: var(--scoop, currentColor)"/>
+    <path d="M7 24.5 H41 L24 46 Z" style="fill: var(--cone, currentColor)"/>
+  </symbol>
+  <!-- single scoop dot for the Marathi wordmark -->
+  <symbol id="scoop-dot" viewBox="0 0 30 36">
+    <circle cx="15" cy="12" r="11" style="fill: var(--scoop, currentColor)"/>
+    <path d="M5 17 L15 35 L25 17 Z" style="fill: var(--cone, currentColor)"/>
+  </symbol>
+</svg>
+
+<h1>Mahaveer · Logo concepts</h1>
+<p class="intro">"Modern gelato boutique" direction. Four directions to choose from; the chosen one will be refined and delivered as SVG/PNG files (favicon, app icon, print). "19XX" waits for the founding year.</p>
+
+<div class="grid">
+
+  <!-- A -->
+  <section class="concept">
+    <header><b>A · Classic wordmark</b><span>letter-spaced serif, bilingual</span></header>
+    <div class="row">
+      <div class="stage">
+        <div class="wm">
+          <div class="en">MAHAVEER</div>
+          <div class="rule"><span>ICE CREAM · AMALNER</span></div>
+          <div class="mr">महावीर आईस्क्रीम</div>
+        </div>
+      </div>
+      <div class="stage dark">
+        <div class="wm small">
+          <div class="en">MAHAVEER</div>
+          <div class="rule"><span>ICE CREAM · AMALNER</span></div>
+          <div class="mr">महावीर आईस्क्रीम</div>
+        </div>
+      </div>
+    </div>
+    <div class="uses">
+      <span class="tile" style="width:64px;height:64px;background:var(--ink);color:var(--cream);font-family:var(--latin);font-size:38px;font-weight:600">M</span>
+      <span class="tile" style="width:32px;height:32px;background:var(--ink);color:var(--cream);font-family:var(--latin);font-size:20px;font-weight:600">M</span>
+      <small>icon</small>
+      <div class="mini-header"><span>मेनू · आमच्याबद्दल</span><span style="font-family:var(--latin);font-size:18px;font-weight:600;letter-spacing:.16em;color:var(--ink)">MAHAVEER</span><span>ऑर्डर करा</span></div>
+    </div>
+    <p class="note">Most "boutique". Timeless, works on cups, boards and bills in one colour. Least playful; the icon is only a letter.</p>
+  </section>
+
+  <!-- B -->
+  <section class="concept">
+    <header><b>B · Heritage seal</b><span>round badge with year</span></header>
+    <div class="row">
+      <div class="stage">
+        <svg class="seal" viewBox="0 0 200 200" width="230" height="230" style="color:var(--ink)">
+          <defs><path id="ring-a" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"/></defs>
+          <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="100" cy="100" r="58" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+          <text font-size="14.5" fill="currentColor"><textPath href="#ring-a" textLength="452" lengthAdjust="spacing">MAHAVEER ICE CREAM · AMALNER · SINCE 19XX ·</textPath></text>
+          <use href="#cone-line" x="76" y="62" width="48" height="64" style="color:var(--rasp)"/>
+        </svg>
+      </div>
+      <div class="stage rasp">
+        <svg class="seal" viewBox="0 0 200 200" width="170" height="170" style="color:#fff">
+          <defs><path id="ring-b" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"/></defs>
+          <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="100" cy="100" r="58" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+          <text font-size="14.5" fill="currentColor"><textPath href="#ring-b" textLength="452" lengthAdjust="spacing">MAHAVEER ICE CREAM · AMALNER · SINCE 19XX ·</textPath></text>
+          <use href="#cone-line" x="76" y="62" width="48" height="64"/>
+        </svg>
+      </div>
+    </div>
+    <div class="uses">
+      <span class="tile" style="width:64px;height:64px;background:var(--rasp);color:#fff"><svg width="30" height="40"><use href="#cone-line"/></svg></span>
+      <span class="tile" style="width:32px;height:32px;background:var(--rasp);color:#fff"><svg width="15" height="20"><use href="#cone-line"/></svg></span>
+      <small>icon</small>
+      <div class="mini-header"><span>मेनू · आमच्याबद्दल</span><svg viewBox="0 0 200 200" width="44" height="44" style="color:var(--ink)"><circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" stroke-width="6"/><use href="#cone-line" x="64" y="46" width="72" height="96" style="color:var(--rasp)"/></svg><span>ऑर्डर करा</span></div>
+    </div>
+    <p class="note">Shows the 45+ year heritage best; perfect for stickers, cup lids and the shop board. The ring text is too small for the website header, so the header would use the inner cone only.</p>
+  </section>
+
+  <!-- C -->
+  <section class="concept">
+    <header><b>C · Scoop heart</b><span>two scoops on one cone form a heart</span></header>
+    <div class="row">
+      <div class="stage">
+        <div class="lockup">
+          <svg width="96" height="96" style="--scoop:var(--rasp);--cone:var(--mango)"><use href="#scoop-m"/></svg>
+          <div class="txt"><div class="en">Mahaveer</div><div class="sub">ICE CREAM · AMALNER</div></div>
+        </div>
+      </div>
+      <div class="stage dark">
+        <div class="lockup small">
+          <svg width="58" height="58" style="--scoop:#F2B8C6;--cone:var(--mango)"><use href="#scoop-m"/></svg>
+          <div class="txt"><div class="en">Mahaveer</div><div class="sub">ICE CREAM · AMALNER</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="uses">
+      <span class="tile" style="width:64px;height:64px;background:var(--paper);border:1px solid var(--line)"><svg width="42" height="42" style="--scoop:var(--rasp);--cone:var(--mango)"><use href="#scoop-m"/></svg></span>
+      <span class="tile" style="width:32px;height:32px;background:var(--rasp)"><svg width="22" height="22" style="--scoop:#fff;--cone:#F7D58C"><use href="#scoop-m"/></svg></span>
+      <small>icon</small>
+      <div class="mini-header"><span>मेनू · आमच्याबद्दल</span><span style="display:flex;align-items:center;gap:8px;color:var(--ink);font-family:var(--latin);font-size:18px;font-weight:600"><svg width="26" height="26" style="--scoop:var(--rasp);--cone:var(--mango)"><use href="#scoop-m"/></svg>Mahaveer</span><span>ऑर्डर करा</span></div>
+    </div>
+    <p class="note">Most memorable and the strongest small icon (favicon, app, UPI QR stand). Two scoops on one cone make a heart: "made with love". Warmer and a little more playful than A.</p>
+  </section>
+
+  <!-- D -->
+  <section class="concept">
+    <header><b>D · Marathi-first wordmark</b><span>महावीर with a scoop accent</span></header>
+    <div class="row">
+      <div class="stage">
+        <div class="deva">
+          <div class="mr">महावीर<svg viewBox="0 0 30 36" style="--scoop:var(--rasp);--cone:var(--mango)"><use href="#scoop-dot"/></svg></div>
+          <div class="en">MAHAVEER · ICE CREAM</div>
+        </div>
+      </div>
+      <div class="stage dark">
+        <div class="deva small">
+          <div class="mr">महावीर<svg viewBox="0 0 30 36" style="--scoop:#F2B8C6;--cone:var(--mango)"><use href="#scoop-dot"/></svg></div>
+          <div class="en">MAHAVEER · ICE CREAM</div>
+        </div>
+      </div>
+    </div>
+    <div class="uses">
+      <span class="tile" style="width:64px;height:64px;background:var(--ink);color:var(--cream);font-family:var(--deva);font-size:34px;padding-top:6px">म</span>
+      <span class="tile" style="width:32px;height:32px;background:var(--ink);color:var(--cream);font-family:var(--deva);font-size:18px;padding-top:3px">म</span>
+      <small>icon</small>
+      <div class="mini-header"><span>मेनू · आमच्याबद्दल</span><span style="color:var(--ink);font-family:var(--deva);font-size:24px">महावीर</span><span>ऑर्डर करा</span></div>
+    </div>
+    <p class="note">Most local and personal; matches the Marathi-first website. Elegant serif Devanagari (Tiro Devanagari Marathi). Less readable for English-only visitors.</p>
+  </section>
+
+</div>
+</body>
+</html>

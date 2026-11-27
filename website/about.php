@@ -35,7 +35,7 @@ view('site_header', ['page' => 'about', 'path' => '/about.php']);
     <?php endforeach; ?>
   </article>
   <aside class="content-card about-facts">
-    <div class="about-facts__art"><img src="/assets/img/cone.svg" width="72" height="90" alt=""></div>
+    <div class="about-facts__art"><img src="/assets/img/logo-mark.svg" width="64" height="64" alt=""></div>
     <ul class="icon-list">
       <li><?= icon('pin', 18) ?><span><?= e(lang_field($shop, 'shop_address')) ?></span></li>
       <li><?= icon('clock', 18) ?><span><?= e(t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 'close' => format_time($shop['close_time'] ?? '22:30')])) ?></span></li>

@@ -38,9 +38,7 @@ view('counter_head', ['title' => t('counter.login_title')]);
 <main class="login-screen">
   <section class="login-staff">
     <div class="login-brand">
-      <span class="login-brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 40 48" width="34" height="41"><path d="M9 21h22L20 46z" fill="#FFB300"/><path d="M14 21l6 19M20 21v21M26 21l-6 19" stroke="#E09400" stroke-width="1.6" fill="none"/><ellipse cx="20" cy="17" rx="13" ry="10" fill="#F8BBD0"/><ellipse cx="20" cy="9" rx="8.5" ry="7" fill="#FFF8F0"/></svg>
-      </span>
+      <span class="login-brand__mark" aria-hidden="true"><img src="/assets/img/logo-mark.svg" width="44" height="44" alt=""></span>
       <span>
         <span class="login-brand__name"><?= e(lang_field(Settings::all(), 'shop_name')) ?></span>
         <span class="login-brand__sub"><?= e(t('counter.title')) ?></span>

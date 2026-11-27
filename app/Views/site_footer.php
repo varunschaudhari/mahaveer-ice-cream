@@ -19,9 +19,9 @@ $hours = t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 
 <footer class="site-footer">
   <div class="container site-footer__grid">
     <div class="site-footer__brand">
-      <p class="site-footer__name"><?= e(lang_field($shop, 'shop_name')) ?></p>
-      <p><?= e(t('shop.tagline')) ?></p>
-      <p class="site-footer__years"><?= icon('star', 16) ?><?= e(t('shop.years')) ?></p>
+      <p class="site-footer__name"><img src="/assets/img/logo-mark.svg" width="40" height="40" alt=""><span><?= e(lang_field($shop, 'shop_name')) ?></span></p>
+      <p class="site-footer__tagline"><?= e(t('shop.tagline')) ?></p>
+      <p class="site-footer__years"><?= e(t('shop.years')) ?></p>
     </div>
     <div>
       <h2 class="site-footer__title"><?= e(t('site.visit_us')) ?></h2>

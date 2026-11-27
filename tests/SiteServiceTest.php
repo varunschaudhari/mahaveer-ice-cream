@@ -150,6 +150,22 @@ final class SiteServiceTest extends DatabaseTestCase
     // Best sellers (developer decision: automatic, last 30 days)
     // ---------------------------------------------------------------
 
+    public function testCategorySummaryCountsItemsAndLowestPrice(): void
+    {
+        $summary = SiteService::categorySummary([
+            ['id' => 1, 'name_mr' => 'आईस्क्रीम', 'name_en' => 'Ice Cream', 'items' => [
+                ['variants' => [['price_paise' => 2000], ['price_paise' => 4000]]],
+                ['variants' => [['price_paise' => 1500], ['price_paise' => 3000]]],
+            ]],
+            ['id' => 2, 'name_mr' => 'रिकामे', 'name_en' => 'Empty', 'items' => []],
+        ]);
+        self::assertSame([['id' => 1, 'name_mr' => 'आईस्क्रीम', 'name_en' => 'Ice Cream', 'count' => 2, 'from_paise' => 1500]], $summary);
+
+        $seeded = SiteService::categorySummary((new \App\Services\MenuService())->publicMenu());
+        self::assertSame(['Ice Cream', 'Lassi', 'Shakes', 'Shrikhand'], array_column($seeded, 'name_en'));
+        self::assertSame(1500, $seeded[0]['from_paise'], 'Vanilla half');
+    }
+
     public function testBestSellersStartWithTheSpecsThree(): void
     {
         $names = array_column($this->site->bestSellers(new DateTimeImmutable('2026-11-26 12:00')), 'name_en');
@@ -192,7 +208,7 @@ final class SiteServiceTest extends DatabaseTestCase
         $data = SiteService::structuredData($settings, 'https://mahaveericecream.in', 'https://mahaveericecream.in/media.php?f=x.webp');
 
         self::assertSame('IceCreamShop', $data['@type']);
-        self::assertSame('Mahavir Ice Cream', $data['name']);
+        self::assertSame('Mahaveer Ice Cream', $data['name']);
         self::assertSame('महावीर आईस्क्रीम', $data['alternateName']);
         self::assertSame('https://mahaveericecream.in/', $data['url']);
         self::assertSame('+919922220000', $data['telephone']);
@@ -212,7 +228,7 @@ final class SiteServiceTest extends DatabaseTestCase
     public function testDirectionsAndWhatsappLinks(): void
     {
         $settings = Settings::all();
-        self::assertStringStartsWith('https://www.google.com/maps/search/?api=1&query=Mahavir%20Ice%20Cream%2C%20Dhule%20Road', SiteService::directionsUrl($settings));
+        self::assertStringStartsWith('https://www.google.com/maps/search/?api=1&query=Mahaveer%20Ice%20Cream%2C%20Dhule%20Road', SiteService::directionsUrl($settings));
         self::assertSame('https://maps.app.goo.gl/abc', SiteService::directionsUrl(['google_maps_url' => 'https://maps.app.goo.gl/abc'] + $settings));
 
         self::assertNull(SiteService::whatsappUrl($settings), 'hidden while no number is set');

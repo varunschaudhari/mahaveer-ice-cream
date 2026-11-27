@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gelato Boutique Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martel:wght@300;400;700;800&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Design mockup only: "Modern gelato boutique" direction for the public website home page. */
+  :root {
+    --paper: #FBF8F3;
+    --ink: #1F1A17;
+    --muted: #7D746D;
+    --line: #E8E1D8;
+    --accent: #B4325A;
+    --pistachio: #DDE5CF;
+    --strawberry: #F6DAD8;
+    --mango: #F7E3BF;
+    --vanilla: #F3EBDD;
+    --choco: #DCC8BA;
+    --blueberry: #DEDDF0;
+    --serif: 'Martel', Georgia, serif;
+    --sans: 'Noto Sans Devanagari', 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.6; }
+  h1, h2, h3, p, ul { margin: 0; }
+  ul { padding: 0; list-style: none; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  .eyebrow { color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+  /* Devanagari letters join: never letter-space Marathi text (only the Latin logo line is spaced) */
+  .serif { font-family: var(--serif); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 28px; border-radius: 999px; font-weight: 600; }
+  .btn-ink { background: var(--ink); color: #fff; }
+  .btn-line { border: 1px solid var(--ink); }
+  .link { border-bottom: 1px solid currentColor; padding-bottom: 2px; font-weight: 600; }
+  .mock-tag { position: fixed; right: 12px; bottom: 12px; z-index: 10; padding: 6px 12px; border-radius: 999px; background: rgba(31, 26, 23, 0.85); color: #fff; font-size: 12px; letter-spacing: 0.05em; }
+
+  /* top strip + header */
+  .strip { border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; text-align: center; padding: 8px 16px; letter-spacing: 0.04em; }
+  .header { border-bottom: 1px solid var(--line); }
+  .header .wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: 84px; }
+  .nav { display: flex; gap: 28px; font-size: 15px; }
+  .nav a[aria-current] { border-bottom: 1px solid var(--ink); }
+  .logo { text-align: center; line-height: 1.05; }
+  .logo b { display: block; font-family: var(--serif); font-size: 26px; font-weight: 800; letter-spacing: 0.02em; }
+  .logo span { color: var(--muted); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; justify-content: flex-end; gap: 20px; font-size: 15px; }
+  .header-right .btn { min-height: 44px; padding: 0 22px; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; padding: 64px 0 80px; }
+  .hero h1 { margin-top: 18px; font-family: var(--serif); font-size: 64px; font-weight: 300; line-height: 1.15; letter-spacing: -0.01em; }
+  .hero h1 em { color: var(--accent); font-style: normal; font-weight: 700; }
+  .hero p.lead { max-width: 30rem; margin-top: 20px; color: var(--muted); font-size: 18px; }
+  .hero .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: 36px; }
+  .hero .facts { display: flex; gap: 36px; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .hero .facts b { display: block; font-family: var(--serif); font-size: 26px; font-weight: 700; }
+  .hero .facts span { color: var(--muted); font-size: 13px; }
+  .hero-media { position: relative; aspect-ratio: 4 / 5; border-radius: 28px; background: var(--pistachio); overflow: hidden; }
+  .hero-media svg.big { position: absolute; left: 50%; bottom: 4%; width: 62%; transform: translateX(-50%); }
+  .hero-media .note { position: absolute; left: 24px; top: 24px; color: #5f6b52; font-size: 13px; }
+  .float-card { position: absolute; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 18px; background: rgba(255, 255, 255, 0.92); box-shadow: 0 20px 40px rgba(31, 26, 23, 0.12); }
+  .float-card .dot { width: 44px; height: 44px; border-radius: 50%; background: var(--choco); }
+  .float-card small { display: block; color: var(--muted); font-size: 12px; }
+  .float-card b { font-family: var(--serif); font-size: 17px; }
+
+  /* flavours */
+  .section { padding: 80px 0; border-top: 1px solid var(--line); }
+  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 40px; }
+  .section-head h2 { margin-top: 10px; font-family: var(--serif); font-size: 40px; font-weight: 300; line-height: 1.2; }
+  .flavours { display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; text-align: center; }
+  .pan { aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 -10px 24px rgba(0, 0, 0, 0.06), inset 0 10px 24px rgba(255, 255, 255, 0.6); }
+  .flavours p { margin-top: 14px; font-family: var(--serif); font-size: 17px; }
+  .flavours small { color: var(--muted); font-size: 13px; }
+
+  /* products */
+  .products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .product .img { position: relative; aspect-ratio: 1; border-radius: 22px; overflow: hidden; }
+  .product .img svg { position: absolute; left: 50%; bottom: 0; width: 46%; transform: translateX(-50%); }
+  .product .img .tag { position: absolute; left: 16px; top: 16px; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.85); font-size: 12px; font-weight: 600; }
+  .product .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+  .product h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; }
+  .product .price { margin-top: 2px; color: var(--muted); font-size: 15px; }
+  .product .price b { color: var(--ink); font-weight: 600; }
+  .add { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 46px; height: 46px; border: 1px solid var(--ink); border-radius: 50%; font-size: 22px; line-height: 1; }
+
+  /* story */
+  .story { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .story .img { position: relative; aspect-ratio: 5 / 4; border-radius: 28px; background: var(--vanilla); overflow: hidden; }
+  .story .img .label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #9a8b7a; font-size: 14px; }
+  .story h2 { margin-top: 12px; font-family: var(--serif); font-size: 40px; font-weight: 300; line-height: 1.25; }
+  .story p { margin-top: 18px; color: var(--muted); font-size: 17px; }
+  .story .sign { margin-top: 28px; font-family: var(--serif); font-size: 20px; font-style: italic; }
+
+  /* party band */
+  .band { background: var(--ink); color: #F4EEE6; }
+  .band .wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: center; padding-top: 72px; padding-bottom: 72px; }
+  .band .eyebrow { color: #B9AFA6; }
+  .band h2 { margin-top: 12px; font-family: var(--serif); font-size: 40px; font-weight: 300; line-height: 1.25; }
+  .band p { margin-top: 14px; color: #C9C0B7; }
+  .band .btn { margin-top: 28px; border: 1px solid #F4EEE6; color: #F4EEE6; }
+  .steps { display: grid; gap: 0; }
+  .steps li { display: grid; grid-template-columns: 48px 1fr; gap: 16px; padding: 18px 0; border-top: 1px solid rgba(244, 238, 230, 0.15); }
+  .steps li:last-child { border-bottom: 1px solid rgba(244, 238, 230, 0.15); }
+  .steps b { font-family: var(--serif); font-size: 22px; font-weight: 300; color: #E3A3B6; }
+  .steps strong { display: block; font-weight: 600; }
+  .steps span { color: #B9AFA6; font-size: 14px; }
+
+  /* visit */
+  .visit { display: grid; grid-template-columns: repeat(3, 1fr) 1.2fr; gap: 32px; }
+  .visit h3 { margin-top: 10px; font-family: var(--serif); font-size: 20px; font-weight: 400; }
+  .visit p { margin-top: 6px; color: var(--muted); }
+  .map { min-height: 180px; border-radius: 22px; background: repeating-linear-gradient(0deg, transparent 0 23px, #EDE6DC 23px 24px), repeating-linear-gradient(90deg, transparent 0 23px, #EDE6DC 23px 24px), var(--vanilla); position: relative; }
+  .map::after { content: ''; position: absolute; left: 50%; top: 45%; width: 18px; height: 18px; border-radius: 50% 50% 50% 0; background: var(--accent); transform: translate(-50%, -50%) rotate(-45deg); box-shadow: 0 0 0 8px rgba(180, 50, 90, 0.15); }
+
+  footer { border-top: 1px solid var(--line); padding: 48px 0 40px; text-align: center; color: var(--muted); font-size: 14px; }
+  footer .logo b { color: var(--ink); }
+  footer nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; margin-top: 20px; color: var(--ink); }
+  footer p { margin-top: 20px; }
+
+  /* phones */
+  @media (max-width: 760px) {
+    .wrap { padding: 0 20px; }
+    .header .wrap { grid-template-columns: auto 1fr; min-height: 68px; }
+    .nav { display: none; }
+    .logo { text-align: left; }
+    .logo b { font-size: 22px; }
+    .header-right .btn { display: none; }
+    .hero { grid-template-columns: 1fr; gap: 32px; padding: 36px 0 56px; }
+    .hero h1 { font-size: 40px; }
+    .hero p.lead { font-size: 16px; }
+    .hero .facts { gap: 24px; margin-top: 32px; }
+    .hero .facts b { font-size: 22px; }
+    .section { padding: 56px 0; }
+    .section-head { flex-direction: column; align-items: flex-start; margin-bottom: 28px; }
+    .section-head h2, .story h2, .band h2 { font-size: 30px; }
+    .flavours { grid-template-columns: repeat(3, 1fr); gap: 18px 16px; }
+    .products { grid-template-columns: 1fr; gap: 32px; }
+    .story { grid-template-columns: 1fr; gap: 28px; }
+    .band .wrap { grid-template-columns: 1fr; gap: 28px; padding-top: 56px; padding-bottom: 56px; }
+    .visit { grid-template-columns: 1fr; gap: 24px; }
+    .mobile-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: flex; gap: 10px; padding: 10px 16px; background: rgba(251, 248, 243, 0.95); border-top: 1px solid var(--line); }
+    .mobile-bar .btn { flex: 1; min-height: 48px; padding: 0 12px; }
+    body { padding-bottom: 70px; }
+    .mock-tag { bottom: 80px; }
+  }
+  @media (min-width: 761px) { .mobile-bar { display: none; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="waffle" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="10" height="10" fill="#E2B272"/><path d="M0 0H10M0 0V10" stroke="#C9934F" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <symbol id="cone" viewBox="0 0 200 300">
+    <path d="M52 118 L100 296 L148 118 Z" fill="url(#waffle)"/>
+    <ellipse cx="100" cy="118" rx="52" ry="10" fill="#C9934F" opacity="0.45"/>
+    <circle cx="100" cy="82" r="60" style="fill: var(--scoop)"/>
+    <path d="M44 100 q8 28 18 4 q10 30 22 2 q12 26 22 0 q12 30 24 0 q10 22 16 -6" style="fill: var(--scoop)"/>
+    <ellipse cx="78" cy="60" rx="16" ry="10" fill="#fff" opacity="0.35"/>
+  </symbol>
+  <symbol id="cup" viewBox="0 0 200 260">
+    <circle cx="70" cy="110" r="48" style="fill: var(--scoop2, var(--scoop))"/>
+    <circle cx="130" cy="110" r="48" style="fill: var(--scoop)"/>
+    <circle cx="100" cy="72" r="46" style="fill: var(--scoop3, var(--scoop))"/>
+    <ellipse cx="86" cy="54" rx="13" ry="8" fill="#fff" opacity="0.35"/>
+    <path d="M30 132 H170 L152 258 H48 Z" fill="#FFFFFF"/>
+    <path d="M30 132 H170 L166 160 H34 Z" fill="#F0E8DD"/>
+  </symbol>
+  <symbol id="glass" viewBox="0 0 200 300">
+    <path d="M50 70 H150 L132 250 H68 Z" fill="#FFFFFF" opacity="0.9"/>
+    <path d="M56 110 H144 L130 248 H70 Z" style="fill: var(--scoop)"/>
+    <path d="M58 150 H142" stroke="#fff" stroke-width="6" opacity="0.5"/>
+    <circle cx="100" cy="70" r="34" style="fill: var(--scoop2, var(--scoop))"/>
+    <rect x="70" y="250" width="60" height="14" rx="4" fill="#FFFFFF"/>
+    <rect x="114" y="10" width="8" height="90" rx="4" fill="#B4325A" transform="rotate(12 118 55)"/>
+  </symbol>
+</svg>
+
+<p class="strip">रोज सकाळी 10:00 – रात्री 10:30 &nbsp;·&nbsp; धुळे रोड, अमळनेर &nbsp;·&nbsp; +91 99222 20000</p>
+
+<header class="header">
+  <div class="wrap">
+    <nav class="nav" aria-label="पाने">
+      <a href="#" aria-current="page">मुख्य पान</a><a href="#">मेनू</a><a href="#">आमच्याबद्दल</a><a href="#">पार्टी ऑर्डर</a>
+    </nav>
+    <a class="logo" href="#"><b>महावीर</b><span>Ice Cream · Amalner</span></a>
+    <div class="header-right">
+      <a href="#">पत्ता</a><a href="#">English</a>
+      <a class="btn btn-ink" href="#">ऑर्डर करा</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">अमळनेरमध्ये 45+ वर्षे</p>
+        <h1>प्रत्येक स्कूपमध्ये<br><em>आनंद</em>.</h1>
+        <p class="lead">आत्ता ऑर्डर द्या, ठरलेल्या वेळी दुकानातून घ्या आणि काउंटरवर पैसे द्या.</p>
+        <div class="actions">
+          <a class="btn btn-ink" href="#">टेकअवे ऑर्डर करा →</a>
+          <a class="link" href="#">पूर्ण मेनू पहा</a>
+        </div>
+        <div class="facts">
+          <div><b>45+</b><span>वर्षे अमळनेरमध्ये</span></div>
+          <div><b>26</b><span>पदार्थ मेनूवर</span></div>
+          <div><b>रोज</b><span>10:00 – 10:30</span></div>
+        </div>
+      </div>
+      <div class="hero-media">
+        <span class="note">मुख्य फोटो इथे</span>
+        <svg class="big" viewBox="0 0 200 300" style="--scoop:#F2B8C6"><use href="#cone"/></svg>
+        <div class="float-card">
+          <span class="dot"></span>
+          <span><small>सर्वाधिक विकले जाणारे</small><b>मावा · ₹25 पासून</b></span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><p class="eyebrow">आमचे फ्लेवर्स</p><h2>आजच्या <span class="serif" style="font-weight:700">काउंटरवर</span></h2></div>
+        <a class="link" href="#">सर्व 16 आईस्क्रीम →</a>
+      </div>
+      <ul class="flavours">
+        <li><div class="pan" style="background:#F6EBD9"></div><p>वॅनिला</p><small>₹15 पासून</small></li>
+        <li><div class="pan" style="background:#F7D58C"></div><p>मँगो</p><small>₹20 पासून</small></li>
+        <li><div class="pan" style="background:#C9D9AE"></div><p>पिस्ता</p><small>₹20 पासून</small></li>
+        <li><div class="pan" style="background:#F3B7C3"></div><p>स्ट्रॉबेरी</p><small>₹20 पासून</small></li>
+        <li><div class="pan" style="background:#9C7563"></div><p>चॉकलेट</p><small>₹25 पासून</small></li>
+        <li><div class="pan" style="background:#E2B880"></div><p>बटर स्कॉच</p><small>₹25 पासून</small></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div><p class="eyebrow">सर्वाधिक विकले जाणारे</p><h2>लोकांची आवडती</h2></div>
+        <a class="link" href="#">पूर्ण मेनू →</a>
+      </div>
+      <ul class="products">
+        <li class="product">
+          <div class="img" style="background:var(--choco)"><span class="tag">आईस्क्रीम</span><svg viewBox="0 0 200 260" style="--scoop:#B98A6E;--scoop2:#E9D3B8;--scoop3:#CFA88A"><use href="#cup"/></svg></div>
+          <div class="row"><div><h3>मावा</h3><p class="price">हाफ <b>₹25</b> · फुल <b>₹50</b> · 1 किलो <b>₹400</b></p></div><a class="add" href="#" aria-label="ऑर्डर">+</a></div>
+        </li>
+        <li class="product">
+          <div class="img" style="background:var(--mango)"><span class="tag">श्रीखंड</span><svg viewBox="0 0 200 260" style="--scoop:#F2C46B;--scoop2:#F7DB9B;--scoop3:#EFB54C"><use href="#cup"/></svg></div>
+          <div class="row"><div><h3>केशरी ड्रायफ्रुट श्रीखंड</h3><p class="price">250 ग्रॅम <b>₹100</b> · 500 ग्रॅम <b>₹200</b></p></div><a class="add" href="#" aria-label="ऑर्डर">+</a></div>
+        </li>
+        <li class="product">
+          <div class="img" style="background:var(--strawberry)"><span class="tag">शेक</span><svg viewBox="0 0 200 300" style="--scoop:#EFC9A9;--scoop2:#F7E6D0"><use href="#glass"/></svg></div>
+          <div class="row"><div><h3>बदाम शेक</h3><p class="price">हाफ <b>₹40</b> · फुल <b>₹80</b></p></div><a class="add" href="#" aria-label="ऑर्डर">+</a></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap story">
+      <div class="img"><span class="label">दुकानाचा / कुटुंबाचा फोटो</span></div>
+      <div>
+        <p class="eyebrow">आमची गोष्ट</p>
+        <h2>धुळे रोडवरचं<br>आपलं आईस्क्रीम पार्लर</h2>
+        <p>गेली 45+ वर्षे अमळनेरकरांना आईस्क्रीम, लस्सी, शेक आणि श्रीखंड देत आहोत. (मालकाकडून मूळ गोष्ट येथे येईल.)</p>
+        <p class="sign">Adding flavours to your life</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">लग्न · वाढदिवस · कार्यक्रम</p>
+        <h2>पार्टीसाठी किलोने आईस्क्रीम</h2>
+        <p>किलो किंवा जास्त नगांची ऑर्डर किमान 1 दिवस आधी द्या. मालक तपासून तुम्हाला फोन करतील.</p>
+        <a class="btn" href="#">मोठ्या ऑर्डरची विनंती करा →</a>
+      </div>
+      <ol class="steps">
+        <li><b>01</b><div><strong>विनंती पाठवा</strong><span>पदार्थ, नग, तारीख व वेळ निवडा.</span></div></li>
+        <li><b>02</b><div><strong>मालक फोन करतील</strong><span>अंतिम किंमत व आगाऊ रक्कम सांगतील.</span></div></li>
+        <li><b>03</b><div><strong>आगाऊ रक्कम भरा</strong><span>दुकानात किंवा UPI ने.</span></div></li>
+        <li><b>04</b><div><strong>ऑर्डर न्या</strong><span>ठरलेल्या दिवशी, उरलेली रक्कम भरा.</span></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap visit">
+      <div><p class="eyebrow">पत्ता</p><h3>धुळे रोड, पाच पाऊली मंदिराजवळ</h3><p>हनुमान नगर, अमळनेर 425401</p><p style="margin-top:14px"><a class="link" href="#">रस्ता दाखवा</a></p></div>
+      <div><p class="eyebrow">वेळ</p><h3>रोज उघडे</h3><p>सकाळी 10:00 – रात्री 10:30</p></div>
+      <div><p class="eyebrow">संपर्क</p><h3>+91 99222 20000</h3><p>ऑर्डर व प्रश्नांसाठी फोन करा</p></div>
+      <div class="map"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#"><b>महावीर</b><span>Ice Cream · Amalner</span></a>
+    <nav><a href="#">मेनू</a><a href="#">आमच्याबद्दल</a><a href="#">पार्टी ऑर्डर</a><a href="#">फोटो</a><a href="#">पत्ता</a><a href="#">संपर्क</a></nav>
+    <p>© 2026 महावीर आईस्क्रीम</p>
+  </div>
+</footer>
+
+<div class="mobile-bar"><a class="btn btn-line" href="#">फोन करा</a><a class="btn btn-ink" href="#">ऑर्डर करा</a></div>
+<span class="mock-tag">डिझाइन नमुना · Mockup</span>
+</body>
+</html>

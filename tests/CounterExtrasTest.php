@@ -109,7 +109,7 @@ final class CounterExtrasTest extends DatabaseTestCase
         self::assertStringContainsString('बदाम शेक (फुल)', $html);
         self::assertStringNotContainsString('Badam Shake', $html, 'item names in Marathi only');
         self::assertStringContainsString('महावीर आईस्क्रीम', $html);
-        self::assertStringContainsString('Mahavir Ice Cream', $html);
+        self::assertStringContainsString('Mahaveer Ice Cream', $html);
         self::assertMatchesRegularExpression('/<strong>1<\/strong>/', $html, 'token');
         self::assertStringContainsString('₹165', $html);
         self::assertStringContainsString('पार्सल चार्ज', $html);

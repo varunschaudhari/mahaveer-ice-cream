@@ -188,4 +188,10 @@ Content still to come from the owner: logo file, photos, founding year and famil
 
 ## 16. Branding
 
-Use the colours of the shop's logo (magenta/pink with a cream background) until the owner provides the logo file. Suggested tokens: primary `#C2185B`, primary-dark `#880E4F`, accent `#FFB300`, background `#FFF8F0`, text `#2B1B17`, success `#2E7D32`, danger `#C62828`. Keep these as CSS custom properties so they can change in one place.
+**Updated 2026-11-27 (client decision):** new logo and a "modern gelato boutique" look for the website and the customer ordering pages.
+
+- Name in English: **Mahaveer Ice Cream** (Marathi महावीर आईस्क्रीम unchanged).
+- Logo: "scoop heart" – two scoops on one cone forming a heart, with the wordmark "Mahaveer · ICE CREAM · AMALNER". Files and the build script are in `docs/brand/`, and the PWA / push icons are made from it. A round seal version with "Since <year>" waits for the founding year.
+- Palette: paper `#FBF8F3`, ink `#1F1A17` (main buttons), muted `#7D746D`, hairlines `#E8E1D8`, one accent raspberry `#B4325A`, flavour pastels behind photos (strawberry, mango, pistachio, blueberry, chocolate, vanilla). Headings in Martel (serif, self-hosted), body in Noto Sans Devanagari.
+- The counter keeps its own high-contrast till colours (magenta / green Cash / purple UPI) and only uses the new logo.
+- Keep colours as CSS custom properties so they can change in one place.

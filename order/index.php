@@ -63,9 +63,7 @@ view('header', ['title' => t('order.page_title'), 'css' => ['css/base.css', 'css
       </ol>
       <a class="party-link" href="/bulk.php"><?= e(t('bulk.link')) ?></a>
     </div>
-    <div class="shop-hero__art" aria-hidden="true">
-      <svg viewBox="0 0 120 150" width="120" height="150"><path d="M30 66h60L60 146z" fill="#FFB300"/><path d="M42 66l18 64M60 66v72M78 66l-18 64M36 86l42 0M44 106l26 0" stroke="#E09400" stroke-width="3" fill="none"/><circle cx="60" cy="54" r="32" fill="#F48FB1"/><circle cx="42" cy="40" r="22" fill="#FFF3E0"/><circle cx="78" cy="38" r="22" fill="#CE93D8"/><circle cx="60" cy="22" r="18" fill="#F8BBD0"/><circle cx="62" cy="6" r="6" fill="#C2185B"/></svg>
-    </div>
+    <div class="shop-hero__art" aria-hidden="true"><img src="/assets/img/logo-mark.svg" width="120" height="120" alt=""></div>
   </section>
 
   <?php if ($recent !== []): ?>

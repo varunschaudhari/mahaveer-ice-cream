@@ -40,9 +40,7 @@ $i18n = [
 <div class="counter-app" data-i18n="<?= e(json_encode($i18n, JSON_UNESCAPED_UNICODE)) ?>">
   <header class="counter-header">
     <span class="counter-brand">
-      <span class="counter-brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 40 48" width="20" height="24"><path d="M9 21h22L20 46z" fill="#FFB300"/><path d="M14 21l6 19M20 21v21M26 21l-6 19" stroke="#E09400" stroke-width="1.6" fill="none"/><ellipse cx="20" cy="17" rx="13" ry="10" fill="#F8BBD0"/><ellipse cx="20" cy="9" rx="8.5" ry="7" fill="#FFF8F0"/></svg>
-      </span>
+      <span class="counter-brand__mark" aria-hidden="true"><img src="/assets/img/logo-mark.svg" width="26" height="26" alt=""></span>
       <span class="counter-header__title"><?= e(lang_field(Settings::all(), 'shop_name')) ?></span>
     </span>
     <span class="counter-header__actions">

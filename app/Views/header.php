@@ -16,9 +16,10 @@ $otherLang = lang() === 'mr' ? 'en' : 'mr';
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#C2185B">
+<meta name="theme-color" content="#FBF8F3">
 <?= csrf_meta() ?>
 <title><?= e($title) ?></title>
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/img/icon-192.png" sizes="192x192" type="image/png">
 <?php foreach ($css as $file): ?>
 <link rel="stylesheet" href="<?= e(asset($file)) ?>">
@@ -28,9 +29,7 @@ $otherLang = lang() === 'mr' ? 'en' : 'mr';
 <header class="site-header shop-header">
   <div class="container site-header__inner">
     <a class="brand" href="/">
-      <span class="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 40 48" width="22" height="26"><path d="M9 21h22L20 46z" fill="#FFB300"/><path d="M14 21l6 19M20 21v21M26 21l-6 19" stroke="#E09400" stroke-width="1.6" fill="none"/><ellipse cx="20" cy="17" rx="13" ry="10" fill="#F8BBD0"/><ellipse cx="20" cy="9" rx="8.5" ry="7" fill="#FFF8F0"/></svg>
-      </span>
+      <img class="brand__mark" src="/assets/img/logo-mark.svg" width="40" height="40" alt="">
       <span class="brand__text">
         <span class="brand__name"><?= e(lang_field($shop, 'shop_name')) ?></span>
         <span class="brand__tag"><?= e(t('shop.years')) ?></span>

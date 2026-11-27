@@ -17,7 +17,7 @@ $shop = Settings::all();
 $siteUrl = rtrim((string) config('APP_URL_WEBSITE', ''), '/');
 $orderUrl = rtrim((string) config('APP_URL_ORDER', ''), '/');
 $otherLang = lang() === 'mr' ? 'en' : 'mr';
-$ogImage ??= $siteUrl . '/assets/img/icon-512.png';
+$ogImage ??= $siteUrl . '/assets/img/og-image.png';
 $jsonLd ??= null;
 $banner = (new SiteService())->banner();
 $title = t('site.title.' . $page);
@@ -34,7 +34,8 @@ $description = t('site.desc.' . $page);
 <meta name="robots" content="noindex">
 <?php endif; ?>
 <link rel="canonical" href="<?= e($siteUrl . $path) ?>">
-<meta name="theme-color" content="#C2185B">
+<meta name="theme-color" content="#FBF8F3">
+<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/img/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <meta property="og:type" content="website">
@@ -52,28 +53,30 @@ $description = t('site.desc.' . $page);
 </head>
 <body class="site">
 <a class="skip-link" href="#main"><?= e(t('site.skip')) ?></a>
+<p class="site-strip">
+  <span><?= e(t('shop.hours', ['open' => format_time($shop['open_time'] ?? '10:00'), 'close' => format_time($shop['close_time'] ?? '22:30')])) ?></span>
+  <?php if (($shop['shop_phone'] ?? '') !== ''): ?>
+  <span class="site-strip__sep" aria-hidden="true">·</span>
+  <a href="tel:<?= e(preg_replace('/[^\d+]/', '', $shop['shop_phone'])) ?>"><?= e($shop['shop_phone']) ?></a>
+  <?php endif; ?>
+</p>
 <header class="site-header">
-  <div class="container site-header__inner">
-    <?php /* TODO: owner content – logo file; the cone mark + shop name stand in until then. */ ?>
+  <div class="container site-header__top">
+    <a class="lang-toggle" href="<?= e(lang_switch_url($otherLang)) ?>" hreflang="<?= e($otherLang) ?>" lang="<?= e($otherLang) ?>"><?= e(t('lang.switch')) ?></a>
     <a class="brand" href="/">
-      <span class="brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 40 48" width="24" height="29"><path d="M9 21h22L20 46z" fill="#FFB300"/><path d="M14 21l6 19M20 21v21M26 21l-6 19" stroke="#E09400" stroke-width="1.6" fill="none"/><ellipse cx="20" cy="17" rx="13" ry="10" fill="#F8BBD0"/><ellipse cx="20" cy="9" rx="8.5" ry="7" fill="#FFF8F0"/></svg>
-      </span>
+      <img class="brand__mark" src="/assets/img/logo-mark.svg" width="44" height="44" alt="">
       <span class="brand__text">
         <span class="brand__name"><?= e(lang_field($shop, 'shop_name')) ?></span>
         <span class="brand__tag"><?= e(t('shop.years')) ?></span>
       </span>
     </a>
-    <nav class="site-nav" aria-label="<?= e(t('site.nav_label')) ?>">
-      <?php foreach (SiteService::PAGES as $key => $href): ?>
-      <a href="<?= e($href) ?>"<?= $key === $page ? ' aria-current="page"' : '' ?>><?= e(t('site.nav.' . $key)) ?></a>
-      <?php endforeach; ?>
-    </nav>
-    <div class="site-header__actions">
-      <a class="lang-toggle" href="<?= e(lang_switch_url($otherLang)) ?>" hreflang="<?= e($otherLang) ?>" lang="<?= e($otherLang) ?>"><?= e(t('lang.switch')) ?></a>
-      <a class="btn btn-primary site-header__order" href="<?= e($orderUrl . '/') ?>"><?= icon('bag', 18) ?><?= e(t('site.order_online')) ?></a>
-    </div>
+    <a class="btn btn-ink site-header__order" href="<?= e($orderUrl . '/') ?>"><?= e(t('site.order_online')) ?></a>
   </div>
+  <nav class="container site-nav" aria-label="<?= e(t('site.nav_label')) ?>">
+    <?php foreach (SiteService::PAGES as $key => $href): ?>
+    <a href="<?= e($href) ?>"<?= $key === $page ? ' aria-current="page"' : '' ?>><?= e(t('site.nav.' . $key)) ?></a>
+    <?php endforeach; ?>
+  </nav>
 </header>
 <?php if ($banner !== null): ?>
 <p class="site-banner" role="status"><span class="container"><?= e(lang_field($banner, 'value')) ?></span></p>
