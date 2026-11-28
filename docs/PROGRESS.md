@@ -132,6 +132,11 @@ Update at the end of every Claude Code session: tick finished items, note decisi
   - end to end: a cash bill paid at phone width was queued (toast "Bill sent to the counter printer"); the counter at PC width claimed it and loaded `print.php?type=bill` in its print frame
 - Not testable here: the actual paper print on the TM-T82 (GO_LIVE §2).
 - Real phone (Samsung Galaxy M14, 384 px wide, owner login): the header pushed the counter wider than the screen (the shop name could not shrink). Fixed: the name shortens with "…", the app frame never grows wider than the screen. Checked at 360, 384 and 1024 px.
+- Owner / admin on the counter (phones only; staff and the counter PC unchanged):
+  - ☰ in the counter header opens the shared owner/admin menu as a drawer (`app_nav` with `topbar => false` inside `.has-nav.nav-drawer`; `app-nav.css` keeps it a drawer at every width)
+  - the gear shows a short "Admin" / "ॲडमिन" label
+  - Lock is left out, because on an owner's phone it would end the login; Log out is in the menu
+  - fixed on the way: the admin login bar style (`body:not(.has-nav) .admin-bar`) also caught the counter's drawer; it is now `body.admin:not(.has-nav)`
 
 ### 2026-11-28 – One menu for the owner page and admin (phone sidebar)
 

@@ -3,7 +3,8 @@
  * One menu for the owner's phone page and the admin pages (logged-in admin only).
  * Wide screens (≥ 1024 px): a fixed side menu. Phones and tablets: a slim top bar whose ☰ button
  * slides the same menu in from the left (app-nav.js, styles in app-nav.css).
- * Vars: $user (logged-in admin), $active (nav key), $tag (small text under the shop name).
+ * Vars: $user (logged-in admin), $active (nav key), $tag (small text under the shop name),
+ * optional $topbar (false on the counter: it has its own header with a ☰ button).
  * @var array $user
  */
 
@@ -11,6 +12,7 @@ use App\Settings;
 
 $active ??= '';
 $tag ??= t('admin.title');
+$topbar ??= true;
 $otherLang = lang() === 'mr' ? 'en' : 'mr';
 // key => [link, label, icon]; the everyday screens first (the app opens on live orders), then admin.
 // The counter takes the logged-in owner straight to billing (Auth::requireStaff accepts any login).
@@ -40,10 +42,12 @@ $brand = static function () use ($shopName, $tag): void { ?>
     </a>
 <?php };
 ?>
+<?php if ($topbar): ?>
 <div class="app-topbar">
   <button type="button" class="app-topbar__menu" data-nav-open aria-controls="app-nav" aria-expanded="false" aria-label="<?= e(t('nav.open_menu')) ?>"><?= icon('menu', 24) ?></button>
   <?php $brand(); ?>
 </div>
+<?php endif; ?>
 <header class="admin-bar" id="app-nav" data-nav>
   <div class="admin-bar__head">
     <?php $brand(); ?>

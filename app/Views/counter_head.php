@@ -13,5 +13,6 @@
 <title><?= e($title) ?></title>
 <link rel="stylesheet" href="<?= e(asset('css/base.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/counter.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/app-nav.css')) ?>">
 </head>
 <body class="counter">

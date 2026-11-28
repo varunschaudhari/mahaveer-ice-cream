@@ -53,4 +53,4 @@ $scripts ??= [];
 </dialog>
 
 <iframe class="print-frame" data-print-frame title="print" tabindex="-1" aria-hidden="true"></iframe>
-<?php view('counter_foot', ['scripts' => array_merge(['js/counter.js'], $scripts)]); ?>
+<?php view('counter_foot', ['scripts' => array_merge(['js/counter.js', 'js/app-nav.js'], $scripts)]); ?>

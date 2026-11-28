@@ -384,7 +384,7 @@ body.counter .input:focus { border-color: var(--color-primary); outline: none; b
 .printer-switch small { display: block; color: var(--c-muted); font-size: var(--text-sm); font-weight: 400; }
 
 /* Phone-only pieces, never shown on the counter PC. */
-.bill-bar, .cart-scrim, .counter-cart__close { display: none; }
+.bill-bar, .cart-scrim, .counter-cart__close, .counter-menu-btn, .counter-lang__short { display: none; }
 
 /* ---------- Phones and tablets (below 1024 px). The counter PC layout above stays as it is. ---------- */
 
@@ -396,6 +396,15 @@ body.counter .input:focus { border-color: var(--color-primary); outline: none; b
   .counter-header { padding-inline: var(--space-3); }
   .counter-header__title { font-size: var(--text-base); }
   .counter-lang__text, .counter-lock__text, .counter-header__name { display: none; }
+  /* Owner / admin: ☰ opens the same menu as admin; "Admin" stays readable; Lock is left out
+     (it would end the owner's login; Log out is at the bottom of the ☰ menu). */
+  .counter-menu-btn {
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; margin-left: calc(-1 * var(--space-2));
+    border: 0; border-radius: 12px; background: transparent; color: #FFF3E8;
+  }
+  .counter-menu-btn:active { background: rgba(255, 255, 255, 0.12); }
+  .counter-lang__short { display: inline; font-size: var(--text-sm); }
+  .counter-lock-form.is-admin { display: none; }
   .counter-header__staff { padding: 2px; }
   .counter-lang { padding-inline: var(--space-2); }
   .counter-header .counter-lock { min-width: 44px; padding-inline: var(--space-2); justify-content: center; }

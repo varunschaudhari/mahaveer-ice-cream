@@ -5,7 +5,7 @@
  * Chrome 109 (counter PC): no CSS nesting, no color-mix(), no @scope, no subgrid.
  */
 
-body.admin, body.has-nav {
+body.admin, body.has-nav, .nav-drawer {
   --n-ink: #1F1A17;
   --n-line: #E8E1D8;
   --n-soft: #F6F1EA;
@@ -31,7 +31,7 @@ body.admin, body.has-nav {
 
 /* ---------- logged out (admin login): a plain top bar ---------- */
 
-body:not(.has-nav) .admin-bar {
+body.admin:not(.has-nav) .admin-bar {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
   padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--n-line); background: #FFFFFF;
 }
@@ -100,8 +100,22 @@ body:not(.has-nav) .admin-bar {
   .app-topbar, .app-scrim, .admin-bar__close { display: none !important; }
 }
 
+/* ---------- counter (owner on a phone): the menu is only ever a drawer ---------- */
+/* Its own ☰ sits in the counter header; at every width the menu stays hidden until opened, so the
+   counter PC layout is never covered by a fixed side menu. */
+
+.nav-drawer .admin-bar {
+  z-index: 160; /* above the counter's bill bar, bill sheet and sound hint */
+  width: 300px; max-width: 86vw; transform: translateX(-105%); visibility: hidden;
+  transition: transform 0.22s ease, visibility 0s linear 0.22s;
+}
+body.nav-open .nav-drawer .admin-bar { transform: none; visibility: visible; box-shadow: 0 0 40px rgba(31, 26, 23, 0.25); transition: transform 0.22s ease; }
+.nav-drawer .admin-bar__close { display: inline-flex !important; }
+.nav-drawer .app-scrim:not([hidden]) { display: block !important; z-index: 155; }
+.nav-drawer .admin-nav a { font-size: 0.9375rem; }
+
 @media (prefers-reduced-motion: reduce) {
-  .has-nav .admin-bar { transition: none; }
+  .has-nav .admin-bar, .nav-drawer .admin-bar { transition: none; }
 }
 
 @media print {

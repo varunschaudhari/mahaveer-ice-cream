@@ -9,6 +9,7 @@
 use App\Settings;
 
 $withCart ??= false;
+$isAdmin = in_array($user['role'], App\Auth::ADMIN_ROLES, true);
 $otherLang = lang() === 'mr' ? 'en' : 'mr';
 $tabs = [
     'billing' => ['/counter/billing.php', t('counter.tab.billing'), 'receipt'],
@@ -38,22 +39,30 @@ $i18n = [
     'print_sent' => t('counter.print_sent'),
 ];
 ?>
+<?php if ($isAdmin): ?>
+<?php /* Owner / admin on a phone: the same menu as on the admin pages, as a drawer (app-nav.css). */ ?>
+<div class="has-nav nav-drawer"><?php view('app_nav', ['user' => $user, 'active' => 'counter', 'tag' => t('counter.title'), 'topbar' => false]); ?></div>
+<?php endif; ?>
 <div class="counter-app" data-i18n="<?= e(json_encode($i18n, JSON_UNESCAPED_UNICODE)) ?>">
   <header class="counter-header">
+    <?php if ($isAdmin): ?>
+    <button type="button" class="counter-menu-btn" data-nav-open aria-controls="app-nav" aria-expanded="false" aria-label="<?= e(t('nav.open_menu')) ?>"><?= icon('menu', 24) ?></button>
+    <?php endif; ?>
     <span class="counter-brand">
       <span class="counter-brand__mark" aria-hidden="true"><img src="/assets/img/logo-mark.png" width="23" height="26" alt=""></span>
       <span class="counter-header__title"><?= e(lang_field(Settings::all(), 'shop_name')) ?></span>
     </span>
     <span class="counter-header__actions">
       <a class="counter-lang" href="<?= e(lang_switch_url($otherLang)) ?>"><?= e(t('lang.switch')) ?></a>
-      <?php if (in_array($user['role'], App\Auth::ADMIN_ROLES, true)): ?>
-      <a class="counter-lang" href="/admin/" aria-label="<?= e(t('counter.open_admin')) ?>"><?= icon('settings', 18) ?><span class="counter-lang__text"><?= e(t('counter.open_admin')) ?></span></a>
+      <?php if ($isAdmin): ?>
+      <a class="counter-lang" href="/admin/" aria-label="<?= e(t('counter.open_admin')) ?>"><?= icon('settings', 18) ?><span class="counter-lang__text"><?= e(t('counter.open_admin')) ?></span><span class="counter-lang__short"><?= e(t('owner.admin_link')) ?></span></a>
       <?php endif; ?>
       <span class="counter-header__staff">
         <span class="counter-avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></span>
         <span class="counter-header__name"><?= e($user['name']) ?></span>
       </span>
-      <form method="post" action="/counter/lock.php">
+      <?php /* Lock ends the login: on an owner's phone it is left out (Log out is in the ☰ menu). */ ?>
+      <form method="post" action="/counter/lock.php" class="counter-lock-form<?= $isAdmin ? ' is-admin' : '' ?>">
         <?= csrf_field() ?>
         <button type="submit" class="counter-btn counter-lock" aria-label="<?= e(t('counter.lock')) ?>"><?= icon('lock', 18) ?><span class="counter-lock__text"><?= e(t('counter.lock')) ?></span></button>
       </form>
