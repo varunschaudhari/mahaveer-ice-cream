@@ -28,7 +28,13 @@
   .poster { padding: 0; }
 }
 
-/* Not production: a stamp printed across every QR so a test sheet can never be used. */
+/* Staging: the code stays scannable for testing; a band above / below says it is not for customers.
+   A border, not a background, so it prints even with "background graphics" off. */
+.test-band { margin: 2mm 0; padding: 1.5mm 4mm; border: 0.8mm dashed #000; color: #000; font-size: 13px; font-weight: 700; line-height: 1.3; }
+.poster .test-band { font-size: 22px; }
+.sticker .test-band { margin: 0.5mm 0 0; padding: 0.5mm 2mm; border-width: 0.6mm; font-size: 10px; white-space: nowrap; }
+
+/* Anywhere else (local / http): a stamp printed across every QR so a test sheet can never be used. */
 .qr-box { position: relative; display: inline-block; }
 .test-stamp {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg);

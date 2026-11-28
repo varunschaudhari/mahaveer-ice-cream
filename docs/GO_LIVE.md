@@ -69,7 +69,7 @@ Use real devices: the counter PC (Chrome 109, TM-T82 printer), an Android phone 
 ## 4. Print the QR stickers and poster (production only)
 
 - [ ] admin → Tables → **Regenerate QR** for every table (the seeded codes are not random enough – SECURITY_REVIEW.md item 5). Old staging stickers stop working, as intended.
-- [ ] admin → Tables → Print stickers, and admin → Takeaway QR poster. On production there is **no** "TEST – DO NOT USE" stamp across the QR codes; if you see one, you are not on production.
+- [ ] admin → Tables → Print stickers, and admin → Takeaway QR poster. On production there is **no** "TEST – DO NOT USE" stamp across the QR codes and **no** dashed "TEST (staging)" band; if you see either, you are not on production. Throw away every staging test sticker / poster.
 - [ ] Scan every sticker with a phone before laminating: each opens its own table.
 
 ## 5. At the shop

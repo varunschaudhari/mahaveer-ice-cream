@@ -123,7 +123,7 @@ Notes:
 - [ ] Deployed to staging, migrations applied, manual test of the milestone checklist
 - [ ] Merge to `main`, deploy production, apply migrations
 - [ ] admin → System health (super-admin): crons OK, recent backup, no errors in today's log; check again after the first hour
-- [ ] QR stickers and posters are printed only from production URLs (anywhere else they carry a "TEST – DO NOT USE" stamp)
+- [ ] QR stickers and posters for the shop are printed only from production. Staging prints scannable codes with a dashed "TEST (staging) – not for customers" band, for testing with real phones only – never put them up in the shop. Local / http prints a "TEST – DO NOT USE" stamp across the code.
 
 First go-live: follow `docs/GO_LIVE.md` step by step.
 

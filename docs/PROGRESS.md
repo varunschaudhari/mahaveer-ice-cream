@@ -33,6 +33,7 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-27 | **Developer (usability review):** takeaway checkout selects the earliest free pickup slot already (customer can change it); pickup time is asked before name/mobile. Customer menu as compact rows (no letter tiles). Counter: an open online order whose pickup window has ended is marked "Late"; on the Online / Tables tab the alert bar leaves out what is already on screen, the beep repeats until any tap there. SPEC §6, §9 updated. |
 | 2026-11-27 | **Developer:** an Android **owner app** (APK, installed from the file – the Play Store app stays phase 2). It is a Trusted Web Activity around `/owner/` (androidbrowserhelper 2.7.4), so it needs no own code and follows every website deploy. Package `com.mahaveericecream.owner` (`in.` is not allowed: Java keyword). Built for staging now, rebuilt for production at go-live (GO_LIVE §3). Source in `android/`; signing key outside the repo. DEPLOYMENT §7b. |
 | 2026-11-28 | **Client:** the counter also works on phones (owner from the admin menu). A phone never prints kitchen tickets; bills taken on a phone print at the counter PC through a print queue (new table `print_jobs`, migration 003, approved). Per-device "This screen prints bills" setting (Today tab), on by default on wide screens. |
+| 2026-11-28 | **Developer:** staging QR poster / stickers are scannable, so the whole flow can be tested with real phones. They carry a dashed "TEST (staging) – not for customers" band (poster: above and below the code; sticker: below it, in place of "Scan to order") and a staging notice on screen. Production unchanged (clean codes); local / http keeps the stamp across the code. `QrService::mode()`. |
 | 2026-11-28 | **Fix:** counter pages now send CSP `frame-src 'self'`. Since M0 every page sent `'none'`, which blocked the hidden frame the counter prints through, so bills / KOTs could not have printed on the counter PC (never tested on the real printer). |
 | 2026-11-26 | `minishlink/web-push` pinned to `^10.1`. v11 needs a separately installed PSR-18 HTTP client (an extra package); v10 brings Guzzle itself. `chillerlan/php-qrcode` `^6.0`. |
 | 2026-11-26 | `composer.json` sets `config.platform.php = 8.2.0` so the lock file never pulls packages that need PHP > 8.2. |
@@ -111,6 +112,17 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-28 – Scannable QR codes on staging (TEST band)
+
+- `QrService::mode($env, $url)`: `live` (production + https), `test` (staging + https), `blocked` (everything else).
+- `admin/qr.php` and `admin/table_stickers.php` use it:
+  - test: a clean code, a dashed band "चाचणी (स्टेजिंग) – ग्राहकांसाठी नाही · TEST (staging) – not for customers" (`.test-band` in `poster.css`), and an on-screen staging notice
+  - blocked: the stamp across the code, as before
+- On a sticker the band sits below the code, in place of "Scan to order" (with both, the text ran past the sticker's 68 mm border).
+- New text keys: `qr.test_band`, `qr.staging_notice`.
+- Checks: 367 PHPUnit tests pass (new `QrServiceTest`). Print preview rendered for the poster and stickers in test mode: everything inside the sticker border.
+- Next: deploy to staging, print the poster and a sticker sheet, test takeaway and table orders end to end with real phones (counter, owner app notifications, printing).
 
 ### 2026-11-28 – Counter on phones + print queue
 

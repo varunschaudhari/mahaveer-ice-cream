@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 // Admin: A4 sheet of table QR stickers (SPEC §12): table number + QR + "Scan to order", both
 // languages. Print only from production — the QR codes point to this server's APP_URL_ORDER;
-// anywhere else a "TEST – do not use" stamp is printed across each QR.
+// on staging the codes stay scannable with a "TEST" band; anywhere else a "TEST – do not use" stamp
+// is printed across each QR (QrService::mode).
 
 use App\Auth;
 use App\Lang;
@@ -15,7 +16,7 @@ require __DIR__ . '/../boot.php';
 
 $user = Auth::requireAdmin();
 $base = rtrim((string) config('APP_URL_ORDER', ''), '/');
-$isProduction = app_env() === 'production' && str_starts_with($base, 'https://');
+$qrMode = QrService::mode(app_env(), $base . '/');
 $active = array_filter((new TableService())->tables(), static fn (array $t): bool => (bool) $t['is_active']);
 $mr = Lang::strings('mr');
 $en = Lang::strings('en');
@@ -34,7 +35,9 @@ $en = Lang::strings('en');
 <div class="poster-toolbar">
   <a class="btn btn-secondary" href="/admin/tables.php">← <?= e(t('admin.nav.tables')) ?></a>
   <button type="button" class="btn btn-primary" data-print-page><?= e(t('qr.print')) ?></button>
-  <?php if (!$isProduction): ?>
+  <?php if ($qrMode === 'test'): ?>
+  <p class="flash flash-error"><?= e(t('qr.staging_notice', ['url' => $base . '/'])) ?></p>
+  <?php elseif ($qrMode === 'blocked'): ?>
   <p class="flash flash-error"><?= e(t('qr.not_production', ['url' => $base . '/'])) ?></p>
   <?php endif; ?>
 </div>
@@ -45,10 +48,14 @@ $en = Lang::strings('en');
     <p class="sticker-table-en"><?= e(str_replace('{n}', $number, $en['table.label'])) ?><?= $table['area'] === 'outside' ? ' · ' . e($en['table.outside']) : '' ?></p>
     <div class="qr-box">
       <img class="sticker-qr" src="<?= e(QrService::svgDataUri($base . '/t.php?t=' . $table['qr_token'])) ?>" alt="QR <?= e($table['code']) ?>" width="240" height="240">
-      <?php if (!$isProduction): ?><span class="test-stamp"><?= e($mr['qr.test_stamp']) ?><br><?= e($en['qr.test_stamp']) ?></span><?php endif; ?>
+      <?php if ($qrMode === 'blocked'): ?><span class="test-stamp"><?= e($mr['qr.test_stamp']) ?><br><?= e($en['qr.test_stamp']) ?></span><?php endif; ?>
     </div>
+    <?php if ($qrMode === 'test'): /* a test sticker has no room for both: the band replaces "Scan to order" */ ?>
+    <p class="test-band"><?= e($mr['qr.test_band']) ?> · <?= e($en['qr.test_band']) ?></p>
+    <?php else: ?>
     <p class="sticker-scan"><?= e($mr['tables.sticker_scan']) ?></p>
     <p class="sticker-scan-en"><?= e($en['tables.sticker_scan']) ?></p>
+    <?php endif; ?>
   </section>
   <?php endforeach; ?>
 </main>

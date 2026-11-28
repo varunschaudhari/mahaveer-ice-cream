@@ -893,6 +893,8 @@ return [
     'settings.error.map_embed' => 'Google Maps → Share → Embed a map मधील कोड पेस्ट करा (त्यात https://www.google.com/maps/embed?pb=… असते).',
     // M9 – hardening
     'qr.test_stamp' => 'चाचणी – वापरू नका',
+    'qr.test_band' => 'चाचणी (स्टेजिंग) – ग्राहकांसाठी नाही',
+    'qr.staging_notice' => 'स्टेजिंग: हे QR {url} या चाचणी सिस्टमकडे जातात. फक्त चाचणीसाठी – दुकानात लावू नका.',
     'admin.nav.health' => 'सिस्टम तपासणी',
     'health.super_only' => 'हे पान फक्त डेव्हलपर (super-admin) खात्यासाठी आहे.',
     'health.help' => '{time} ला तपासले. पुन्हा तपासण्यासाठी पान रीलोड करा.',

@@ -891,6 +891,8 @@ return [
     'settings.error.map_embed' => 'Paste the code from Google Maps → Share → Embed a map (it contains https://www.google.com/maps/embed?pb=…).',
     // M9 – hardening
     'qr.test_stamp' => 'TEST – DO NOT USE',
+    'qr.test_band' => 'TEST (staging) – not for customers',
+    'qr.staging_notice' => 'Staging: these QR codes open the test system at {url}. For testing only – do not put them up in the shop.',
     'admin.nav.health' => 'System health',
     'health.super_only' => 'Only the developer account (super-admin) can open this page.',
     'health.help' => 'Checked {time}. Reload to check again.',
