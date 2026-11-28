@@ -117,8 +117,9 @@ Update at the end of every Claude Code session: tick finished items, note decisi
   - cream status/navigation bars, a splash with the logo, notifications delegated to the app (small icon = white logo mark), POST_NOTIFICATIONS for Android 13+, Custom Tab fallback without Chrome
 - Icons from the client's logo via `docs/brand/build_logo.ps1` (new Android output: launcher, adaptive foreground, notification icon, splash per density).
 - Signing key `%USERPROFILE%\.mahavir-android\owner-release.jks` + `keystore.properties` (outside the repo, back them up). Its SHA-256 is in `order/.well-known/assetlinks.json`, deployed with `order/`.
-- Built `android/dist/mahavir-owner-staging-1.0.0.apk` (4.6 MB, git-ignored). Checked with apksigner (v2 signature, fingerprint matches the link file) and aapt2 (package, labels en/mr, launch URL, colours). The local server returns the link file as `application/json`. 355 PHPUnit tests pass.
-- Not tested yet on a real phone: install, verification without the address bar (needs the link file deployed on staging), notifications through the app.
+- Built `android/dist/mahavir-owner-staging-1.0.1.apk` (4.6 MB, git-ignored). Checked with apksigner (v2 signature, fingerprint matches the link file) and aapt2 (package, labels en/mr, launch URL, colours). The local server returns the link file as `application/json`. 355 PHPUnit tests pass.
+- 1.0.0 crashed at launch: LauncherActivity enables `ManageDataLauncherActivity` ("Site settings" shortcut), which was not declared. 1.0.1 declares it (and `android:manageSpaceActivity`), as Google's template does.
+- Tested 1.0.1 on a real phone (Samsung Galaxy M14, Android 15, Chrome 154) over adb: installs, no crash, opens the owner page full screen without an address bar (link file verified on staging). Notifications through the app still to test.
 
 ### 2026-11-27 – Usability review: placement fixes
 
