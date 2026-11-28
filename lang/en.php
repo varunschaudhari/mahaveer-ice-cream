@@ -927,7 +927,8 @@ return [
     // Pay-first takeaway by UPI (decision 2026-11-28)
     'settings.group.upi' => 'Online payment (UPI)',
     'settings.upi_id' => 'Shop UPI ID',
-    'settings.help.upi_id' => 'Customers pay for takeaway orders to this UPI ID before the shop starts making them; the counter confirms each payment. Leave empty and customers pay at the counter.',
+    'settings.help.upi_id' => 'Customers pay for takeaway orders to this UPI ID before the shop starts making them; the counter confirms each payment. The ID must accept UPI payment links: a Paytm counter-QR ID (paytmqr…@paytm) does not, so payments fail. Test with a ₹1–20 order after saving. Leave empty and customers pay at the counter.',
+    'order.step_pay_upi' => 'Pay by UPI',
     'settings.payment_wait_mins' => 'Time to pay (minutes)',
     'settings.help.payment_wait_mins' => 'An order not paid within this time is cancelled and its pickup slot is free again.',
     'settings.error.upi' => 'Enter a UPI ID like shopname@bank.',

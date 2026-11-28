@@ -59,7 +59,7 @@ view('header', ['title' => t('order.page_title'), 'css' => ['css/base.css', 'css
       <ol class="hero-steps">
         <li><span class="hero-steps__n">1</span><?= e(t('order.step_choose')) ?></li>
         <li><span class="hero-steps__n">2</span><?= e(t('order.step_time')) ?></li>
-        <li><span class="hero-steps__n">3</span><?= e(t('order.step_pay')) ?></li>
+        <li><span class="hero-steps__n">3</span><?= e(t(App\Services\UpiService::enabled() ? 'order.step_pay_upi' : 'order.step_pay')) ?></li>
       </ol>
       <a class="party-link" href="/bulk.php"><?= e(t('bulk.link')) ?></a>
     </div>
