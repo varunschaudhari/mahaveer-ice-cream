@@ -32,6 +32,8 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 | 2026-11-27 | **Client (later the same day):** use the shop's own logo (supplied as a JPG) instead of the scoop heart, which is retired (still in git history). English name back to **Mahavir** and tagline "Adding flavors to your life", both as on the logo. Accent colour = logo pink, pastels from the logo colours, black buttons kept. App icons and notification badge from the logo's swirl-and-M. SPEC §16 updated. Staging: set the English shop name back to "Mahavir Ice Cream" in admin → Settings. |
 | 2026-11-27 | **Developer (usability review):** takeaway checkout selects the earliest free pickup slot already (customer can change it); pickup time is asked before name/mobile. Customer menu as compact rows (no letter tiles). Counter: an open online order whose pickup window has ended is marked "Late"; on the Online / Tables tab the alert bar leaves out what is already on screen, the beep repeats until any tap there. SPEC §6, §9 updated. |
 | 2026-11-27 | **Developer:** an Android **owner app** (APK, installed from the file – the Play Store app stays phase 2). It is a Trusted Web Activity around `/owner/` (androidbrowserhelper 2.7.4), so it needs no own code and follows every website deploy. Package `com.mahaveericecream.owner` (`in.` is not allowed: Java keyword). Built for staging now, rebuilt for production at go-live (GO_LIVE §3). Source in `android/`; signing key outside the repo. DEPLOYMENT §7b. |
+| 2026-11-28 | **Client:** the counter also works on phones (owner from the admin menu). A phone never prints kitchen tickets; bills taken on a phone print at the counter PC through a print queue (new table `print_jobs`, migration 003, approved). Per-device "This screen prints bills" setting (Today tab), on by default on wide screens. |
+| 2026-11-28 | **Fix:** counter pages now send CSP `frame-src 'self'`. Since M0 every page sent `'none'`, which blocked the hidden frame the counter prints through, so bills / KOTs could not have printed on the counter PC (never tested on the real printer). |
 | 2026-11-26 | `minishlink/web-push` pinned to `^10.1`. v11 needs a separately installed PSR-18 HTTP client (an extra package); v10 brings Guzzle itself. `chillerlan/php-qrcode` `^6.0`. |
 | 2026-11-26 | `composer.json` sets `config.platform.php = 8.2.0` so the lock file never pulls packages that need PHP > 8.2. |
 | 2026-11-26 | Money: decimal quantities round half-up to the paisa per line; a discount may not exceed subtotal + parcel; `money()` uses Indian grouping (₹1,25,000). |
@@ -109,6 +111,26 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 ## Session notes
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
+
+### 2026-11-28 – Counter on phones + print queue
+
+- "Counter" added to the shared owner/admin menu (second, after Live orders).
+- Phone layout for the counter (below 1024 px; the counter PC at ≥ 1024 px is unchanged), in `counter.css` (end of file):
+  - compact header (icons for admin / lock, avatar without name); tabs as a sideways row that starts at the current tab
+  - billing: items full width, the bill as a bottom bar ("3 items · ₹95 · View bill") opening the bill as a sheet that closes after payment (`billing.js`)
+  - online / bulk cards one per row, tables two per row, stock two per row; Today's bills as cards
+  - login: name tiles, then the PIN card (scrolled into view)
+  - the sound hint at the top
+- Printing:
+  - `PrintQueueService` + `api/print_queue.php` (add / claim) + `print_queue` count in the poll + migration `003_print_jobs.sql` + weekly cleanup
+  - `counter.js`: `isPrinter()` (Today tab setting, default by width). Non-printing screens queue bills and skip KOTs; the printing screen claims and prints them silently.
+- Fixed the CSP that blocked counter printing (`frame_sources_for()`, tested).
+- New text keys: `counter.print_sent`, `counter.printer_device`, `counter.printer_hint`, `counter.view_bill`, `print.error.invalid`, `nav.open_menu` / `nav.close_menu` (earlier today).
+- Checks: 365 PHPUnit tests pass (new `PrintQueueTest`). Headless Chrome:
+  - 390 px: every counter tab, the bill sheet, login
+  - 1024×768: billing unchanged
+  - end to end: a cash bill paid at phone width was queued (toast "Bill sent to the counter printer"); the counter at PC width claimed it and loaded `print.php?type=bill` in its print frame
+- Not testable here: the actual paper print on the TM-T82 (GO_LIVE §2).
 
 ### 2026-11-28 – One menu for the owner page and admin (phone sidebar)
 

@@ -23,6 +23,23 @@
 
   var cart = document.querySelector('[data-cart]');
   var linesEl = cart.querySelector('[data-cart-lines]');
+  // Phones: the bill opens as a sheet from a bottom bar (counter.css below 1024 px).
+  var billBar = document.querySelector('[data-cart-open]');
+  var cartScrim = document.querySelector('.cart-scrim');
+
+  function setCartOpen(open) {
+    document.body.classList.toggle('cart-open', open);
+    if (cartScrim) {
+      cartScrim.hidden = !open;
+    }
+  }
+
+  if (billBar) {
+    billBar.addEventListener('click', function () { setCartOpen(true); });
+  }
+  document.querySelectorAll('[data-cart-close]').forEach(function (el) {
+    el.addEventListener('click', function () { setCartOpen(false); });
+  });
   var busy = false;
 
   function text(key, params) {
@@ -136,6 +153,15 @@
     cart.querySelectorAll('[data-pay]').forEach(function (button) {
       button.disabled = !canPay || (button.getAttribute('data-pay') === 'mixed' && t.total < 200);
     });
+    if (billBar) {
+      var count = state.lines.reduce(function (sum, l) { return sum + l.qty; }, 0);
+      billBar.hidden = state.lines.length === 0;
+      billBar.querySelector('[data-bill-count]').textContent = text('items', { n: Number.isInteger(count) ? count : state.lines.length });
+      billBar.querySelector('[data-bill-total]').textContent = C.money(t.total);
+    }
+    if (state.lines.length === 0) {
+      setCartOpen(false); // paid or cleared: back to the menu
+    }
     persist();
   }
 

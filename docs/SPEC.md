@@ -100,6 +100,8 @@ URL: `order.mahaveericecream.in/bulk.php` (also linked from website).
 
 Opened as a Chrome app window: `chrome.exe --app=https://order.mahaveericecream.in/counter/ --kiosk-printing --autoplay-policy=no-user-gesture-required`.
 
+**On a phone (client decision 2026-11-28):** the same counter also works below 1024 px, e.g. the owner from the admin menu: tabs as a sideways row, the bill as a bottom bar that opens as a sheet, Today's bills as cards. A phone never prints kitchen tickets. Bills taken on a phone print at the counter PC (print queue, ARCHITECTURE §8) when its counter screen is open; the per-device "This screen prints bills" setting on the Today tab decides which screen prints (on by default on the counter PC, off on phones).
+
 Layout (landscape, 1024×768 minimum, touch only, no hover-dependent UI):
 
 - **Billing tab:** category buttons → item grid → variant buttons (Half/Full). Cart on the right. Dine-in / Parcel toggle (every new bill starts on **Dine-in**). Payment: Cash / UPI / Mixed (split amounts), cash tendered → change shown. Save & Print → **one copy** of the bill with token prints. Big buttons (min 56 px tall).

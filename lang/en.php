@@ -62,6 +62,11 @@ return [
     'counter.no_staff' => 'No staff accounts yet. The owner can add them in Admin → Staff.',
     'counter.logged_in_as' => 'Logged in: {name}',
     'counter.lock' => 'Lock',
+    'print.error.invalid' => 'This cannot be printed.',
+    'counter.print_sent' => 'Bill sent to the counter printer',
+    'counter.printer_device' => 'This screen prints bills (also those sent from phones)',
+    'counter.printer_hint' => 'Keep it on only on the counter PC with the printer. Keep it off on phones: their bills print at the counter PC.',
+    'counter.view_bill' => 'View bill',
     'counter.billing_coming' => 'The billing screen comes in the next stage.',
     'counter.open_admin' => 'Open admin',
 

@@ -1,6 +1,7 @@
 /*
  * Counter screen (Essae touchscreen PC, Windows 7, Chrome 109). Load after base.css.
  * Landscape, 1024×768 minimum, touch only: no hover-only actions, buttons ≥ 56px tall, text ≥ 16px.
+ * Below 1024 px (the owner's phone, decision 2026-11-28) a phone layout at the end of this file.
  * Chrome 109: no CSS nesting, no color-mix(), no @scope, no subgrid, no text-wrap: balance.
  * "Warm parlour" look like the customer pages, tuned for a till: chocolate header, white bar of
  * tab pills, cream work area, white cards, magenta for the main action, green / purple pay buttons.
@@ -373,6 +374,106 @@ body.counter .input:focus { border-color: var(--color-primary); outline: none; b
 .bills-table tr.cancel-reason td { border-top: 0; font-size: var(--text-sm); text-decoration: none; }
 .row-actions { display: flex; gap: var(--space-2); justify-content: flex-end; }
 .row-actions .counter-btn { font-size: var(--text-base); }
+
+/* ---------- Printer setting (Today tab) ---------- */
+
+.printer-switch { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--c-line); border-radius: var(--c-radius-lg); background: #FFFFFF; cursor: pointer; }
+.printer-switch input { flex-shrink: 0; width: 26px; height: 26px; margin-top: 2px; accent-color: var(--color-primary); }
+.printer-switch strong { display: block; }
+.printer-switch small { display: block; color: var(--c-muted); font-size: var(--text-sm); font-weight: 400; }
+
+/* Phone-only pieces, never shown on the counter PC. */
+.bill-bar, .cart-scrim, .counter-cart__close { display: none; }
+
+/* ---------- Phones and tablets (below 1024 px). The counter PC layout above stays as it is. ---------- */
+
+@media (max-width: 1023.98px) {
+  :root { --tap-min: 48px; --counter-header: 56px; --counter-tabs: 60px; }
+  body.counter { font-size: 16px; }
+  .counter-app { min-width: 0; height: 100vh; height: 100dvh; }
+
+  .counter-header { padding-inline: var(--space-3); }
+  .counter-header__title { font-size: var(--text-base); }
+  .counter-lang__text, .counter-lock__text, .counter-header__name { display: none; }
+  .counter-header__staff { padding: 2px; }
+  .counter-lang { padding-inline: var(--space-2); }
+  .counter-header .counter-lock { min-width: 44px; padding-inline: var(--space-2); justify-content: center; }
+
+  .counter-tabs { overflow-x: auto; padding: var(--space-2); scrollbar-width: none; }
+  .counter-tabs::-webkit-scrollbar { display: none; }
+  .counter-tab { flex: 0 0 auto; min-height: 44px; padding-inline: var(--space-3); font-size: var(--text-base); }
+  .alert-bar { min-height: 44px; padding-inline: var(--space-3); font-size: var(--text-base); }
+  .counter-panel { padding: var(--space-3); }
+
+  /* Billing: the menu fills the screen; the bill is a bottom bar that opens as a sheet. */
+  .counter-main { grid-template-columns: minmax(0, 1fr); }
+  .billing-menu { padding-bottom: 96px; }
+  .billing-menu .category-bar { top: calc(-1 * var(--space-3)); margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-3)) var(--space-3); padding: var(--space-2) var(--space-3); }
+  .billing-menu .item-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-2); }
+  .variant-btn { min-height: 56px; }
+  .counter-cart {
+    position: fixed; right: 0; bottom: 0; left: 0; z-index: 90; max-height: 90vh; max-height: 90dvh;
+    border-left: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -16px 40px rgba(43, 27, 23, 0.25);
+    transform: translateY(105%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s;
+  }
+  body.cart-open .counter-cart { transform: none; visibility: visible; transition: transform 0.22s ease; }
+  .counter-cart__head { min-height: 56px; }
+  .counter-cart__close {
+    display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-left: auto;
+    border: 0; border-radius: 12px; background: #F3EAE1; color: var(--color-text);
+  }
+  .counter-cart__empty { display: none !important; }
+  .cart-scrim:not([hidden]) { display: block; position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 85; background: rgba(43, 27, 23, 0.5); }
+  .bill-bar:not([hidden]) {
+    position: fixed; right: var(--space-3); bottom: var(--space-3); left: var(--space-3); z-index: 80;
+    display: flex; align-items: center; gap: var(--space-3); min-height: 64px; padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+    border: 0; border-radius: 18px; background: var(--c-choco); color: #FFFFFF; text-align: left; box-shadow: 0 12px 30px rgba(43, 27, 23, 0.35);
+  }
+  body.cart-open .bill-bar { display: none; }
+  .bill-bar__icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 14px; background: rgba(255, 255, 255, 0.14); }
+  .bill-bar__summary { display: flex; flex-direction: column; font-size: var(--text-sm); line-height: 1.25; }
+  .bill-bar__summary strong { font-size: var(--text-lg); }
+  .bill-bar__cta { margin-left: auto; padding: var(--space-2) var(--space-4); border-radius: 12px; background: var(--c-gradient); font-weight: 700; }
+  .cart-line__controls .counter-btn { width: 48px; }
+  .pay-btn { min-height: 60px; }
+  .counter-cart__footer { padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)); }
+  .billing-menu .category-bar { scrollbar-width: none; }
+  .billing-menu .category-bar::-webkit-scrollbar { display: none; }
+  /* Until the first tap: at the top, so it never covers the bill bar or the pay buttons. */
+  .sound-hint { top: calc(var(--counter-header) + var(--counter-tabs) + var(--space-2)); bottom: auto; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+
+  /* Online and bulk orders: one card per row. Tables: two tiles per row. Stock: two per row. */
+  .online-grid { grid-template-columns: minmax(0, 1fr); }
+  .order-card__table { font-size: 1.75rem; }
+  .table-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+  .table-tile { min-height: 132px; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); }
+  .table-tile__number { font-size: 2rem; }
+  .table-dialog { width: calc(100vw - 16px); max-height: 94vh; max-height: 94dvh; }
+  .counter-dialog { padding: var(--space-4); }
+  .stock-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+  /* Today: summary in two columns, each bill as a card instead of the wide table. */
+  .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary-card--total, .summary-cards [data-print-day] { grid-column: 1 / -1; }
+  .bills-table, .bills-table tbody, .bills-table tr, .bills-table td { display: block; }
+  .bills-table thead { display: none; }
+  .bills-table tr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--space-3); padding: var(--space-3); border-top: 1px solid var(--c-line); }
+  .bills-table tbody tr:first-child { border-top: 0; }
+  .bills-table td { padding: 0; border: 0; }
+  .bills-table .num { font-weight: 700; }
+  .bills-table .row-actions { flex-basis: 100%; justify-content: flex-start; margin-top: var(--space-2); }
+  .bills-table tr.cancel-reason { padding-top: 0; border-top: 0; }
+
+  /* Login: the name tiles, then the PIN card under them. */
+  body.counter .login-screen { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); height: 100vh; height: 100dvh; padding: var(--space-4); }
+  .login-pin, .login-placeholder { grid-column: 1; grid-row: auto; }
+  .login-placeholder { display: none; }
+  .login-staff h1 { margin-top: var(--space-4); font-size: var(--text-xl); }
+  .staff-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .staff-tile { min-height: 72px; padding: var(--space-3); font-size: var(--text-lg); }
+  .pin-pad { grid-template-columns: repeat(3, 80px); }
+  .pin-pad .counter-btn { min-height: 68px; }
+}
 
 /* ---------- Motion ---------- */
 

@@ -28,7 +28,7 @@ final class CleanupService
         $this->storage = $storage ?? APP_ROOT . '/storage';
     }
 
-    /** @return array{logs: int, rate_limits: int, sessions: int, photos: int} what was deleted */
+    /** @return array{logs: int, rate_limits: int, sessions: int, photos: int, print_jobs: int} what was deleted */
     public function run(DateTimeImmutable $now): array
     {
         return [
@@ -36,6 +36,7 @@ final class CleanupService
             'rate_limits' => $this->oldRateLimits($now),
             'sessions' => $this->oldSessions($now),
             'photos' => $this->orphanPhotos($now),
+            'print_jobs' => (new PrintQueueService($this->db))->deleteOld($now),
         ];
     }
 

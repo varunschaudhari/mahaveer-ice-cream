@@ -546,6 +546,16 @@ function is_https(): bool
 }
 
 /**
+ * Frame origins a page may load. The counter prints by loading its own print page into a hidden
+ * frame (counter.js), which frame-src 'none' would block: counter pages allow 'self' only.
+ * @return list<string>
+ */
+function frame_sources_for(string $path): array
+{
+    return str_starts_with($path, '/counter/') ? ["'self'"] : [];
+}
+
+/**
  * Security headers for every HTML/JSON response. Pages that embed a frame (the Google Map on
  * the website location page) call this again with the extra frame origins; header() replaces.
  */

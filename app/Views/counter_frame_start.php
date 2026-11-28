@@ -35,6 +35,7 @@ $i18n = [
     'cash_part' => t('billing.cash_part', ['total' => '{total}']),
     'mixed_invalid' => t('payment.error.mixed'),
     'received_amount' => t('billing.received_amount'),
+    'print_sent' => t('counter.print_sent'),
 ];
 ?>
 <div class="counter-app" data-i18n="<?= e(json_encode($i18n, JSON_UNESCAPED_UNICODE)) ?>">
@@ -46,15 +47,15 @@ $i18n = [
     <span class="counter-header__actions">
       <a class="counter-lang" href="<?= e(lang_switch_url($otherLang)) ?>"><?= e(t('lang.switch')) ?></a>
       <?php if (in_array($user['role'], App\Auth::ADMIN_ROLES, true)): ?>
-      <a class="counter-lang" href="/admin/"><?= icon('settings', 18) ?><?= e(t('counter.open_admin')) ?></a>
+      <a class="counter-lang" href="/admin/" aria-label="<?= e(t('counter.open_admin')) ?>"><?= icon('settings', 18) ?><span class="counter-lang__text"><?= e(t('counter.open_admin')) ?></span></a>
       <?php endif; ?>
       <span class="counter-header__staff">
         <span class="counter-avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($user['name'], 0, 1))) ?></span>
-        <?= e($user['name']) ?>
+        <span class="counter-header__name"><?= e($user['name']) ?></span>
       </span>
       <form method="post" action="/counter/lock.php">
         <?= csrf_field() ?>
-        <button type="submit" class="counter-btn counter-lock"><?= icon('lock', 18) ?><?= e(t('counter.lock')) ?></button>
+        <button type="submit" class="counter-btn counter-lock" aria-label="<?= e(t('counter.lock')) ?>"><?= icon('lock', 18) ?><span class="counter-lock__text"><?= e(t('counter.lock')) ?></span></button>
       </form>
     </span>
   </header>

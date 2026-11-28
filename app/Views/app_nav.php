@@ -12,9 +12,11 @@ use App\Settings;
 $active ??= '';
 $tag ??= t('admin.title');
 $otherLang = lang() === 'mr' ? 'en' : 'mr';
-// key => [link, label, icon]; the owner's live orders first (the app opens there), then admin.
+// key => [link, label, icon]; the everyday screens first (the app opens on live orders), then admin.
+// The counter takes the logged-in owner straight to billing (Auth::requireStaff accepts any login).
 $nav = [
     'owner' => ['/owner/', t('owner.orders'), 'bag'],
+    'counter' => ['/counter/', t('admin.nav.counter'), 'receipt'],
     'home' => ['/admin/', t('admin.dashboard'), 'home'],
     'reports' => ['/admin/reports.php', t('admin.nav.reports'), 'chart'],
     'bulk' => ['/admin/bulk.php', t('admin.nav.bulk'), 'gift'],

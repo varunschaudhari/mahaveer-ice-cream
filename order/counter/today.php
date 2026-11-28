@@ -56,6 +56,12 @@ view('counter_frame_start', ['user' => $user, 'active' => 'today']);
     <button type="button" class="counter-btn btn-go" data-print-day><?= e(t('today.print_summary')) ?></button>
   </div>
 
+  <?php /* Per device (counter.js): on by default on the wide counter PC, off on phones. */ ?>
+  <label class="printer-switch">
+    <input type="checkbox" data-printer-toggle>
+    <span><strong><?= e(t('counter.printer_device')) ?></strong><small><?= e(t('counter.printer_hint')) ?></small></span>
+  </label>
+
   <?php if ($orders === [] && $tableBills === []): ?>
   <p class="muted"><?= e(t('today.empty')) ?></p>
   <?php endif; ?>

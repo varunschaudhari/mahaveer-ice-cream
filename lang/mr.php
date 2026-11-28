@@ -64,6 +64,11 @@ return [
     'counter.no_staff' => 'अजून कर्मचारी खाते नाही. मालकांनी व्यवस्थापन → कर्मचारी मध्ये जोडावे.',
     'counter.logged_in_as' => 'लॉग इन: {name}',
     'counter.lock' => 'लॉक',
+    'print.error.invalid' => 'हे प्रिंट करता येत नाही.',
+    'counter.print_sent' => 'बिल काउंटरच्या प्रिंटरला पाठवले',
+    'counter.printer_device' => 'ही स्क्रीन बिल प्रिंट करते (फोनवरून आलेली बिलेही)',
+    'counter.printer_hint' => 'फक्त प्रिंटर जोडलेल्या काउंटर PC वर चालू ठेवा. फोनवर बंद ठेवा: फोनवरची बिले काउंटर PC वर प्रिंट होतात.',
+    'counter.view_bill' => 'बिल पहा',
     'counter.billing_coming' => 'बिलिंग स्क्रीन पुढच्या टप्प्यात येईल.',
     'counter.open_admin' => 'व्यवस्थापन उघडा',
 

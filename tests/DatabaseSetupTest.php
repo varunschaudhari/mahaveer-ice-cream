@@ -19,7 +19,7 @@ final class DatabaseSetupTest extends DatabaseTestCase
 
         self::assertSame([
             'audit_log', 'categories', 'customers', 'daily_tokens', 'dining_tables', 'item_variants',
-            'items', 'order_items', 'orders', 'payments', 'push_subscriptions', 'rate_limits',
+            'items', 'order_items', 'orders', 'payments', 'print_jobs', 'push_subscriptions', 'rate_limits',
             'schema_migrations', 'sequences', 'settings', 'site_content', 'site_photos', 'staff',
             'table_alerts', 'table_sessions',
         ], $tables);
@@ -30,7 +30,7 @@ final class DatabaseSetupTest extends DatabaseTestCase
         $migrator = new Migrator($this->db(), APP_ROOT . '/database');
         self::assertSame([], $migrator->pending());
         self::assertSame(
-            ['001_schema.sql', '002_report_indexes.sql'],
+            ['001_schema.sql', '002_report_indexes.sql', '003_print_jobs.sql'],
             $this->db()->query('SELECT filename FROM schema_migrations')->fetchAll(PDO::FETCH_COLUMN)
         );
     }

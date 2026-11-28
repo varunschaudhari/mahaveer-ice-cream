@@ -24,6 +24,7 @@ Use real devices: the counter PC (Chrome 109, TM-T82 printer), an Android phone 
 - [ ] Log in with name + PIN; bill 2× Badam Shake Full + 1× Vanilla Half, Parcel, cash ₹200 → total ₹180, change ₹20; the bill prints with Marathi names and the token on top.
 - [ ] UPI bill, Cash + UPI bill; discount with owner PIN; cancel a bill on the Today tab with owner PIN; reprint shows "DUPLICATE / प्रत".
 - [ ] Sold-out toggle on the Stock tab; the item shows sold out on the customer menu.
+- [ ] Counter on the owner's phone (admin menu → Counter): a cash bill → "Bill sent to the counter printer" on the phone → the counter PC prints it within ~5 s. Accepting a table order on the phone prints the KOT at the counter PC, never on the phone.
 - [ ] Switch off the shop router: the red "No internet" banner shows; hotspot on → back to normal.
 
 **Takeaway (M3)**

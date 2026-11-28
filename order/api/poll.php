@@ -13,6 +13,7 @@ use App\Auth;
 use App\Services\BulkService;
 use App\Services\OrderCard;
 use App\Services\OrderService;
+use App\Services\PrintQueueService;
 use App\Services\ReportService;
 use App\Services\TableService;
 use App\Settings;
@@ -31,6 +32,8 @@ $data = $orders->newOnlineSummary($today) + [
     'time' => $today->format('H:i'),
     // The counter prints these KOTs unless it already did (e.g. the owner accepted on his phone).
     'kot_pending' => $orders->recentlyAcceptedTableOrders($today),
+    // Bills sent from a phone; a counter screen that prints claims them (api/print_queue.php).
+    'print_queue' => (new PrintQueueService())->pendingCount($today),
 ];
 
 if (($_GET['view'] ?? '') === 'tables') {

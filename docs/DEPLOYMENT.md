@@ -140,7 +140,9 @@ First go-live: follow `docs/GO_LIVE.md` step by step.
   (path may be `Program Files (x86)`). Copy it to the Startup folder so it opens on boot.
 - [ ] Power options: never sleep, screen off after 30 min at most.
 - [ ] Internet backup: keep a phone with mobile hotspot (or a 4G dongle) for when the shop internet drops. Connect the counter PC to it once and save the password, so staff only have to switch the hotspot on. If the PC has no Wi-Fi, use a USB Wi-Fi adapter or the phone's USB tethering. Test: switch off the shop router, switch on the hotspot, print a bill.
+- [ ] Today tab: "This screen prints bills (also those sent from phones)" is **ticked** on the counter PC (it is by default on a wide screen). Leave it off on any phone or second screen, so only this PC prints.
 - [ ] Test: bill with Marathi item names prints clearly; KOT prints; beep is audible over shop noise.
+- [ ] Test from the owner's phone (admin menu → Counter): take a small cash bill; the phone says "Bill sent to the counter printer" and the counter PC prints it within a few seconds.
 - [ ] Reports (admin → Reports → Print) are A4 pages. The counter's Chrome prints silently to the receipt printer (`--kiosk-printing`), so print or save reports as PDF from the owner's phone or another PC, not from the counter shortcut.
 
 ## 7. Owner's phone (Android)

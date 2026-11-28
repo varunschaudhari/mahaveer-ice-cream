@@ -141,6 +141,16 @@ final class HelpersTest extends TestCase
         icon('"><script>');
     }
 
+    public function testOnlyCounterPagesMayLoadAFrameFromTheirOwnSite(): void
+    {
+        // The counter prints through a hidden frame with its own print page; everything else: none.
+        self::assertSame(["'self'"], frame_sources_for('/counter/billing.php'));
+        self::assertSame(["'self'"], frame_sources_for('/counter/print.php'));
+        self::assertSame([], frame_sources_for('/admin/'));
+        self::assertSame([], frame_sources_for('/'));
+        self::assertSame([], frame_sources_for('/counterfeit.php'));
+    }
+
     public function testCrossLinkKeepsTheVisitorsLanguage(): void
     {
         $previous = lang();

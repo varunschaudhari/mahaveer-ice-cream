@@ -120,7 +120,7 @@ final class CronAndCleanupTest extends DatabaseTestCase
 
         $deleted = (new CleanupService($this->db(), $this->storage))->run($now);
 
-        self::assertSame(['logs' => 1, 'rate_limits' => 1, 'sessions' => 1, 'photos' => 1], $deleted);
+        self::assertSame(['logs' => 1, 'rate_limits' => 1, 'sessions' => 1, 'photos' => 1, 'print_jobs' => 0], $deleted);
         self::assertFileDoesNotExist($oldLog);
         self::assertFileExists($keptLog, '90 days are kept');
         self::assertFileDoesNotExist($oldSession);

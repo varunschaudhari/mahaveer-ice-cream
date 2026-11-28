@@ -173,6 +173,8 @@ Shared hosting has no WebSockets. Use short polling:
 - Print pages live in `order/counter/print.php?type=bill|kot|day&id=…`.
 - CSS: `@page { size: 80mm auto; margin: 0; }`, body width 72 mm (printable area), font Noto Sans Devanagari, base 12 px, token and table number 32–40 px bold, black only.
 - The counter UI loads the print page in a hidden `<iframe>` and calls `iframe.contentWindow.print()` after the iframe's `load` event (and fonts ready). With Chrome's `--kiosk-printing` flag this prints silently to the Windows default printer.
+- Counter pages send `frame-src 'self'` (all other pages `'none'`), so that hidden frame may load the print page (`frame_sources_for()`; fixed 2026-11-28, before that the CSP blocked it).
+- **Which screen prints** (decision 2026-11-28): a per-device setting on the Today tab ("This screen prints bills"), on by default on wide screens (the counter PC), off on phones. A screen that does not print (the owner using the counter on a phone) never prints kitchen tickets and sends bills to `api/print_queue.php` (table `print_jobs`, migration 003). The printing counter sees `print_queue` in its poll, claims the jobs in one UPDATE (so two screens never print the same job) and prints them silently. Jobs older than 30 minutes are skipped (counter PC was off); the weekly cleanup deletes them after 2 days.
 - Chrome sends the page as an image to the printer driver, so Marathi prints correctly even though the printer has no Devanagari font.
 - Keep receipts short: no images except an optional small monochrome logo.
 
@@ -239,4 +241,4 @@ Target current Android Chrome and iOS Safari; still avoid the list above to keep
 
 ### Security headers (all responses, `send_security_headers()`)
 
-`X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-Frame-Options: SAMEORIGIN`, the CSP from §11 (frames only for the Google map on the website location page, and only once the map code is set), `Permissions-Policy` (no camera, microphone, location, payment, USB), `Strict-Transport-Security: max-age=31536000` in production over HTTPS only, and no `X-Powered-By`. The full line-by-line review is in `docs/SECURITY_REVIEW.md`.
+`X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`, `X-Frame-Options: SAMEORIGIN`, the CSP from §11 (frames only for the Google map on the website location page, once the map code is set, and the counter's own print page on counter pages), `Permissions-Policy` (no camera, microphone, location, payment, USB), `Strict-Transport-Security: max-age=31536000` in production over HTTPS only, and no `X-Powered-By`. The full line-by-line review is in `docs/SECURITY_REVIEW.md`.

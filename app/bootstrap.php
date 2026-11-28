@@ -129,6 +129,6 @@ if (PHP_SAPI !== 'cli' && !defined('APP_NO_SESSION')) {
 }
 
 if (PHP_SAPI !== 'cli') {
-    send_security_headers();
+    send_security_headers(frame_sources_for((string) parse_url((string) ($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PATH)));
     Lang::initFromRequest();
 }

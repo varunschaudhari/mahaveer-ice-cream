@@ -2,7 +2,8 @@
  * Counter screen shared code (every tab). Plain JavaScript for Chrome 109 on Windows 7:
  * no newer APIs (see ARCHITECTURE.md §10). Exposes window.Counter:
  *   api(url, body?)        JSON call with CSRF header; throws {message, code}
- *   print(url)             prints a page silently through a hidden iframe (--kiosk-printing)
+ *   print(url)             prints a page silently through a hidden iframe (--kiosk-printing) on the
+ *                          printing screen; elsewhere (phones) queues it for the counter PC
  *   toast(message, type)   short message at the bottom
  *   numpad({...})          on-screen number pad dialog → Promise<string|null>
  *   choose({...})          pick a reason (or type one) → Promise<string|null>
@@ -182,6 +183,9 @@ window.Counter = (function () {
       var data = await api('/api/poll.php' + (params.length ? '?' + params.join('&') : ''));
       updateAlerts(data);
       (data.kot_pending || []).forEach(printKot);
+      if (data.print_queue > 0 && isPrinter()) {
+        claimPrints();
+      }
       document.dispatchEvent(new CustomEvent('counter:poll', { detail: data }));
     } catch (e) { /* offline banner is already shown by api() */ }
   }
@@ -239,10 +243,73 @@ window.Counter = (function () {
     });
   }
 
-  /** Prints a page silently; jobs wait for each other because they share one hidden frame. */
-  function print(url) {
+  // ---------- which screen prints (decision 2026-11-28) ----------
+  // The receipt printer hangs on the counter PC. A screen "prints" when this device's setting says
+  // so (Today tab), by default when it is wide (the counter PC); phones queue their bills instead
+  // and the printing counter claims them from the poll (api/print_queue.php).
+
+  var PRINTER_KEY = 'mahavir.counter.printer';
+
+  function isPrinter() {
+    var value = null;
+    try {
+      value = window.localStorage.getItem(PRINTER_KEY);
+    } catch (e) { /* default below */ }
+    if (value === '1' || value === '0') {
+      return value === '1';
+    }
+    return window.matchMedia('(min-width: 1024px)').matches;
+  }
+
+  function setPrinter(on) {
+    try {
+      window.localStorage.setItem(PRINTER_KEY, on ? '1' : '0');
+    } catch (e) { /* stays on the default */ }
+  }
+
+  function printHere(url) {
     printQueue = printQueue.then(function () { return printNow(url); });
     return printQueue;
+  }
+
+  /** Prints a page silently here, or sends it to the printing counter when this screen does not print. */
+  function print(url) {
+    if (isPrinter()) {
+      return printHere(url);
+    }
+    return api('/api/print_queue.php', { action: 'add', url: url }).then(
+      function () { toast(t('print_sent'), 'success'); },
+      function (err) { toast(err.message || t('error'), 'error'); }
+    );
+  }
+
+  var claiming = false;
+
+  function claimPrints() {
+    if (claiming) {
+      return;
+    }
+    claiming = true;
+    api('/api/print_queue.php', { action: 'claim' }).then(function (data) {
+      (data.urls || []).forEach(printHere);
+    }).catch(function () { /* the next poll tries again */ }).then(function () {
+      claiming = false;
+    });
+  }
+
+  // Phones: the tab row scrolls sideways; start it at the current tab.
+  var tabRow = document.querySelector('.counter-tabs');
+  var currentTab = tabRow && tabRow.querySelector('.is-active');
+  if (currentTab && tabRow.scrollWidth > tabRow.clientWidth) {
+    tabRow.scrollLeft = Math.max(0, currentTab.offsetLeft - 12);
+  }
+
+  var printerToggle = document.querySelector('[data-printer-toggle]');
+  if (printerToggle) {
+    printerToggle.checked = isPrinter();
+    printerToggle.addEventListener('change', function () {
+      setPrinter(printerToggle.checked);
+    });
   }
 
   // ---------- kitchen tickets (table orders) ----------
@@ -252,6 +319,9 @@ window.Counter = (function () {
   var KOT_KEY = 'mahavir.counter.kots';
 
   function printKot(orderId) {
+    if (!isPrinter()) {
+      return; // phones never print kitchen tickets; the counter PC prints them from its poll
+    }
     var printed;
     try {
       printed = JSON.parse(window.localStorage.getItem(KOT_KEY)) || [];
@@ -593,6 +663,7 @@ window.Counter = (function () {
     t: t,
     acknowledge: acknowledge,
     printKot: printKot,
+    isPrinter: isPrinter,
     setPollFull: function (value) {
       pollFull = value;
       poll();

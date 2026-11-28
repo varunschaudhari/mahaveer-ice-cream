@@ -31,6 +31,10 @@
     staffInput.value = tile.getAttribute('data-staff-id');
     nameEl.textContent = tile.getAttribute('data-staff-name');
     panel.hidden = false;
+    // Phones: the PIN card sits under the name tiles; bring it into view.
+    if (!window.matchMedia('(min-width: 1024px)').matches && panel.scrollIntoView) {
+      panel.scrollIntoView({ block: 'start' });
+    }
   }
 
   function select(tile) {
