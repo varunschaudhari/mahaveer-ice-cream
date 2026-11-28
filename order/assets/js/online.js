@@ -1,7 +1,9 @@
 /*
  * Counter Online tab: active takeaway orders as cards, refreshed by Counter's 5 s poll.
  * Received → Accept; Preparing → Ready / Picked up; Ready → Picked up. Cancel needs a reason,
- * plus the owner PIN once the order is accepted (SPEC §3). Chrome 109.
+ * plus the owner PIN once the order is accepted (SPEC §3). Pay-first orders (SPEC §6) wait for
+ * their UPI payment: Payment received → Preparing, Not received → cancelled; a paid order needs
+ * no payment at pickup. Chrome 109.
  */
 (function () {
   'use strict';
@@ -49,8 +51,17 @@
     return node;
   }
 
+  function actionsFor(order) {
+    if (order.status === 'pending_payment') {
+      // The customer said "I have paid": check the soundbox / UPI app. Otherwise the payment may
+      // still come (or came without the tap), and the order can be cancelled as usual.
+      return order.pay_claimed ? ['confirm_payment', 'payment_missing'] : ['confirm_payment', 'cancel'];
+    }
+    return (ACTIONS[order.type] || {})[order.status] || [];
+  }
+
   function card(order) {
-    var article = el('article', 'order-card status-' + order.status + ' type-' + order.type);
+    var article = el('article', 'order-card status-' + order.status + ' type-' + order.type + (order.pay_claimed ? ' is-pay-claimed' : ''));
 
     if (order.type === 'table') {
       article.appendChild(el('p', 'order-card__table', text('table', { n: order.table })));
@@ -64,6 +75,12 @@
     if (order.slot) {
       var slot = text('pickup', { slot: order.slot }) + (order.late ? ' · ' + text('late') : '');
       article.appendChild(el('p', 'order-card__slot' + (order.late ? ' is-late' : ''), slot));
+    }
+    if (order.pay_by) {
+      article.appendChild(el('p', 'order-card__payby', text('pay_by', { time: order.pay_by })));
+    }
+    if (order.paid) {
+      article.appendChild(el('p', 'order-card__paid', text('paid_upi')));
     }
 
     var who = el('p', 'order-card__customer', order.customer + ' ');
@@ -86,8 +103,9 @@
     article.appendChild(el('p', 'order-card__total', C.money(order.total_paise)));
 
     var actions = el('div', 'order-card__actions');
-    ((ACTIONS[order.type] || {})[order.status] || []).forEach(function (action) {
-      var button = el('button', 'counter-btn' + (action === 'cancel' ? ' btn-danger-c' : ' btn-go'), text(action));
+    actionsFor(order).forEach(function (action) {
+      var danger = action === 'cancel' || action === 'payment_missing';
+      var button = el('button', 'counter-btn' + (danger ? ' btn-danger-c' : ' btn-go'), text(action));
       button.type = 'button';
       button.setAttribute('data-action', action);
       button.setAttribute('data-id', order.id);
@@ -149,6 +167,28 @@
       if (result && result.print_url) {
         C.printKot(id); // kitchen ticket for a table order (printed once, even if the poll sees it too)
       }
+    } else if (action === 'confirm_payment') {
+      var yes = await C.choose({ title: text('confirm_title', { token: order.token, total: C.money(order.total_paise) }), options: [text('confirm_yes')] });
+      if (yes) {
+        await run(id, { action: 'confirm_payment', order_id: id }, function () {
+          return text('confirmed_done', { token: order.token });
+        });
+      }
+    } else if (action === 'payment_missing') {
+      var sure = await C.choose({ title: text('missing_title', { token: order.token, total: C.money(order.total_paise) }), options: [text('missing_yes')] });
+      if (sure) {
+        await run(id, { action: 'payment_missing', order_id: id }, function () {
+          return text('cancelled', { token: order.token });
+        });
+      }
+    } else if (action === 'picked_up' && order.paid) {
+      // Paid by UPI in advance: nothing to collect, straight to the bill.
+      var handed = await run(id, { action: 'pickup', order_id: id, method: 'upi', cash_paise: 0 }, function (r) {
+        return text('picked_up_done', { token: order.token, bill: r.bill_no });
+      });
+      if (handed) {
+        C.print(handed.print_url);
+      }
     } else if (action === 'picked_up') {
       C.pay(order.total_paise, async function (method, cashPaise) {
         var result = await run(id, { action: 'pickup', order_id: id, method: method, cash_paise: cashPaise }, function (r) {
@@ -165,14 +205,17 @@
         return;
       }
       var pin = '';
-      if (order.status !== 'received') {
+      if (order.status !== 'received' && order.status !== 'pending_payment') {
         pin = await C.numpad({ title: C.t('owner_pin'), mask: true, maxLength: 4, minLength: 4 });
         if (!pin) {
           return;
         }
       }
       await run(id, { action: 'cancel', order_id: id, reason: reason, pin: pin }, function () {
-        return text('cancelled', { token: order.token });
+        // A UPI payment already made goes back to the customer from the owner's UPI app.
+        return order.paid
+          ? text('cancelled_refund', { token: order.token, total: C.money(order.total_paise) })
+          : text('cancelled', { token: order.token });
       });
     }
   });

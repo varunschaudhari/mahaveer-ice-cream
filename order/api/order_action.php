@@ -6,11 +6,14 @@ declare(strict_types=1);
 //   accept / ready / serve  online + table order status (accept on a table order → KOT print URL)
 //   pickup  method, cash_paise   collect payment → bill number → returns the print URL
 //   reprint                 logs the reprint, returns the print URL (marked DUPLICATE)
+//   confirm_payment         pay-first: the UPI money arrived → Preparing; notifies the owner
+//   payment_missing         pay-first: no money found → cancelled (no owner PIN: nothing was paid)
 //   cancel  reason[, pin]   reason always; the owner PIN once the order is accepted (SPEC §3)
 
 use App\Auth;
 use App\Csrf;
 use App\Services\OrderService;
+use App\Services\PushService;
 use App\ValidationException;
 
 require __DIR__ . '/../boot.php';
@@ -50,6 +53,15 @@ try {
                 'bill_no' => (int) $order['bill_no'],
                 'print_url' => '/counter/print.php?type=bill&id=' . $orderId,
             ]]);
+
+        case 'confirm_payment':
+            $order = $orders->confirmPayment($orderId, $user['id']);
+            notify_owners_later(PushService::forOrder($order));
+            json_response(['ok' => true, 'data' => ['status' => 'preparing']]);
+
+        case 'payment_missing':
+            $orders->paymentMissing($orderId, $user['id']);
+            json_response(['ok' => true, 'data' => ['cancelled' => true]]);
 
         case 'reprint':
             $orders->logReprint($orderId, $user['id']);

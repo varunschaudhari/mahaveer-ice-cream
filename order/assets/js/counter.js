@@ -92,6 +92,8 @@ window.Counter = (function () {
   // acknowledged (newest order id, newest alert id) is kept in this counter's localStorage.
   // On the Online tab the bar leaves out "new orders" (they are on screen) and on the Tables tab
   // "table alerts"; the beep still repeats until any tap on that page acknowledges them.
+  // Kinds: o = new orders, p = UPI payments a customer says they made (pay-first, checked on the
+  // Online tab; payment ids, as the order may be older than ones already seen), a = table alerts.
 
   var pollFull = false;
   var pollView = '';
@@ -99,28 +101,31 @@ window.Counter = (function () {
   var badge = document.querySelector('[data-online-badge]');
   var tablesBadge = document.querySelector('[data-tables-badge]');
   var alertBar = document.querySelector('[data-alert-bar]');
-  var latest = { o: 0, a: 0 };
-  var lastSeen = { o: 0, a: 0 };
-  var unacked = { o: false, a: false };
-  var counts = { o: 0, a: 0 };
+  var latest = { o: 0, p: 0, a: 0 };
+  var lastSeen = { o: 0, p: 0, a: 0 };
+  var unacked = { o: false, p: false, a: false };
+  var counts = { o: 0, p: 0, a: 0 };
   var onOnlineTab = window.location.pathname === '/counter/online.php';
   var onTablesTab = window.location.pathname === '/counter/tables.php';
 
   function acked() {
     try {
       var value = JSON.parse(window.localStorage.getItem(ACK_KEY));
-      return value && typeof value === 'object' ? { o: value.o || 0, a: value.a || 0 } : { o: 0, a: 0 };
+      return value && typeof value === 'object' ? { o: value.o || 0, p: value.p || 0, a: value.a || 0 } : { o: 0, p: 0, a: 0 };
     } catch (e) {
-      return { o: 0, a: 0 };
+      return { o: 0, p: 0, a: 0 };
     }
   }
 
-  // kind: 'o' (new orders), 'a' (table alerts) or nothing for both.
+  // kind: 'o' (new orders and payments to check, both on the Online tab), 'a' (table alerts) or
+  // nothing for all.
   function acknowledge(kind) {
     var value = acked();
     if (!kind || kind === 'o') {
       value.o = latest.o;
       unacked.o = false;
+      value.p = latest.p;
+      unacked.p = false;
     }
     if (!kind || kind === 'a') {
       value.a = latest.a;
@@ -140,6 +145,9 @@ window.Counter = (function () {
     if (unacked.o && !onOnlineTab) {
       parts.push(t('new_orders', { n: counts.o }));
     }
+    if (unacked.p && !onOnlineTab) {
+      parts.push(t('pay_checks', { n: counts.p }));
+    }
     if (unacked.a && !onTablesTab) {
       parts.push(t('table_alerts', { n: counts.a }));
     }
@@ -155,20 +163,24 @@ window.Counter = (function () {
   }
 
   function updateAlerts(data) {
-    latest = { o: data.latest_new_id, a: data.latest_alert_id };
-    setBadge(badge, data.new_count);
+    var payCount = data.pay_count || 0;
+    var latestPay = data.latest_pay_id || 0;
+    latest = { o: data.latest_new_id, p: latestPay, a: data.latest_alert_id };
+    setBadge(badge, data.new_count + payCount);
     setBadge(tablesBadge, data.alert_count);
     var seen = acked();
     unacked = {
       o: data.new_count > 0 && data.latest_new_id > seen.o,
+      p: payCount > 0 && latestPay > seen.p,
       a: data.alert_count > 0 && data.latest_alert_id > seen.a
     };
-    counts = { o: data.new_count, a: data.alert_count };
+    counts = { o: data.new_count, p: payCount, a: data.alert_count };
     renderAlertBar();
-    if ((unacked.o && data.latest_new_id > lastSeen.o) || (unacked.a && data.latest_alert_id > lastSeen.a)) {
+    if ((unacked.o && data.latest_new_id > lastSeen.o) || (unacked.p && latestPay > lastSeen.p) ||
+        (unacked.a && data.latest_alert_id > lastSeen.a)) {
       beep(); // something new just arrived: beep at once, then every 10 s
     }
-    lastSeen = { o: data.latest_new_id, a: data.latest_alert_id };
+    lastSeen = { o: data.latest_new_id, p: latestPay, a: data.latest_alert_id };
   }
 
   async function poll() {
@@ -193,13 +205,13 @@ window.Counter = (function () {
   window.setInterval(poll, 5000);
   window.setTimeout(poll, 300);
   window.setInterval(function () {
-    if (unacked.o || unacked.a) {
+    if (unacked.o || unacked.p || unacked.a) {
       beep();
     }
   }, 10000);
   // On the tab that shows them, any tap means the staff has seen the new orders / table alerts.
   document.addEventListener('pointerdown', function () {
-    if (onOnlineTab && unacked.o) {
+    if (onOnlineTab && (unacked.o || unacked.p)) {
       acknowledge('o');
     }
     if (onTablesTab && unacked.a) {
@@ -211,7 +223,7 @@ window.Counter = (function () {
 
   if (alertBar) {
     alertBar.addEventListener('click', function () {
-      var target = unacked.o ? '/counter/online.php' : '/counter/tables.php';
+      var target = unacked.o || unacked.p ? '/counter/online.php' : '/counter/tables.php';
       acknowledge();
       if (window.location.pathname !== target) {
         window.location.href = target;

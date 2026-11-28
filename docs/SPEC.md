@@ -32,13 +32,13 @@ All orders live in one `orders` table with `order_type`:
 | Type | Created by | Status flow |
 |---|---|---|
 | `counter` | Staff at counter | Saved directly as `completed` (paid at billing) |
-| `takeaway` | Customer via takeaway QR / website | `received` → (staff Accept) `preparing` → (Ready) `ready` → (Picked up + payment collected) `completed` |
+| `takeaway` | Customer via takeaway QR / website | `received` → (staff Accept) `preparing` → (Ready) `ready` → (Picked up + payment collected) `completed`. With pay-first by UPI on (§6): `pending_payment` → (counter: Payment received) `preparing` → (Ready) `ready` → (Picked up, nothing to collect) `completed` |
 | `table` | Customer via table QR | `received` → (Accept, KOT prints) `preparing` → (Served) `served` → `completed` when the table is settled |
 | `bulk` | Customer via bulk form | `pending_approval` → (owner approves, sets advance) `preparing` → `ready` → `completed` when balance is paid |
 
 Any order can go to `cancelled` (owner PIN needed once it is `preparing` or later; reason required). Takeaway orders not picked up 30 minutes after their slot ends go to `no_show` automatically (cron).
 
-`pending_payment` exists in the schema for phase 2 (Razorpay); do not use it in V1.
+`pending_payment` is used by pay-first takeaway orders (§6, decision 2026-11-28): the order waits for the customer's UPI payment and is not yet an order for the shop. No payment gateway: Razorpay stays phase 2.
 
 ## 4. Numbers
 
@@ -64,13 +64,21 @@ URL: `order.mahaveericecream.in/` (takeaway QR on door/counter poster, links fro
 
 1. Menu by category with Half/Full or weight variants. Sold-out items greyed and not addable. Inactive items hidden.
 2. Cart stored in the browser (`sessionStorage`) until checkout. Shows subtotal, ₹5 parcel charge, total.
-3. Checkout: pickup slot (the earliest free slot is selected already; the customer can tap another – client decision 2026-11-27), name, mobile (10 digits, starts 6–9), optional note. Payment: "Pay at counter on pickup" (only option in V1).
+3. Checkout: pickup slot (the earliest free slot is selected already; the customer can tap another – client decision 2026-11-27), name, mobile (10 digits, starts 6–9), optional note. Payment: "Pay at counter on pickup", or – when the shop's UPI ID is set in Settings – pay first by UPI (point 10).
 4. Pickup slots: 15-minute slots for **today only**, earliest = now + 15 min rounded up to the next slot, last slot ends 30 min before closing (so last pickup slot 9:45–10:00 PM). A slot with 10 or more active takeaway orders is full.
 5. Ordering closed outside hours: banner "दुकान बंद आहे, सकाळी 10:00 वाजता उघडेल" / "Shop closed, opens at 10:00 AM".
 6. Blocked mobile numbers (2+ no-shows) see: "Please order at the counter or call the shop."
 7. After placing: order status page `order.php?id=<id>&k=<order_key>` shows token, items, total, pickup slot, live status (polls every 10 s): Received → Confirmed/Preparing → Ready → Picked up / Cancelled.
 8. "My recent orders" on the menu page: this phone's own last 5 orders, remembered in a cookie that holds each order's id + secret key (never the mobile number, so nobody can see another person's orders by typing their number); reorder button refills the cart with currently available items. Name and mobile are pre-filled from the phone.
-9. The customer can cancel their own order from the status page while it is still Received (not yet accepted); after that they call the shop.
+9. The customer can cancel their own order from the status page while it is still Received (not yet accepted), or Waiting for payment before tapping "I have paid"; after that they call the shop.
+10. **Pay first by UPI** (owner's decision 2026-11-28; on when `upi_id` is set, off when empty). Without a payment gateway the system cannot see the shop's account, so the counter confirms every payment:
+    - Every takeaway order starts as **Waiting for payment** (`pending_payment`, `payment_pref = online`). It holds its pickup slot but is not a new order for the shop yet (no beep, no owner notification).
+    - The status page shows the amount, **Pay with a UPI app** (a `upi://pay` link with the shop's UPI ID, English shop name, amount and "Mahavir token N"; it opens GPay / PhonePe / Paytm / the bank app on the same phone), **I have paid**, and – folded – a QR code of the same link plus the UPI ID with Copy, for paying from another phone. No proof is asked for: staff match the amount, time and name in the shop's UPI app.
+    - "I have paid" is saved as an unchecked payment (`payments`: `upi_online`, status `created`); the counter beeps and the card shows **Check payment** with **Payment received** / **Not received**. Staff check the soundbox / UPI business app.
+    - **Payment received** → the payment counts (`success`), the order goes straight to Preparing (staff have just looked at it) and the owner's phone is notified. Staff can also confirm an order whose customer paid but never tapped "I have paid".
+    - **Not received** → the order is cancelled (no owner PIN: nothing was paid), the slot is free again.
+    - Not paid and no "I have paid" within `payment_wait_mins` (15) → cancelled automatically (cron, every 5 min), not counted as a no-show. An order with "I have paid" is never cancelled automatically: the customer may really have paid.
+    - At pickup nothing is collected; the bill shows "Online UPI". Cancelling a paid order needs the owner PIN; the owner sends the money back from his UPI app, and the payment is marked refunded so day totals leave it out.
 
 ## 7. Table ordering (customer phone)
 
@@ -105,7 +113,7 @@ Opened as a Chrome app window: `chrome.exe --app=https://order.mahaveericecream.
 Layout (landscape, 1024×768 minimum, touch only, no hover-dependent UI):
 
 - **Billing tab:** category buttons → item grid → variant buttons (Half/Full). Cart on the right. Dine-in / Parcel toggle (every new bill starts on **Dine-in**). Payment: Cash / UPI / Mixed (split amounts), cash tendered → change shown. Save & Print → **one copy** of the bill with token prints. Big buttons (min 56 px tall).
-- **Online orders tab:** takeaway + table orders in arrival order, newest highlighted. Each card: token, type, table number (very large for table orders, e.g. "TABLE 4") or pickup slot, items, total, age; a slot whose window has ended while the order is still open is marked "Late". Buttons by status: Accept / Ready / Picked up (collect payment) / Served / Cancel.
+- **Online orders tab:** takeaway + table orders in arrival order, newest highlighted. Each card: token, type, table number (very large for table orders, e.g. "TABLE 4") or pickup slot, items, total, age; a slot whose window has ended while the order is still open is marked "Late". Buttons by status: Accept / Ready / Picked up (collect payment) / Served / Cancel. Pay-first orders (§6.10): a quiet dashed card "Waiting for payment until 11:41" (Payment received / Cancel), and a highlighted "Check payment" card with a beep once the customer says they paid (Payment received / Not received, each with a confirm step); a paid card shows "Paid by UPI" and Picked up goes straight to the bill.
 - **Tables tab:** 7 tiles (T7 labelled Outside). Each tile: Free / Occupied / Bill requested, running total, minutes since first order, open alerts. Tap → table detail: orders, Mark served, Move order to another table, Settle (combined bill → payment → print → table Free).
 - **Stock tab:** every item with an on/off switch for today's availability.
 - **Today tab:** today's bills, reprint, cancel (owner PIN), day close summary (totals by Cash / UPI counter, counts by order type), print day summary.
@@ -137,7 +145,7 @@ URL: `order.mahaveericecream.in/owner/` installable to the home screen (PWA mani
 URL: `order.mahaveericecream.in/admin/`. Works on the counter PC and the owner's phone.
 
 - Menu: categories, items (Marathi + English name, photo, sort order, active, online enabled), variants (labels, price, sort order). Activating an item with a ₹0 variant is refused.
-- Settings (table `settings`): hours, last order minutes, parcel charge, slot length and capacity, minimum lead time, no-show auto-cancel minutes, no-shows before block, bulk notice days, table warning minutes, bill header/footer text.
+- Settings (table `settings`): hours, last order minutes, parcel charge, slot length and capacity, minimum lead time, no-show auto-cancel minutes, no-shows before block, bulk notice days, table warning minutes, bill header/footer text, shop UPI ID and time to pay (pay-first takeaway).
 - Tables: list T1–T7, area, active, regenerate QR token, print QR stickers (A4 sheet, each sticker shows table number + QR + "Scan to order").
 - Takeaway QR poster: A4 printable.
 - Bulk orders: approve/reject, advance, balance.
@@ -180,6 +188,8 @@ Content still to come from the owner: logo file, photos, founding year and famil
 | `bulk_notice_days` | 1 | Minimum days ahead for bulk orders |
 | `table_unsettled_mins` | 120 | Warn on counter after this |
 | `whatsapp_number` | empty | Website WhatsApp button hidden when empty |
+| `upi_id` | empty | Shop's UPI ID for pay-first takeaway (§6.10); empty = pay at the counter |
+| `payment_wait_mins` | 15 | An unpaid pay-first order is cancelled after this |
 
 ## 15. Language
 

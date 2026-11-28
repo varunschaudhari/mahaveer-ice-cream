@@ -123,22 +123,34 @@ function customer_status(array $order): array
         ];
     }
 
+    // Pay-first by UPI (decision 2026-11-28): pending_payment until the counter confirms the money.
+    $prepay = ($order['payment_pref'] ?? '') === 'online';
+    $claimed = $status === 'pending_payment' && App\Services\OrderService::hasPaymentClaim($order);
     $help = match ($status) {
+        'pending_payment' => $claimed
+            ? t('status.help.pay_checking')
+            : t('status.help.pay_now', [
+                'amount' => money(paise_from_decimal((string) $order['total'])),
+                'time' => format_time(App\Services\OrderService::payBy($order)->format('H:i')),
+            ]),
         'received' => t('status.help.received'),
         'preparing' => t('status.help.preparing'),
-        'ready' => t('status.help.ready', ['token' => $order['token_no']]),
+        'ready' => t($prepay ? 'status.help.ready_paid' : 'status.help.ready', ['token' => $order['token_no']]),
         'completed' => t('status.help.completed'),
-        'cancelled' => t('status.help.cancelled'),
+        'cancelled' => ($order['cancel_reason'] ?? '') === App\Services\OrderService::UNPAID_REASON
+            ? t('status.help.unpaid')
+            : t('status.help.cancelled'),
         'no_show' => t('status.help.no_show'),
         default => '',
     };
+    $stepLabel = static fn (string $key): string => $key === 'pending_payment' ? t('status.step_payment') : order_status_label($key);
     return [
-        'label' => order_status_label($status),
+        'label' => $claimed ? t('status.payment_checking') : order_status_label($status),
         'help' => $help,
-        'can_cancel' => $order['order_type'] === 'takeaway' && $status === 'received',
+        'can_cancel' => $order['order_type'] === 'takeaway' && ($status === 'received' || ($status === 'pending_payment' && !$claimed)),
         'steps' => array_map(
-            static fn (string $key): array => ['key' => $key, 'label' => order_status_label($key)],
-            ['received', 'preparing', 'ready', 'completed']
+            static fn (string $key): array => ['key' => $key, 'label' => $stepLabel($key)],
+            $prepay ? ['pending_payment', 'preparing', 'ready', 'completed'] : ['received', 'preparing', 'ready', 'completed']
         ),
     ];
 }
@@ -148,6 +160,7 @@ function order_status_label(string $status): string
 {
     return match ($status) {
         'pending_approval' => t('status.pending_approval'),
+        'pending_payment' => t('status.pending_payment'),
         'received' => t('status.received'),
         'preparing' => t('status.preparing'),
         'ready' => t('status.ready'),

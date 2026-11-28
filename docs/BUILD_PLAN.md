@@ -173,4 +173,4 @@ Build in this order. Each milestone ends with: tests pass, manual checklist done
 
 ## Phase 2 (do not build now)
 
-Razorpay online payments, WhatsApp notifications for takeaway orders, SMS, OTP, delivery, loyalty/coupons, GST, Play Store app, token display screen, inventory, aggregator integration.
+Razorpay (or any payment gateway) online payments – pay-first takeaway by manual UPI is in V1 (decision 2026-11-28), WhatsApp notifications for takeaway orders, SMS, OTP, delivery, loyalty/coupons, GST, Play Store app, token display screen, inventory, aggregator integration.

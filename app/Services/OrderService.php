@@ -15,12 +15,17 @@ use PDOException;
 /**
  * Orders (SPEC §3). Counter bills are saved straight as completed. Takeaway orders go
  * received → (accept) preparing → (ready) ready → (pickup + payment) completed, or cancelled /
- * no_show. Table and bulk orders join in M4–M5.
+ * no_show. With pay-first by UPI switched on (UpiService) they start as pending_payment instead and
+ * go to preparing once the counter confirms the money arrived. Table and bulk orders join in M4–M5.
  */
 final class OrderService
 {
     /** Text saved as cancel_reason when a customer cancels from the status page. */
     public const CUSTOMER_CANCEL_REASON = 'ग्राहकाने रद्द केले / Cancelled by customer';
+    /** cancel_reason of a pay-first order nobody paid for in time (cron). */
+    public const UNPAID_REASON = 'वेळेत पेमेंट आले नाही / Not paid in time';
+    /** cancel_reason when the counter found no UPI payment for an order. */
+    public const PAYMENT_MISSING_REASON = 'पेमेंट मिळाले नाही / Payment not received';
     /** Statuses of an order that still needs the shop's attention. */
     public const ACTIVE_STATUSES = ['received', 'preparing', 'ready'];
 
@@ -48,7 +53,8 @@ final class OrderService
     // ---------------------------------------------------------------
 
     /**
-     * Places a takeaway order: status received, today's next token, no bill number until pickup.
+     * Places a takeaway order: status received (pending_payment when pay-first by UPI is on),
+     * today's next token, no bill number until pickup.
      *
      * $input: order_key (32 hex, made by the phone; a repeat returns the saved order), name,
      * mobile, slot ('19:30'), note, lines [['variant_id' => …, 'qty' => …]].
@@ -98,8 +104,9 @@ final class OrderService
             Settings::paise('parcel_charge'),
         );
 
+        $prepay = UpiService::enabled();
         try {
-            $orderId = Db::transaction(function () use ($key, $name, $mobile, $note, $lines, $slot, $totals, $now): int {
+            $orderId = Db::transaction(function () use ($key, $name, $mobile, $note, $lines, $slot, $totals, $now, $prepay): int {
                 // The token lock serialises all orders of the day, so this count cannot race.
                 $token = $this->sequences->nextToken($now);
                 if ($this->slots->countAt($slot['at']) >= Settings::int('slot_capacity', 10)) {
@@ -111,11 +118,12 @@ final class OrderService
                     "INSERT INTO orders (order_key, token_no, token_date, order_type, service_type, customer_id, status,
                                          pickup_at, subtotal, parcel_charge, discount, total, amount_paid, payment_pref,
                                          note, created_at)
-                     VALUES (?, ?, ?, 'takeaway', 'parcel', ?, 'received', ?, ?, ?, 0, ?, 0, 'counter', ?, ?)"
+                     VALUES (?, ?, ?, 'takeaway', 'parcel', ?, ?, ?, ?, ?, 0, ?, 0, ?, ?, ?)"
                 )->execute([
-                    $key, $token, $now->format('Y-m-d'), $customerId, $slot['at'],
+                    $key, $token, $now->format('Y-m-d'), $customerId, $prepay ? 'pending_payment' : 'received', $slot['at'],
                     decimal_from_paise($totals['subtotal']), decimal_from_paise($totals['parcel_charge']),
-                    decimal_from_paise($totals['total']), $note === '' ? null : $note, $now->format('Y-m-d H:i:s'),
+                    decimal_from_paise($totals['total']), $prepay ? 'online' : 'counter',
+                    $note === '' ? null : $note, $now->format('Y-m-d H:i:s'),
                 ]);
                 $orderId = (int) $this->db->lastInsertId();
                 $this->insertLines($orderId, $lines, $totals['lines']);
@@ -220,7 +228,8 @@ final class OrderService
 
     /**
      * Customer collects and pays: preparing|ready → completed, with the bill number assigned now
-     * (SPEC §4) and the payment recorded. Staff may skip "Ready".
+     * (SPEC §4) and the payment recorded. Staff may skip "Ready". An order already paid by UPI
+     * (pay-first) records nothing more; $method is ignored for it.
      */
     public function pickup(int $orderId, string $method, int $cashPaise, int $staffId, ?DateTimeImmutable $now = null): array
     {
@@ -231,17 +240,22 @@ final class OrderService
                 throw ValidationException::one('_', 'order.error.wrong_status');
             }
             $total = paise_from_decimal((string) $order['total']);
-            $payments = PaymentService::split($method, $total, $cashPaise);
+            $payments = self::isPrepaid($order) ? [] : PaymentService::split($method, $total, $cashPaise);
             $billNo = $this->sequences->nextBillNo();
             $this->db->prepare(
                 "UPDATE orders SET status = 'completed', bill_no = ?, amount_paid = ?, completed_at = ?, staff_id = ? WHERE id = ?"
             )->execute([$billNo, $order['total'], $now->format('Y-m-d H:i:s'), $staffId, $orderId]);
-            $this->payments->record($orderId, $payments, $staffId, $now);
+            if ($payments !== []) {
+                $this->payments->record($orderId, $payments, $staffId, $now);
+            }
         });
         return $this->find($orderId);
     }
 
-    /** Customer cancels from the status page: only their own order (secret key), only before it is accepted. */
+    /**
+     * Customer cancels from the status page: only their own order (secret key), only before it is
+     * accepted, and a pay-first order only until they say they have paid (then they call the shop).
+     */
     public function cancelByCustomer(int $orderId, string $key, ?DateTimeImmutable $now = null): void
     {
         $order = $this->findForCustomer($orderId, $key) ?? throw ValidationException::one('_', 'status.not_found');
@@ -249,10 +263,142 @@ final class OrderService
             (new BulkService($this->db))->cancel($orderId, self::CUSTOMER_CANCEL_REASON, null, $now);
             return;
         }
-        if ($order['order_type'] !== 'takeaway' || $order['status'] !== 'received') {
+        $unpaid = $order['status'] === 'pending_payment' && !self::hasPaymentClaim($order);
+        if ($order['order_type'] !== 'takeaway' || !($order['status'] === 'received' || $unpaid)) {
             throw ValidationException::one('_', 'order.error.cannot_cancel');
         }
         $this->cancel($orderId, self::CUSTOMER_CANCEL_REASON, null, null, $now);
+    }
+
+    // ---------------------------------------------------------------
+    // Pay-first takeaway by UPI (decision 2026-11-28, SPEC §6)
+    // ---------------------------------------------------------------
+
+    /** Paid in advance by UPI and confirmed by the counter. */
+    public static function isPrepaid(array $order): bool
+    {
+        return $order['payment_pref'] === 'online'
+            && paise_from_decimal((string) $order['amount_paid']) >= paise_from_decimal((string) $order['total']);
+    }
+
+    /** The customer tapped "I have paid" and the counter has not checked it yet. $order from find(). */
+    public static function hasPaymentClaim(array $order): bool
+    {
+        foreach ($order['payments'] ?? [] as $payment) {
+            if ($payment['status'] === 'created') {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Customer taps "I have paid": saved as an unchecked UPI payment (status created) for the counter
+     * to confirm. Repeats, and taps after the counter already confirmed, change nothing.
+     */
+    public function customerSaysPaid(int $orderId, string $key, ?DateTimeImmutable $now = null): void
+    {
+        $this->findForCustomer($orderId, $key) ?? throw ValidationException::one('_', 'status.not_found');
+        $at = ($now ?? now())->format('Y-m-d H:i:s');
+        Db::transaction(function () use ($orderId, $at): void {
+            $order = $this->lockOrder($orderId);
+            if ($order['order_type'] !== 'takeaway' || $order['status'] !== 'pending_payment') {
+                return; // the status page reloads and shows what happened instead
+            }
+            $claimed = $this->db->prepare("SELECT COUNT(*) FROM payments WHERE order_id = ? AND status = 'created'");
+            $claimed->execute([$orderId]);
+            if ((int) $claimed->fetchColumn() > 0) {
+                return;
+            }
+            $this->db->prepare(
+                "INSERT INTO payments (order_id, mode, amount, status, created_at) VALUES (?, 'upi_online', ?, 'created', ?)"
+            )->execute([$orderId, $order['total'], $at]);
+        });
+    }
+
+    /**
+     * The counter saw the money arrive (soundbox / UPI app): the payment counts from now and the
+     * order goes straight to Preparing, as staff have just looked at it. Also works when the
+     * customer paid but never tapped "I have paid".
+     */
+    public function confirmPayment(int $orderId, int $staffId, ?DateTimeImmutable $now = null): array
+    {
+        $at = ($now ?? now())->format('Y-m-d H:i:s');
+        Db::transaction(function () use ($orderId, $staffId, $at): void {
+            $order = $this->lockOrder($orderId);
+            if ($order['order_type'] !== 'takeaway' || $order['status'] !== 'pending_payment') {
+                throw ValidationException::one('_', 'order.error.wrong_status');
+            }
+            $claim = $this->db->prepare(
+                "UPDATE payments SET status = 'success', amount = ?, staff_id = ?, created_at = ? WHERE order_id = ? AND status = 'created'"
+            );
+            $claim->execute([$order['total'], $staffId, $at, $orderId]);
+            if ($claim->rowCount() === 0) {
+                $this->db->prepare(
+                    "INSERT INTO payments (order_id, mode, amount, status, staff_id, created_at) VALUES (?, 'upi_online', ?, 'success', ?, ?)"
+                )->execute([$orderId, $order['total'], $staffId, $at]);
+            }
+            $this->db->prepare(
+                "UPDATE orders SET status = 'preparing', amount_paid = total, accepted_at = ?, staff_id = ? WHERE id = ?"
+            )->execute([$at, $staffId, $orderId]);
+            $this->audit->log($staffId, 'payment_confirmed', 'order', $orderId, [
+                'token' => $order['token_no'],
+                'total' => $order['total'],
+            ]);
+        });
+        return $this->find($orderId);
+    }
+
+    /** The counter found no money for an order waiting for payment: cancelled, the slot is free again. */
+    public function paymentMissing(int $orderId, int $staffId, ?DateTimeImmutable $now = null): void
+    {
+        $order = $this->find($orderId) ?? throw ValidationException::one('_', 'cancel.error.not_found');
+        if ($order['status'] !== 'pending_payment') {
+            throw ValidationException::one('_', 'order.error.wrong_status');
+        }
+        $this->cancel($orderId, self::PAYMENT_MISSING_REASON, null, $staffId, $now);
+    }
+
+    /**
+     * Pay-first orders nobody paid for within payment_wait_mins are cancelled and free their slot
+     * (cron/auto_noshow.php, every 5 min). An order with "I have paid" waits for the counter
+     * instead: the customer may really have paid.
+     *
+     * @return int how many orders were cancelled
+     */
+    public function cancelUnpaid(?DateTimeImmutable $now = null): int
+    {
+        $now ??= now();
+        $minutes = max(5, Settings::int('payment_wait_mins', 15));
+        $cutoff = $now->modify("-{$minutes} minutes")->format('Y-m-d H:i:s');
+
+        return Db::transaction(function () use ($cutoff): int {
+            $stmt = $this->db->prepare(
+                "SELECT o.id, o.token_no, o.token_date, o.total FROM orders o
+                 WHERE o.order_type = 'takeaway' AND o.status = 'pending_payment' AND o.created_at <= ?
+                   AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id AND p.status = 'created')
+                 FOR UPDATE"
+            );
+            $stmt->execute([$cutoff]);
+            $orders = $stmt->fetchAll();
+            foreach ($orders as $order) {
+                $this->db->prepare("UPDATE orders SET status = 'cancelled', cancel_reason = ? WHERE id = ?")
+                    ->execute([self::UNPAID_REASON, $order['id']]);
+                $this->audit->log(null, 'cancel_unpaid', 'order', (int) $order['id'], [
+                    'token' => $order['token_no'],
+                    'date' => $order['token_date'],
+                    'total' => $order['total'],
+                ]);
+            }
+            return count($orders);
+        });
+    }
+
+    /** Until when an unpaid pay-first order waits (status page: "Pay by …"). */
+    public static function payBy(array $order): DateTimeImmutable
+    {
+        return (new DateTimeImmutable((string) $order['created_at']))
+            ->modify('+' . max(5, Settings::int('payment_wait_mins', 15)) . ' minutes');
     }
 
     /**
@@ -289,19 +435,22 @@ final class OrderService
     }
 
     /**
-     * Online orders still needing the shop today (Online tab), oldest first, with their lines.
+     * Online orders still needing the shop today (Online tab), oldest first, with their lines;
+     * pay-first orders still waiting for their UPI payment included.
      * @return list<array>
      */
     public function activeOnline(DateTimeImmutable $day): array
     {
         $stmt = $this->db->prepare(
-            "SELECT o.id, o.token_no, o.order_type, o.status, o.pickup_at, o.total, o.note, o.created_at,
-                    cu.name AS customer_name, cu.mobile AS customer_mobile, t.code AS table_code
+            "SELECT o.id, o.token_no, o.order_type, o.status, o.pickup_at, o.total, o.amount_paid, o.payment_pref,
+                    o.note, o.created_at, cu.name AS customer_name, cu.mobile AS customer_mobile, t.code AS table_code,
+                    EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id AND p.status = 'created') AS pay_claimed
              FROM orders o
              LEFT JOIN customers cu ON cu.id = o.customer_id
              LEFT JOIN table_sessions ts ON ts.id = o.table_session_id
              LEFT JOIN dining_tables t ON t.id = ts.table_id
-             WHERE o.token_date = ? AND o.order_type IN ('takeaway', 'table') AND o.status IN ('received', 'preparing', 'ready')
+             WHERE o.token_date = ? AND o.order_type IN ('takeaway', 'table')
+               AND o.status IN ('pending_payment', 'received', 'preparing', 'ready')
              ORDER BY o.id"
         );
         $stmt->execute([$day->format('Y-m-d')]);
@@ -326,10 +475,11 @@ final class OrderService
     }
 
     /**
-     * For the counter's 5-second poll: online/table orders waiting to be accepted and open table
-     * alerts, with the newest id of each (the screen beeps until they are acknowledged).
+     * For the counter's 5-second poll: online/table orders waiting to be accepted, UPI payments the
+     * customer says they made (the counter checks them) and open table alerts, with the newest id
+     * of each (the screen beeps until they are acknowledged).
      *
-     * @return array{new_count: int, latest_new_id: int, alert_count: int, latest_alert_id: int}
+     * @return array{new_count: int, latest_new_id: int, pay_count: int, latest_pay_id: int, alert_count: int, latest_alert_id: int}
      */
     public function newOnlineSummary(DateTimeImmutable $day): array
     {
@@ -339,10 +489,18 @@ final class OrderService
         );
         $stmt->execute([$day->format('Y-m-d')]);
         $orders = $stmt->fetch();
+        $stmt = $this->db->prepare(
+            "SELECT COUNT(*) AS n, COALESCE(MAX(p.id), 0) AS latest FROM payments p JOIN orders o ON o.id = p.order_id
+             WHERE p.status = 'created' AND o.status = 'pending_payment' AND o.token_date = ?"
+        );
+        $stmt->execute([$day->format('Y-m-d')]);
+        $claims = $stmt->fetch();
         $alerts = $this->db->query("SELECT COUNT(*) AS n, COALESCE(MAX(id), 0) AS latest FROM table_alerts WHERE status = 'open'")->fetch();
         return [
             'new_count' => (int) $orders['n'],
             'latest_new_id' => (int) $orders['latest'],
+            'pay_count' => (int) $claims['n'],
+            'latest_pay_id' => (int) $claims['latest'],
             'alert_count' => (int) $alerts['n'],
             'latest_alert_id' => (int) $alerts['latest'],
         ];
@@ -517,8 +675,8 @@ final class OrderService
 
     /**
      * Cancels an order (SPEC §3–4); a reason is always required, and only today's orders.
-     * - still 'received' (not accepted): staff may cancel without the owner ($ownerId null);
-     *   the customer's own cancel passes both ids null
+     * - still 'received' (not accepted) or 'pending_payment' (not paid yet): staff may cancel
+     *   without the owner ($ownerId null); the customer's own cancel passes both ids null
      * - accepted or later (preparing / ready / completed): needs an owner's approval — the
      *   caller checks the owner PIN and passes $ownerId
      * A billed order keeps its bill number and stays listed as Cancelled; its payments are
@@ -544,13 +702,16 @@ final class OrderService
             if ($order['token_date'] !== $now->format('Y-m-d')) {
                 throw ValidationException::one('_', 'cancel.error.not_today');
             }
-            if ($order['status'] !== 'received' && $ownerId === null) {
+            if (!in_array($order['status'], ['received', 'pending_payment'], true) && $ownerId === null) {
                 throw ValidationException::one('_', 'cancel.error.owner_needed');
             }
 
             $this->db->prepare("UPDATE orders SET status = 'cancelled', cancel_reason = ?, cancelled_by = ? WHERE id = ?")
                 ->execute([$reason, $ownerId ?? $staffId, $orderId]);
+            // A paid order's money goes back to the customer (the owner refunds a UPI payment from his app).
             $this->db->prepare("UPDATE payments SET status = 'refunded' WHERE order_id = ? AND status = 'success'")
+                ->execute([$orderId]);
+            $this->db->prepare("UPDATE payments SET status = 'failed' WHERE order_id = ? AND status = 'created'")
                 ->execute([$orderId]);
             $this->audit->log($ownerId ?? $staffId, 'cancel_order', 'order', $orderId, [
                 'bill_no' => $order['bill_no'],

@@ -28,6 +28,7 @@ $i18n = [
     'other' => t('counter.other'),
     'owner_pin' => t('counter.owner_pin'),
     'new_orders' => t('online.new_orders'),
+    'pay_checks' => t('online.pay_checks'),
     'table_alerts' => t('tables.new_alerts'),
     'pay_title' => t('online.pay_title'),
     'pay_cash' => t('billing.pay_cash'),

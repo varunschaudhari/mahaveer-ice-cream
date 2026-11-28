@@ -26,6 +26,7 @@ $paymentLabel = static function (array $order): string {
     }
     return implode(' + ', array_map(static fn (string $mode): string => match ($mode) {
         'cash' => t('billing.pay_cash'),
+        'upi_online' => t('print.upi_online'),
         default => t('billing.pay_upi'),
     }, $modes));
 };

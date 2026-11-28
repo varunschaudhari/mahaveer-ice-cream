@@ -44,7 +44,7 @@ Staging: `mahaveer.foreverstory.in` (separate database copy).
 
 ## Out of scope – do not build (phase 2)
 
-Razorpay/online payments, WhatsApp messaging, SMS, OTP login, home delivery, loyalty/coupons, GST invoicing, Play Store app, customer token display screen, raw-material inventory, Zomato/Swiggy. The schema already has unused columns for Razorpay; leave them.
+Razorpay or any other payment gateway (pay-first takeaway by manual UPI, confirmed at the counter, **is** in V1 – decision 2026-11-28, SPEC §6), WhatsApp messaging, SMS, OTP login, home delivery, loyalty/coupons, GST invoicing, Play Store app, customer token display screen, raw-material inventory, Zomato/Swiggy. The schema already has unused columns for Razorpay; leave them.
 
 ## Commands (Windows 11, run from repo root)
 

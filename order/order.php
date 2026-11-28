@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 // Customer order status (SPEC §6.7, §8): order.php?id=…&k=<secret order_key>, for takeaway and
 // bulk orders. Live status every 10 s (status.js). The customer may cancel while the order is
-// still Received (takeaway) or Pending approval (bulk).
+// still Received (takeaway) or Pending approval (bulk). A pay-first takeaway order (SPEC §6) shows
+// the UPI payment card until the counter confirms the money: pay button (opens the customer's UPI
+// app), "I have paid", and a QR code + UPI ID for paying from another phone.
 
 use App\Services\BulkService;
 use App\Services\OrderService;
+use App\Services\QrService;
+use App\Services\UpiService;
 use App\Settings;
 
 require __DIR__ . '/boot.php';
@@ -23,6 +27,10 @@ $isBulk = $order['order_type'] === 'bulk';
 $shop = Settings::all();
 $token = (int) $order['token_no'];
 $view = customer_status($order);
+$totalPaise = paise_from_decimal((string) $order['total']);
+$waitingPay = $order['status'] === 'pending_payment';
+$payClaimed = $waitingPay && OrderService::hasPaymentClaim($order);
+$upiLink = $waitingPay && UpiService::enabled() ? UpiService::linkForOrder($order) : '';
 $pickup = new DateTimeImmutable($order['pickup_at']);
 if ($isBulk) {
     $whenLabel = t('bulk.event_date');
@@ -49,6 +57,26 @@ view('header', ['title' => t('status.title', ['token' => $token]), 'css' => ['cs
     <p class="status-label status-<?= e($order['status']) ?>" data-status-label><?= e($view['label']) ?></p>
   </div>
 
+  <?php if ($upiLink !== ''): ?>
+  <div class="card pay-card<?= $payClaimed ? ' is-claimed' : '' ?>">
+    <?php if ($payClaimed): ?>
+    <p class="pay-card__checking"><?= e(t('status.pay_checking_note')) ?></p>
+    <a class="pay-card__again" href="<?= e($upiLink) ?>"><?= e(t('status.pay_open_again')) ?></a>
+    <?php else: ?>
+    <p class="pay-card__amount"><span><?= e(t('status.pay_amount')) ?></span><strong><?= e(money($totalPaise)) ?></strong></p>
+    <a class="btn btn-primary btn-block btn-lg" href="<?= e($upiLink) ?>"><?= e(t('status.pay_with_upi')) ?></a>
+    <p class="pay-card__apps"><?= e(t('status.pay_apps')) ?></p>
+    <button type="button" class="btn btn-secondary btn-block btn-lg" data-paid><?= e(t('status.i_have_paid')) ?></button>
+    <details class="pay-card__other">
+      <summary><?= e(t('status.pay_other_phone')) ?></summary>
+      <img class="pay-card__qr" src="<?= e(QrService::svgDataUri($upiLink)) ?>" alt="<?= e(t('status.pay_qr_alt')) ?>" width="220" height="220">
+      <p class="pay-card__id"><span><?= e(t('status.upi_id')) ?></span> <strong data-upi-id><?= e(UpiService::shopId()) ?></strong>
+        <button type="button" class="btn btn-ghost pay-card__copy" data-copy data-copied="<?= e(t('status.copied')) ?>"><?= e(t('status.copy')) ?></button></p>
+    </details>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
+
   <div class="card status-progress">
     <ol class="status-steps" data-steps-list>
       <?php foreach ($view['steps'] as $step): ?>
@@ -70,13 +98,19 @@ view('header', ['title' => t('status.title', ['token' => $token]), 'css' => ['cs
       <?php if (!$isBulk): ?>
       <li class="muted"><span><?= e(t('billing.parcel_charge')) ?></span><span><?= e(money(paise_from_decimal((string) $order['parcel_charge']))) ?></span></li>
       <?php endif; ?>
-      <li class="status-items__total"><span><?= e(t('billing.total')) ?></span><span><?= e(money(paise_from_decimal((string) $order['total']))) ?></span></li>
+      <li class="status-items__total"><span><?= e(t('billing.total')) ?></span><span><?= e(money($totalPaise)) ?></span></li>
       <?php if ($isBulk && paise_from_decimal((string) $order['amount_paid']) > 0): ?>
       <li><span><?= e(t('bulk.paid_so_far')) ?></span><span><?= e(money(paise_from_decimal((string) $order['amount_paid']))) ?></span></li>
       <li><span><?= e(t('bulk.balance')) ?></span><span><?= e(money(BulkService::balance($order))) ?></span></li>
       <?php endif; ?>
     </ul>
-    <p class="muted text-sm"><?= e($isBulk ? t('bulk.price_note') : t('checkout.pay_at_counter')) ?></p>
+    <?php if ($isBulk): ?>
+    <p class="muted text-sm"><?= e(t('bulk.price_note')) ?></p>
+    <?php elseif (OrderService::isPrepaid($order)): ?>
+    <p class="pay-done text-sm"><?= e(t('status.paid_upi', ['amount' => money($totalPaise)])) ?></p>
+    <?php elseif ($order['payment_pref'] !== 'online'): ?>
+    <p class="muted text-sm"><?= e(t('checkout.pay_at_counter')) ?></p>
+    <?php endif; ?>
     <?php if (!empty($order['note'])): ?><p class="muted text-sm"><?= e(t('checkout.note')) ?>: <?= e($order['note']) ?></p><?php endif; ?>
   </div>
 

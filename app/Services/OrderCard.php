@@ -15,13 +15,21 @@ final class OrderCard
     {
         $slotMins = max(5, Settings::int('slot_mins', 15));
         $pickup = $order['pickup_at'] === null ? null : new DateTimeImmutable($order['pickup_at']);
+        $waiting = $order['status'] === 'pending_payment';
+        $claimed = $waiting && !empty($order['pay_claimed']);
         return [
             'id' => (int) $order['id'],
             'type' => $order['order_type'],
             'table' => $order['table_code'] === null ? null : table_number($order['table_code']),
             'token' => (int) $order['token_no'],
             'status' => $order['status'],
-            'status_label' => order_status_label($order['status']),
+            'status_label' => $claimed ? t('online.check_payment') : order_status_label($order['status']),
+            // Pay-first by UPI: paid = nothing to collect at pickup; pay_claimed = the customer says
+            // they paid, the counter checks the soundbox / UPI app; pay_by = cancelled after this.
+            'paid' => ($order['payment_pref'] ?? '') === 'online' && !$waiting
+                && paise_from_decimal((string) ($order['amount_paid'] ?? '0')) >= paise_from_decimal((string) $order['total']),
+            'pay_claimed' => $claimed,
+            'pay_by' => $waiting && !$claimed ? format_time(OrderService::payBy($order)->format('H:i')) : '',
             'slot' => $pickup === null ? '' : format_time($pickup->format('H:i')) . ' – ' . format_time($pickup->modify("+{$slotMins} minutes")->format('H:i')),
             'customer' => (string) $order['customer_name'],
             'mobile' => (string) $order['customer_mobile'],

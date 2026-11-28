@@ -301,6 +301,13 @@ body.counter .input:focus { border-color: var(--color-primary); outline: none; b
 .order-card__status { padding: 3px var(--space-3); border-radius: var(--radius-pill); background: var(--color-primary-soft); color: var(--color-primary-dark); font-size: var(--text-sm); font-weight: 700; }
 .order-card.status-received .order-card__status { background: #FFF3CD; color: #8A5A00; }
 .order-card.status-ready .order-card__status { background: #E8F5E9; color: var(--color-success); }
+/* Pay-first (SPEC §6): waiting for the UPI payment = quiet; the customer says paid = check now */
+.order-card.status-pending_payment { border-style: dashed; background: #FAFAFA; }
+.order-card.status-pending_payment .order-card__status { background: #ECEFF1; color: #455A64; }
+.order-card.is-pay-claimed { border: 2px solid #F59E0B; background: #FFFFFF; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3), var(--c-shadow); }
+.order-card.is-pay-claimed .order-card__status { background: #FFF3CD; color: #8A5A00; }
+.order-card__payby { color: var(--c-muted); font-size: var(--text-sm); }
+.order-card__paid { align-self: flex-start; padding: 2px var(--space-3); border-radius: 10px; background: #E8F5E9; color: var(--color-success); font-weight: 700; }
 .order-card__age { color: var(--c-muted); font-size: var(--text-sm); }
 .order-card__slot { display: inline-flex; align-self: flex-start; padding: 2px var(--space-3); border-radius: 10px; background: var(--c-pink); color: var(--color-primary-dark); font-weight: 700; }
 .order-card__slot.is-late { background: #FDECEA; color: #B71C1C; } /* pickup window passed, still open */

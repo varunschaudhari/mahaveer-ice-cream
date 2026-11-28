@@ -28,7 +28,8 @@ Use real devices: the counter PC (Chrome 109, TM-T82 printer), an Android phone 
 - [ ] Switch off the shop router: the red "No internet" banner shows; hotspot on → back to normal.
 
 **Takeaway (M3)**
-- [ ] Customer phone: scan the takeaway poster (staging), order with a pickup slot → the counter beeps and shows the order; Accept → Ready → Picked up (payment) → bill prints; the customer page follows each step.
+- [ ] Customer phone: scan the takeaway poster (staging), order with a pickup slot → the counter beeps and shows the order; Accept → Ready → Picked up (payment) → bill prints; the customer page follows each step. (With the UPI ID empty.)
+- [ ] **Pay first by UPI** (admin → Settings → Shop UPI ID = the shop's real business UPI ID): order → the status page shows "Pay with a UPI app". Tap it on **GPay, PhonePe and Paytm** (one Android phone each if possible, and an iPhone): each must open with the shop's name and the exact amount. Place a small real order (e.g. ₹25), pay it, tap "I have paid" → the counter beeps "Check payment"; the soundbox announced it → Payment received → the owner's phone gets the notification; Ready → Picked up prints the bill with "Online UPI" and asks for no money. Also: "Not received" cancels; an order left unpaid is cancelled after 15–20 minutes. If an app refuses the payment link, note which one and tell the developer before go-live.
 - [ ] Customer cancels a new order from their page; a second order is refused after 5 in 10 minutes from one phone.
 
 **Tables (M4)**
@@ -60,7 +61,7 @@ Use real devices: the counter PC (Chrome 109, TM-T82 printer), an Android phone 
 - [ ] cPanel → **Indexes** → "No Indexing" for `public_html` and the order subdomain. MultiPHP INI Editor: `expose_php = Off`, `display_errors = Off`, `upload_max_filesize = 8M`, `post_max_size = 10M`.
 - [ ] Deploy; `config.php` with `APP_ENV = production`, `https://order.mahaveericecream.in` and `https://mahaveericecream.in`, the production database, **new** VAPID keys from `php database/vapid_keys.php` on this server, `VAPID_SUBJECT = https://mahaveericecream.in`.
 - [ ] `php database/migrate.php --seed`, then `php database/create_owner.php` (owner, staff PINs, your super-admin account).
-- [ ] Owner content: prices for the ₹0 Kulfi items (or leave them inactive), About text, gallery photos, Google Maps link + "Embed a map" code, WhatsApp number if wanted, bill footer.
+- [ ] Owner content: prices for the ₹0 Kulfi items (or leave them inactive), About text, gallery photos, Google Maps link + "Embed a map" code, WhatsApp number if wanted, bill footer, **Shop UPI ID** (pay-first takeaway; double-check every letter – customers' money goes there).
 - [ ] Cron jobs; run each once by hand; System health all **OK**.
 - [ ] Test order on production (counter bill + cancel it on the Today tab), so the bill number sequence starts clean the first evening if you prefer: note the first real bill number.
 - [ ] Google Search Console: add `mahaveericecream.in`, submit `https://mahaveericecream.in/sitemap.xml`.

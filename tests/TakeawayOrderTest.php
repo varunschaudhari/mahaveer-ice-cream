@@ -312,7 +312,10 @@ final class TakeawayOrderTest extends DatabaseTestCase
         $second = (int) $this->place(['slot' => '20:00'])['id'];
         $this->orders->accept($first, $this->staffId, $this->now);
 
-        self::assertSame(['new_count' => 1, 'latest_new_id' => $second, 'alert_count' => 0, 'latest_alert_id' => 0], $this->orders->newOnlineSummary($this->now));
+        self::assertSame(
+            ['new_count' => 1, 'latest_new_id' => $second, 'pay_count' => 0, 'latest_pay_id' => 0, 'alert_count' => 0, 'latest_alert_id' => 0],
+            $this->orders->newOnlineSummary($this->now)
+        );
         $active = $this->orders->activeOnline($this->now);
         self::assertSame([$first, $second], array_map('intval', array_column($active, 'id')));
         self::assertSame('Asha', $active[0]['customer_name']);

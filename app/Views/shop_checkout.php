@@ -81,7 +81,7 @@ $isTable = $mode === 'table';
       </div>
       <p class="info-note">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v5M12 7.5v.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <span><?= e($isTable ? t('table.pay_before_leaving') : t('checkout.pay_at_counter')) ?></span>
+        <span><?= e($isTable ? t('table.pay_before_leaving') : (App\Services\UpiService::enabled() ? t('checkout.pay_upi_first') : t('checkout.pay_at_counter'))) ?></span>
       </p>
       <div class="checkout-submit">
         <p class="flash flash-error" data-error-for="_" role="alert" hidden></p>

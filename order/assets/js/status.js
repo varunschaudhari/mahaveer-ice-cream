@@ -2,6 +2,8 @@
  * Customer order status (takeaway and bulk): checks every 10 s while the page is visible
  * (SPEC §6.7, ARCHITECTURE §7) and stops once the order is finished. The server sends the label,
  * the help line and whether the customer may still cancel; the progress steps come from the page.
+ * Pay-first orders: "I have paid" and Copy (UPI ID) on the payment card; the page reloads once the
+ * counter has confirmed or cancelled the payment, so the card goes away.
  */
 (function () {
   'use strict';
@@ -20,9 +22,14 @@
   var cancelButton = root.querySelector('[data-cancel-order]');
   var errorEl = root.querySelector('[data-status-error]');
   var current = root.getAttribute('data-current');
+  var startedWaiting = current === 'pending_payment';
   var timer = null;
 
   function show(data) {
+    if (startedWaiting && data.status !== 'pending_payment') {
+      window.location.reload();
+      return;
+    }
     current = data.status;
     label.textContent = data.label;
     label.className = 'status-label status-' + data.status;
@@ -90,6 +97,40 @@
       cancelButton.disabled = false;
     }
   });
+
+  var paidButton = root.querySelector('[data-paid]');
+  if (paidButton) {
+    paidButton.addEventListener('click', async function () {
+      paidButton.disabled = true;
+      try {
+        var response = await fetch('/api/customer_paid.php', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf },
+          body: JSON.stringify({ id: id, k: key })
+        });
+        var data = await response.json();
+        if (data.ok) {
+          window.location.reload();
+          return;
+        }
+        errorEl.textContent = data.message;
+        errorEl.hidden = false;
+      } catch (e) { /* no network: the customer taps again */ }
+      paidButton.disabled = false;
+    });
+  }
+
+  var copyButton = root.querySelector('[data-copy]');
+  if (copyButton && navigator.clipboard) {
+    copyButton.addEventListener('click', function () {
+      navigator.clipboard.writeText(root.querySelector('[data-upi-id]').textContent).then(function () {
+        copyButton.textContent = copyButton.getAttribute('data-copied');
+      }, function () { /* the ID is on screen to type in */ });
+    });
+  } else if (copyButton) {
+    copyButton.hidden = true;
+  }
 
   show({ status: current, label: label.textContent, can_cancel: !cancelButton.hidden });
   schedule();

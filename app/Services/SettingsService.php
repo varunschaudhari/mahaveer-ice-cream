@@ -36,6 +36,15 @@ final class SettingsService
         'whatsapp_number' => ['type' => 'mobile'],
         'google_maps_url' => ['type' => 'url'],
         'google_maps_embed' => ['type' => 'map_embed', 'max' => 3000],
+        // Pay-first takeaway by UPI (decision 2026-11-28): empty = pay at the counter as before.
+        'upi_id' => ['type' => 'upi'],
+        'payment_wait_mins' => ['type' => 'int', 'min' => 5, 'max' => 60],
+    ];
+
+    /** Values for keys added after the seed, until the owner saves the settings once. */
+    public const DEFAULTS = [
+        'upi_id' => '',
+        'payment_wait_mins' => '15',
     ];
 
     private readonly PDO $db;
@@ -57,7 +66,10 @@ final class SettingsService
         $values = [];
         $errors = [];
         foreach (self::FIELDS as $key => $rule) {
-            $raw = trim((string) ($input[$key] ?? ''));
+            // A key added after the seed and missing from the input keeps its current value.
+            $raw = !array_key_exists($key, $input) && array_key_exists($key, self::DEFAULTS)
+                ? Settings::get($key, self::DEFAULTS[$key])
+                : trim((string) ($input[$key] ?? ''));
             $result = $this->normalize($raw, $rule);
             if (isset($result['error'])) {
                 $errors[$key] = $result['error'];
@@ -74,7 +86,8 @@ final class SettingsService
         $current = Settings::all();
         $changed = array_keys(array_filter(
             $values,
-            static fn (string $value, string $key): bool => ($current[$key] ?? '') !== $value, // no row yet = empty
+            // no row yet = its default (keys added after the seed) or empty
+            static fn (string $value, string $key): bool => ($current[$key] ?? self::DEFAULTS[$key] ?? '') !== $value,
             ARRAY_FILTER_USE_BOTH
         ));
 
@@ -156,6 +169,10 @@ final class SettingsService
                 return mb_strlen($raw) <= 500 && str_starts_with($raw, 'https://') && filter_var($raw, FILTER_VALIDATE_URL)
                     ? ['value' => $raw]
                     : ['error' => 'settings.error.url'];
+
+            case 'upi':
+                $id = mb_strtolower($raw);
+                return UpiService::isValidId($id) ? ['value' => $id] : ['error' => 'settings.error.upi'];
 
             case 'map_embed':
                 $url = mb_strlen($raw) <= $rule['max'] ? self::mapEmbedUrl($raw) : null;

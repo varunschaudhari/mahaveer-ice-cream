@@ -6,7 +6,11 @@
  * @var bool $copy
  * @var array $shop
  */
-$modeLabel = static fn (string $mode): string => $mode === 'cash' ? t('billing.pay_cash') : t('billing.pay_upi');
+$modeLabel = static fn (string $mode): string => match ($mode) {
+    'cash' => t('billing.pay_cash'),
+    'upi_online' => t('print.upi_online'), // paid in advance (pay-first takeaway)
+    default => t('billing.pay_upi'),
+};
 ?>
 <!doctype html>
 <html lang="mr">

@@ -15,7 +15,7 @@ require __DIR__ . '/../boot.php';
 $user = Auth::requireAdmin();
 $service = new SettingsService();
 $errors = [];
-$values = Settings::all();
+$values = Settings::all() + SettingsService::DEFAULTS;
 
 if (is_post()) {
     Csrf::check();
@@ -31,7 +31,7 @@ if (is_post()) {
     }
 }
 
-// Display order and labels. Input types: text, time, int, money, phone, url.
+// Display order and labels. Input types: text, time, int, money, phone, url, upi.
 $groups = [
     [t('settings.group.shop'), [
         'shop_name_mr' => [t('settings.shop_name_mr'), 'text', null],
@@ -52,6 +52,10 @@ $groups = [
         'min_lead_mins' => [t('settings.min_lead_mins'), 'int', t('settings.help.minutes')],
         'noshow_after_mins' => [t('settings.noshow_after_mins'), 'int', t('settings.help.noshow_after_mins')],
         'noshow_block_count' => [t('settings.noshow_block_count'), 'int', t('settings.help.noshow_block_count')],
+    ]],
+    [t('settings.group.upi'), [
+        'upi_id' => [t('settings.upi_id'), 'upi', t('settings.help.upi_id')],
+        'payment_wait_mins' => [t('settings.payment_wait_mins'), 'int', t('settings.help.payment_wait_mins')],
     ]],
     [t('settings.group.bulk_tables'), [
         'bulk_notice_days' => [t('settings.bulk_notice_days'), 'int', t('settings.help.days')],
@@ -92,6 +96,9 @@ view('admin_header', ['title' => t('admin.nav.settings'), 'active' => 'settings'
         <input class="input" id="s-<?= e($key) ?>" name="<?= e($key) ?>" inputmode="decimal" value="<?= e($value) ?>" required>
         <?php elseif ($type === 'phone'): ?>
         <input class="input" id="s-<?= e($key) ?>" name="<?= e($key) ?>" type="tel" value="<?= e($value) ?>">
+        <?php elseif ($type === 'upi'): ?>
+        <input class="input" id="s-<?= e($key) ?>" name="<?= e($key) ?>" value="<?= e($value) ?>" maxlength="170"
+               autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="shopname@bank">
         <?php elseif ($type === 'url'): ?>
         <input class="input" id="s-<?= e($key) ?>" name="<?= e($key) ?>" type="url" value="<?= e($value) ?>" placeholder="https://">
         <?php else: ?>

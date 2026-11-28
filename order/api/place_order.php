@@ -55,7 +55,9 @@ if (!$order['duplicate']) {
     foreach ($limitKeys as $limitKey) {
         RateLimiter::hit($limitKey);
     }
-    notify_owners_later(PushService::forOrder($order)); // after the reply; the order is already saved
+    if ($order['status'] !== 'pending_payment') { // a pay-first order notifies once the counter confirms payment
+        notify_owners_later(PushService::forOrder($order)); // after the reply; the order is already saved
+    }
 }
 RecentOrders::remember((int) $order['id'], $order['order_key']);
 

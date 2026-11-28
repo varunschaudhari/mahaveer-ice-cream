@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 // Counter Online tab (SPEC §9): takeaway orders in arrival order with Accept / Ready /
-// Picked up (payment → bill) / Cancel. The list refreshes from api/poll.php every 5 s.
+// Picked up (payment → bill) / Cancel. Pay-first orders (SPEC §6) first wait for their UPI
+// payment: Payment received / Not received. The list refreshes from api/poll.php every 5 s.
 
 use App\Auth;
 
@@ -27,6 +28,16 @@ $texts = [
     'empty' => t('online.empty'),
     'table' => t('online.table'),
     'serve' => t('online.serve'),
+    'confirm_payment' => t('online.confirm_payment'),
+    'payment_missing' => t('online.payment_missing'),
+    'pay_by' => t('online.pay_by'),
+    'paid_upi' => t('online.paid_upi'),
+    'confirm_title' => t('online.confirm_title'),
+    'confirm_yes' => t('online.confirm_yes'),
+    'missing_title' => t('online.missing_title'),
+    'missing_yes' => t('online.missing_yes'),
+    'confirmed_done' => t('online.confirmed_done'),
+    'cancelled_refund' => t('online.cancelled_refund'),
 ];
 $cancelReasons = [t('cancel.reason.customer_called'), t('cancel.reason.out_of_stock'), t('cancel.reason.duplicate')];
 
