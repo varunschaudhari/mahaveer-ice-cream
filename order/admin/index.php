@@ -95,6 +95,8 @@ $tiles = [
     ['/admin/audit.php', 'admin.nav.audit', 'admin.tile.audit', 'log'],
 ];
 
+$ownerApp = App\Services\OwnerAppService::latest(app_env()); // the APK for this server, if published
+
 view('admin_header', ['title' => t('admin.dashboard'), 'active' => 'home', 'user' => $user]);
 ?>
 <div class="admin-hello">
@@ -124,5 +126,12 @@ view('admin_header', ['title' => t('admin.dashboard'), 'active' => 'home', 'user
   </div>
   <?php endforeach; ?>
 </nav>
+<?php if ($ownerApp !== null): ?>
+<section class="card dash-app">
+  <h2><?= icon('phone', 22) ?> <?= e(t('admin.app.title')) ?></h2>
+  <p class="text-sm muted"><?= e(t('admin.app.help')) ?></p>
+  <a class="btn btn-primary" href="<?= e($ownerApp['url']) ?>" download><?= e(t('admin.app.download', ['version' => $ownerApp['version'], 'size' => $ownerApp['size_mb']])) ?></a>
+</section>
+<?php endif; ?>
 <?php
 view('admin_footer');

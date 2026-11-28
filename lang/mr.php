@@ -971,4 +971,9 @@ return [
     'online.cancelled_refund' => 'टोकन {token} रद्द केले. ग्राहकाला {total} UPI ने परत पाठवा.',
     'audit.action.payment_confirmed' => 'UPI पेमेंट मिळाल्याची नोंद',
     'audit.action.cancel_unpaid' => 'वेळेत पैसे भरले नाहीत (आपोआप)',
+
+    // Owner app download in admin (DEPLOYMENT §7b)
+    'admin.app.title' => 'मालकाचे ॲप (Android)',
+    'admin.app.help' => 'हे पान मालकाच्या फोनवर उघडा आणि डाउनलोड दाबा. मग फाइल उघडून Install दाबा ("Install unknown apps" ला एकदा परवानगी द्या). नवी आवृत्ती जुन्या ॲपवरच इन्स्टॉल होते; लॉगिन आणि सूचना तशाच राहतात.',
+    'admin.app.download' => 'आवृत्ती {version} डाउनलोड करा ({size} MB)',
 ];

@@ -969,4 +969,9 @@ return [
     'online.cancelled_refund' => 'Token {token} cancelled. Send the {total} back to the customer by UPI.',
     'audit.action.payment_confirmed' => 'UPI payment confirmed',
     'audit.action.cancel_unpaid' => 'Not paid in time (automatic)',
+
+    // Owner app download in admin (DEPLOYMENT §7b)
+    'admin.app.title' => 'Owner app (Android)',
+    'admin.app.help' => 'Open this page on the owner\'s phone and tap Download. Then open the file and tap Install (allow "Install unknown apps" once). A new version installs over the old one; the login and notifications stay.',
+    'admin.app.download' => 'Download version {version} ({size} MB)',
 ];

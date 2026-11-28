@@ -178,6 +178,8 @@ export JAVA_HOME="$USERPROFILE/.jdks/temurin-21"                            # Gi
 ./gradlew.bat assembleRelease -PtwaHost=order.mahaveericecream.in # production
 ```
 - The APK is written to `android/app/build/outputs/apk/release/app-release.apk`; rename it, e.g. `mahavir-owner-production-1.0.1.apk`.
+- **Publish it for download:** copy it to `order/downloads/mahavir-owner-<staging|production>-<version>.apk`, delete the older file of the same server, commit, deploy. admin → Dashboard then shows "Owner app (Android)" with a Download button on that server only (staging offers the staging app, production the production app; `OwnerAppService`). The owner opens admin on his phone, taps Download and installs over the old app. Each APK adds ~4.6 MB to git, so keep only the newest per server.
+- Staging app: 1.0.2 (versionCode 3, 2026-11-28). The production build at go-live needs versionCode 4 or higher.
 - Before every new APK, raise `versionCode` (and `versionName`) in `android/app/build.gradle`. Android installs an update only over a lower version.
 - Installing the production APK over the staging one keeps the app and switches it to the production address. Notifications must then be turned on again, because they belong to each web address.
 - Icons come from the client's logo: `docs/brand/build_logo.ps1` writes them into `android/app/src/main/res`.
