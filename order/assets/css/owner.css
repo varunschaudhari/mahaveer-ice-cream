@@ -48,26 +48,7 @@ body.owner {
 
 .owner-h2 { margin: 0; color: var(--o-ink); font-family: var(--o-serif); font-size: 1.25rem; font-weight: 700; line-height: 1.4; }
 
-/* ---------- top bar ---------- */
-
-.owner-bar {
-  position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--o-line);
-  background: rgba(255, 255, 255, 0.94); color: var(--o-ink);
-}
-.owner-bar__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 60px; padding-block: var(--space-2); }
-.owner-brand { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
-.owner-brand img { flex-shrink: 0; width: auto; height: 32px; }
-.owner-brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
-.owner-brand__name { overflow: hidden; font-family: var(--o-serif); font-size: 0.9375rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.owner-brand__tag { color: var(--o-muted); font-size: 0.75rem; }
-.owner-bar__actions { display: flex; flex-shrink: 0; align-items: center; gap: var(--space-2); }
-.owner .lang-toggle, .owner-admin-link {
-  display: inline-flex; align-items: center; gap: var(--space-1); min-height: 38px; padding-inline: var(--space-3);
-  border: 1px solid var(--o-line); border-radius: var(--radius-pill); background: var(--o-soft);
-  color: var(--o-ink); font-size: var(--text-sm); font-weight: 700; text-decoration: none;
-}
-.owner-admin-link { background: #FFFFFF; }
-.owner-admin-link .icon { color: var(--o-muted); }
+/* The top bar + menu are shared with admin: app-nav.css. */
 
 /* ---------- status lines ---------- */
 

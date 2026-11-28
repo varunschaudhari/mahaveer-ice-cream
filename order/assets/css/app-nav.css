@@ -1,0 +1,110 @@
+/*
+ * The owner + admin menu (app_nav.php) and the logged-out admin top bar. Load after admin.css /
+ * owner.css. Wide screens (≥ 1024 px): a fixed side menu. Phones and tablets: a slim top bar
+ * whose ☰ button slides the same menu in from the left (app-nav.js).
+ * Chrome 109 (counter PC): no CSS nesting, no color-mix(), no @scope, no subgrid.
+ */
+
+body.admin, body.has-nav {
+  --n-ink: #1F1A17;
+  --n-line: #E8E1D8;
+  --n-soft: #F6F1EA;
+  --n-muted: #7D746D;
+  --n-accent: #D81B7F;
+  --n-pink: #FBC4DE;
+  --n-serif: 'Martel', Georgia, serif;
+  --n-side: 248px;
+}
+
+/* ---------- brand + language (shared) ---------- */
+
+.admin-brand { display: flex; align-items: center; gap: var(--space-3); min-width: 0; color: var(--n-ink); text-decoration: none; }
+.admin-brand img { flex-shrink: 0; width: auto; height: 36px; }
+.admin-brand__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.admin-brand__name { overflow: hidden; font-family: var(--n-serif); font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.admin-brand__tag { color: var(--n-muted); font-size: 0.75rem; }
+.admin-bar .lang-toggle {
+  display: inline-flex; align-items: center; min-height: 40px; padding-inline: var(--space-3);
+  border: 1px solid var(--n-line); border-radius: var(--radius-pill); background: var(--n-soft);
+  color: var(--n-ink); font-size: var(--text-sm); font-weight: 700; text-decoration: none;
+}
+
+/* ---------- logged out (admin login): a plain top bar ---------- */
+
+body:not(.has-nav) .admin-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--n-line); background: #FFFFFF;
+}
+
+/* ---------- the menu (side menu and phone drawer look the same) ---------- */
+
+.has-nav .admin-bar {
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 60;
+  display: flex; flex-direction: column; width: var(--n-side);
+  padding: var(--space-4) var(--space-3) var(--space-4); overflow-y: auto; overscroll-behavior: contain;
+  border-right: 1px solid var(--n-line); background: #FFFFFF;
+}
+.admin-bar__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) var(--space-2) var(--space-4); }
+.has-nav .admin-bar__head .admin-brand__name { white-space: normal; } /* "Mahavir Ice Cream" wraps instead of being cut */
+.admin-nav { display: flex; flex: 1 0 auto; flex-direction: column; gap: 2px; }
+.admin-nav a {
+  display: flex; align-items: center; gap: var(--space-3); min-height: 44px; padding: 0 var(--space-3);
+  border-radius: 12px; color: var(--n-ink); font-size: 0.9375rem; font-weight: 700; text-decoration: none;
+}
+.admin-nav .icon { flex-shrink: 0; color: var(--n-muted); }
+.admin-nav a:hover { background: var(--n-soft); }
+.admin-nav a[aria-current="page"] { background: var(--n-ink); color: #FFFFFF; }
+.admin-nav a[aria-current="page"] .icon { color: var(--n-pink); }
+
+.has-nav .admin-bar__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-top: var(--space-4); padding: var(--space-4) var(--space-2) 0; border-top: 1px solid var(--n-line); }
+.has-nav .admin-bar__actions form { display: flex; flex: 1; }
+.admin-user { display: flex; flex-basis: 100%; align-items: center; gap: var(--space-3); min-width: 0; margin: 0 0 var(--space-1); }
+.admin-user__avatar {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--n-pink); color: var(--n-accent); font-family: var(--n-serif); font-weight: 700;
+}
+.admin-user__text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.admin-user__text strong { overflow: hidden; font-size: var(--text-sm); text-overflow: ellipsis; white-space: nowrap; }
+.admin-user__text small { color: var(--n-muted); font-size: 0.75rem; }
+.admin-logout {
+  display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: var(--space-2); min-height: 40px; padding: 0 var(--space-3);
+  border: 1px solid var(--n-line); border-radius: var(--radius-pill); background: #FFFFFF; color: var(--n-ink); font-size: var(--text-sm); font-weight: 700;
+}
+.admin-logout:hover { border-color: var(--n-ink); }
+
+/* ---------- phones + tablets: slim top bar with ☰, the menu slides in ---------- */
+
+.app-topbar {
+  position: -webkit-sticky; position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: var(--space-2); min-height: 60px; padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--n-line); background: rgba(255, 255, 255, 0.96);
+}
+.app-topbar__menu, .admin-bar__close {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px;
+  border: 0; border-radius: 12px; background: transparent; color: var(--n-ink);
+}
+.app-topbar__menu:hover, .admin-bar__close:hover { background: var(--n-soft); }
+.app-scrim { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 55; background: rgba(31, 26, 23, 0.45); }
+
+@media (max-width: 1023.98px) {
+  .has-nav .admin-bar {
+    width: 300px; max-width: 86vw; transform: translateX(-105%); visibility: hidden;
+    transition: transform 0.22s ease, visibility 0s linear 0.22s;
+  }
+  body.nav-open .admin-bar { transform: none; visibility: visible; box-shadow: 0 0 40px rgba(31, 26, 23, 0.25); transition: transform 0.22s ease; }
+  body.nav-open { overflow: hidden; }
+}
+
+@media (min-width: 1024px) {
+  body.has-nav { padding-left: var(--n-side); }
+  .app-topbar, .app-scrim, .admin-bar__close { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .has-nav .admin-bar { transition: none; }
+}
+
+@media print {
+  .admin-bar, .app-topbar, .app-scrim { display: none !important; }
+  body.has-nav { padding-left: 0; }
+}

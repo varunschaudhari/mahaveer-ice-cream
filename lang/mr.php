@@ -70,6 +70,8 @@ return [
     // ---------- admin ----------
     'admin.title' => 'व्यवस्थापन',
     'admin.dashboard' => 'मुख्य पान',
+    'nav.open_menu' => 'मेनू उघडा',
+    'nav.close_menu' => 'मेनू बंद करा',
     'admin.login_title' => 'मालक लॉग इन',
     'admin.login' => 'लॉग इन',
     'admin.logout' => 'लॉग आउट',

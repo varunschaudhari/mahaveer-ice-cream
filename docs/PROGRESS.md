@@ -110,6 +110,19 @@ Update at the end of every Claude Code session: tick finished items, note decisi
 
 <!-- Newest first. One short entry per session: what was done, what is next, any open problem. -->
 
+### 2026-11-28 – One menu for the owner page and admin (phone sidebar)
+
+- New `app/Views/app_nav.php` + `order/assets/css/app-nav.css` + `order/assets/js/app-nav.js`, used by `admin_header.php` and the owner page:
+  - phones / tablets: slim top bar with ☰; the menu slides in from the left over a dimmed page (close button, a tap outside, Escape)
+  - wide screens: the same menu as the fixed side menu (unchanged look on the counter PC)
+- Menu: "Live orders" (`/owner/`) first, then Dashboard and the admin pages; name, language and Log out at the bottom. It replaces the phone chip row of admin and the owner page's own top bar ("Admin" button).
+- The old nav rules moved out of `admin.css` / `owner.css`. The logged-out admin login keeps its plain top bar.
+- New icons `menu`, `close`; text keys `nav.open_menu`, `nav.close_menu` (mr + en).
+- The owner app shows the live pages, so no APK rebuild is needed.
+- Checks: 355 PHPUnit tests pass. Headless Chrome:
+  - 390 px: owner page with the menu closed / open, admin reports (en / mr), login
+  - 1024×768 and 1366: side menu
+
 ### 2026-11-27 – Owner app (APK)
 
 - `android/`: Gradle project (Gradle 8.14.3 wrapper, AGP 8.13.2, compileSdk/targetSdk 36, minSdk 24) for **Mahavir Owner** / "महावीर मालक":

@@ -68,6 +68,8 @@ return [
     // ---------- admin ----------
     'admin.title' => 'Admin',
     'admin.dashboard' => 'Dashboard',
+    'nav.open_menu' => 'Open menu',
+    'nav.close_menu' => 'Close menu',
     'admin.login_title' => 'Owner login',
     'admin.login' => 'Log in',
     'admin.logout' => 'Log out',

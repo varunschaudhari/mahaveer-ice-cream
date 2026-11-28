@@ -14,7 +14,6 @@ use App\Settings;
 require __DIR__ . '/../boot.php';
 
 $user = Auth::requireAdmin('/admin/?next=%2Fowner%2F');
-$otherLang = lang() === 'mr' ? 'en' : 'mr';
 
 $keys = [
     'owner.today_sales', 'owner.bills', 'owner.alerts', 'owner.orders', 'owner.no_orders', 'owner.bulk', 'owner.no_bulk',
@@ -49,20 +48,10 @@ $shopName = lang_field(Settings::all(), 'shop_name');
 <link rel="apple-touch-icon" href="/assets/img/icon-192.png">
 <link rel="stylesheet" href="<?= e(asset('css/base.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/owner.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/app-nav.css')) ?>">
 </head>
-<body class="owner">
-<header class="owner-bar">
-  <div class="container owner-bar__inner">
-    <span class="owner-brand">
-      <img src="/assets/img/logo-mark.png" width="28" height="32" alt="">
-      <span class="owner-brand__text"><span class="owner-brand__name"><?= e($shopName) ?></span><span class="owner-brand__tag"><?= e(t('owner.title')) ?></span></span>
-    </span>
-    <div class="owner-bar__actions">
-      <a class="lang-toggle" href="<?= e(lang_switch_url($otherLang)) ?>" hreflang="<?= e($otherLang) ?>"><?= e(t('lang.switch')) ?></a>
-      <a class="owner-admin-link" href="/admin/"><?= icon('settings', 18) ?><span><?= e(t('owner.admin_link')) ?></span></a>
-    </div>
-  </div>
-</header>
+<body class="owner has-nav">
+<?php view('app_nav', ['user' => $user, 'active' => 'owner', 'tag' => t('owner.title')]); ?>
 
 <main class="container page stack" data-owner
       data-lang="<?= e(lang()) ?>"
@@ -132,5 +121,6 @@ $shopName = lang_field(Settings::all(), 'shop_name');
 </dialog>
 
 <script src="<?= e(asset('js/owner.js')) ?>"></script>
+<script src="<?= e(asset('js/app-nav.js')) ?>"></script>
 </body>
 </html>
