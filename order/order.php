@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 // Customer order status (SPEC §6.7, §8): order.php?id=…&k=<secret order_key>, for takeaway and
 // bulk orders. Live status every 10 s (status.js). The customer may cancel while the order is
-// still Received (takeaway) or Pending approval (bulk). A pay-first takeaway order (SPEC §6) shows
-// the UPI payment card until the counter confirms the money: pay button (opens the customer's UPI
-// app), "I have paid", and a QR code + UPI ID for paying from another phone.
+// still Received (takeaway) or Pending approval (bulk). A pay-first takeaway order (SPEC §6.10)
+// shows the UPI payment card until the counter confirms the money: the order's QR (order_qr.php),
+// "Save QR to phone" + how to scan it from the gallery, "I have paid", and the UPI ID. No payment
+// link button: UPI apps refuse links from a website without a gateway (staging test 2026-11-28).
 
 use App\Services\BulkService;
 use App\Services\OrderService;
-use App\Services\QrService;
 use App\Services\UpiService;
 use App\Settings;
 
@@ -30,7 +30,9 @@ $view = customer_status($order);
 $totalPaise = paise_from_decimal((string) $order['total']);
 $waitingPay = $order['status'] === 'pending_payment';
 $payClaimed = $waitingPay && OrderService::hasPaymentClaim($order);
-$upiLink = $waitingPay && UpiService::enabled() ? UpiService::linkForOrder($order) : '';
+$payQr = $waitingPay && UpiService::enabled()
+    ? '/order_qr.php?id=' . (int) $order['id'] . '&k=' . $order['order_key']
+    : '';
 $pickup = new DateTimeImmutable($order['pickup_at']);
 if ($isBulk) {
     $whenLabel = t('bulk.event_date');
@@ -57,22 +59,28 @@ view('header', ['title' => t('status.title', ['token' => $token]), 'css' => ['cs
     <p class="status-label status-<?= e($order['status']) ?>" data-status-label><?= e($view['label']) ?></p>
   </div>
 
-  <?php if ($upiLink !== ''): ?>
+  <?php if ($payQr !== ''): ?>
   <div class="card pay-card<?= $payClaimed ? ' is-claimed' : '' ?>">
     <?php if ($payClaimed): ?>
     <p class="pay-card__checking"><?= e(t('status.pay_checking_note')) ?></p>
-    <a class="pay-card__again" href="<?= e($upiLink) ?>"><?= e(t('status.pay_open_again')) ?></a>
+    <details class="pay-card__other">
+      <summary><?= e(t('status.pay_show_qr_again')) ?></summary>
+      <img class="pay-card__qr" src="<?= e($payQr) ?>" alt="<?= e(t('status.pay_qr_alt')) ?>" width="240" height="240">
+    </details>
     <?php else: ?>
     <p class="pay-card__amount"><span><?= e(t('status.pay_amount')) ?></span><strong><?= e(money($totalPaise)) ?></strong></p>
-    <a class="btn btn-primary btn-block btn-lg" href="<?= e($upiLink) ?>"><?= e(t('status.pay_with_upi')) ?></a>
-    <p class="pay-card__apps"><?= e(t('status.pay_apps')) ?></p>
+    <img class="pay-card__qr" src="<?= e($payQr) ?>" alt="<?= e(t('status.pay_qr_alt')) ?>" width="240" height="240">
+    <a class="btn btn-primary btn-block btn-lg" href="<?= e($payQr . '&save=1') ?>" download="mahavir-token-<?= $token ?>.png"><?= e(t('status.pay_save_qr')) ?></a>
+    <ol class="pay-steps">
+      <li><?= e(t('status.pay_step_save')) ?></li>
+      <li><?= e(t('status.pay_step_scan')) ?></li>
+      <li><?= e(t('status.pay_step_pay', ['amount' => money($totalPaise)])) ?></li>
+      <li><?= e(t('status.pay_step_back')) ?></li>
+    </ol>
     <button type="button" class="btn btn-secondary btn-block btn-lg" data-paid><?= e(t('status.i_have_paid')) ?></button>
-    <details class="pay-card__other">
-      <summary><?= e(t('status.pay_other_phone')) ?></summary>
-      <img class="pay-card__qr" src="<?= e(QrService::svgDataUri($upiLink)) ?>" alt="<?= e(t('status.pay_qr_alt')) ?>" width="220" height="220">
-      <p class="pay-card__id"><span><?= e(t('status.upi_id')) ?></span> <strong data-upi-id><?= e(UpiService::shopId()) ?></strong>
-        <button type="button" class="btn btn-ghost pay-card__copy" data-copy data-copied="<?= e(t('status.copied')) ?>"><?= e(t('status.copy')) ?></button></p>
-    </details>
+    <p class="pay-card__note"><?= e(t('status.pay_other_phone')) ?></p>
+    <p class="pay-card__id"><span><?= e(t('status.upi_id')) ?></span> <strong data-upi-id><?= e(UpiService::shopId()) ?></strong>
+      <button type="button" class="btn btn-ghost pay-card__copy" data-copy data-copied="<?= e(t('status.copied')) ?>"><?= e(t('status.copy')) ?></button></p>
     <?php endif; ?>
   </div>
   <?php endif; ?>

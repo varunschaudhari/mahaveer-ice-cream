@@ -25,4 +25,14 @@ final class QrServiceTest extends TestCase
     {
         self::assertStringStartsWith('data:image/svg+xml;base64,', QrService::svgDataUri('https://mahaveer.foreverstory.in/'));
     }
+
+    public function testPaymentCodeIsAPngForTheGallery(): void
+    {
+        $png = QrService::pngBinary('upi://pay?pa=shop@okaxis&pn=Mahavir%20Ice%20Cream&am=20.00&cu=INR&tn=Mahavir%20token%206');
+
+        self::assertStringStartsWith("\x89PNG\r\n\x1a\n", $png);
+        $size = getimagesizefromstring($png);
+        self::assertSame($size[0], $size[1]);
+        self::assertGreaterThanOrEqual(300, $size[0]); // big enough to scan from a screenshot
+    }
 }

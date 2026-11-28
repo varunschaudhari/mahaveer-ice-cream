@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use chillerlan\QRCode\Output\QRGdImagePNG;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 
@@ -37,5 +38,21 @@ final class QrService
         $options->connectPaths = true;      // smaller SVG
         $options->addQuietzone = true;
         return (new QRCode($options))->render($url);
+    }
+
+    /**
+     * The code as a PNG (white background, quiet zone) for a customer to save to the phone's
+     * gallery and scan from there in a UPI app (scan-to-pay, decision 2026-11-28). An SVG cannot
+     * be picked from the gallery.
+     */
+    public static function pngBinary(string $text): string
+    {
+        $options = new QROptions();
+        $options->outputInterface = QRGdImagePNG::class;
+        $options->outputBase64 = false;
+        $options->imageTransparent = false;
+        $options->scale = 10;
+        $options->addQuietzone = true;
+        return (new QRCode($options))->render($text);
     }
 }
